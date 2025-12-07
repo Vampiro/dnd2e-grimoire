@@ -9,6 +9,8 @@ import { getFirestore, Firestore } from "firebase/firestore";
 /**
  * Firebase project configuration.
  * Replace these values with your project's Firebase config from the console.
+ *
+ * Note: These are not considered secrets.
  */
 const firebaseConfig = {
   apiKey: "AIzaSyANZjfo2o7rb29gVpziYLTzM3VewMG-5Ss",
