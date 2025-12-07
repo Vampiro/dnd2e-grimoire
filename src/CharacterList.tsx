@@ -1,13 +1,14 @@
 import { createCharacter, deleteCharacter } from "./firebase/characters";
 import { useAtomValue } from "jotai";
 import { charactersAtom } from "./globalState";
+import { CharacterClass } from "./types/Character";
 
 export default function CharacterList() {
   const characters = useAtomValue(charactersAtom);
   async function onCreate() {
     await createCharacter({
       name: `New Wizard - ${crypto.randomUUID()}`,
-      class: "Wizard",
+      classes: [CharacterClass.WIZARD],
     });
   }
 
@@ -23,7 +24,7 @@ export default function CharacterList() {
         {characters.map((c) => (
           <li key={c.id}>
             <span>
-              {c.name} — {c.class}
+              {c.name} — {c.classes}
             </span>
             <button
               onClick={() => handleDelete(c.id)}

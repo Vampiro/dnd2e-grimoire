@@ -1,13 +1,4 @@
-/** Class that a spell can belong to. e.g. wizard, priest. */
-export const SpellClass = {
-  /** Wizard class. */
-  WIZARD: "Wizard",
-  /** Priest class. */
-  PRIEST: "Priest",
-} as const;
-
-/** Class that a spell can belong to. e.g. wizard, priest. */
-export type SpellClass = (typeof SpellClass)[keyof typeof SpellClass];
+import { CharacterClass } from "./Character";
 
 /**
  * A Spell with general details and links to descriptions. Not linked to a player or spellbook.
@@ -16,7 +7,7 @@ export type SpellClass = (typeof SpellClass)[keyof typeof SpellClass];
  */
 export interface Spell {
   /** Class the spell is for. e.g. wizard, priest. */
-  class: SpellClass;
+  class: CharacterClass;
   /** Level of the spell. */
   level: number;
   /** AD&D 2e Wiki link to spell. */
