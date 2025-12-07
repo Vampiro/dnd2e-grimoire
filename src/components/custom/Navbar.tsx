@@ -10,12 +10,14 @@ import { useAtomValue } from "jotai";
 import { User } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { DndWikiSearch } from "./NavbarSearch";
 
 export default function Navbar() {
   const user = useAtomValue(userAtom);
   const [open, setOpen] = useState(false);
   const closeMenu = () => setOpen(false);
   const navigate = useNavigate();
+  const [searchOpen, setSearchOpen] = useState(false);
 
   return (
     <nav className="w-full h-14 bg-background border-b flex items-center px-4 justify-between">
@@ -26,10 +28,13 @@ export default function Navbar() {
       <div className="flex items-center gap-4">
         {/* Account menu */}
         <Popover open={open} onOpenChange={setOpen}>
+          <DndWikiSearch
+            open={searchOpen}
+            onOpenChange={(open) => setSearchOpen(open)}
+          />
           <PopoverTrigger className="p-2 rounded-full hover:bg-accent">
             <User className="h-5 w-5" />
           </PopoverTrigger>
-
           <PopoverContent align="end" className="w-48 p-2">
             <div className="flex flex-col gap-1">
               {user && (
