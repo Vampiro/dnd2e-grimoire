@@ -13,13 +13,13 @@ import { getFirestore, Firestore } from "firebase/firestore";
  * Note: These are not considered secrets.
  */
 const firebaseConfig = {
-  apiKey: "AIzaSyANZjfo2o7rb29gVpziYLTzM3VewMG-5Ss",
-  authDomain: "dnd2e-grimoire.firebaseapp.com",
-  projectId: "dnd2e-grimoire",
-  storageBucket: "dnd2e-grimoire.firebasestorage.app",
-  messagingSenderId: "1035773100850",
-  appId: "1:1035773100850:web:66c7c419e7305e3ee90d2b",
-  measurementId: "G-S3Q2S9W9QL",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 /** The initialized Firebase app */
