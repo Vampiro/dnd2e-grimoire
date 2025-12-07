@@ -4168,12 +4168,6 @@ export const priestSpells: Spell[] = [
   {
     class: CharacterClass.PRIEST,
     level: 3,
-    link: "https://adnd2e.fandom.com/wiki/Sunstroke_(Priest_Spell)",
-    name: "Sunstroke",
-  },
-  {
-    class: CharacterClass.PRIEST,
-    level: 3,
     link: "https://adnd2e.fandom.com/wiki/Surf_(Priest_Spell)",
     name: "Surf",
   },

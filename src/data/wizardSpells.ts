@@ -613,12 +613,6 @@ export const wizardSpells: Spell[] = [
   {
     class: CharacterClass.WIZARD,
     level: 1,
-    link: "https://adnd2e.fandom.com/wiki/Enhance_(Wizard_Spell)",
-    name: "Enhance",
-  },
-  {
-    class: CharacterClass.WIZARD,
-    level: 1,
     link: "https://adnd2e.fandom.com/wiki/Enlarge_(Wizard_Spell)",
     name: "Enlarge",
   },
@@ -1040,7 +1034,7 @@ export const wizardSpells: Spell[] = [
     class: CharacterClass.WIZARD,
     level: 1,
     link: "https://adnd2e.fandom.com/wiki/Living_Link_(Wizard_Spell)",
-    name: "Living Link",
+    name: "Living Link (Wizard's Spell Compendium)",
   },
   {
     class: CharacterClass.WIZARD,
@@ -1269,12 +1263,6 @@ export const wizardSpells: Spell[] = [
     level: 1,
     link: "https://adnd2e.fandom.com/wiki/Predict_Tide_(Wizard_Spell)",
     name: "Predict Tide",
-  },
-  {
-    class: CharacterClass.WIZARD,
-    level: 1,
-    link: "https://adnd2e.fandom.com/wiki/Preserve_(Wizard_Spell)",
-    name: "Preserve",
   },
   {
     class: CharacterClass.WIZARD,
@@ -2973,7 +2961,7 @@ export const wizardSpells: Spell[] = [
     class: CharacterClass.WIZARD,
     level: 2,
     link: "https://adnd2e.fandom.com/wiki/Living_Link_(Wizard_Spell)",
-    name: "Living Link",
+    name: "Living Link (Complete Book of Necromancers)",
   },
   {
     class: CharacterClass.WIZARD,
@@ -3724,12 +3712,6 @@ export const wizardSpells: Spell[] = [
     level: 2,
     link: "https://adnd2e.fandom.com/wiki/Sundazzle_(Wizard_Spell)",
     name: "Sundazzle",
-  },
-  {
-    class: CharacterClass.WIZARD,
-    level: 2,
-    link: "https://adnd2e.fandom.com/wiki/Swim_(Wizard_Spell)",
-    name: "Swim",
   },
   {
     class: CharacterClass.WIZARD,
@@ -5007,12 +4989,6 @@ export const wizardSpells: Spell[] = [
   {
     class: CharacterClass.WIZARD,
     level: 3,
-    link: "https://adnd2e.fandom.com/wiki/Ironwood_(Wizard_Spell)",
-    name: "Ironwood",
-  },
-  {
-    class: CharacterClass.WIZARD,
-    level: 3,
     link: "https://adnd2e.fandom.com/wiki/Isolde's_Answer_(Wizard_Spell)",
     name: "Isolde's Answer",
   },
@@ -5087,12 +5063,6 @@ export const wizardSpells: Spell[] = [
     level: 3,
     link: "https://adnd2e.fandom.com/wiki/Lightning_Bolt_(Wizard_Spell)",
     name: "Lightning Bolt",
-  },
-  {
-    class: CharacterClass.WIZARD,
-    level: 3,
-    link: "https://adnd2e.fandom.com/wiki/Lightning_Reflection_(Wizard_Spell)",
-    name: "Lightning Reflection",
   },
   {
     class: CharacterClass.WIZARD,
@@ -7266,12 +7236,6 @@ export const wizardSpells: Spell[] = [
     level: 4,
     link: "https://adnd2e.fandom.com/wiki/Lich_Armor_(Wizard_Spell)",
     name: "Lich Armor",
-  },
-  {
-    class: CharacterClass.WIZARD,
-    level: 4,
-    link: "https://adnd2e.fandom.com/wiki/Lich_Touch_(Wizard_Spell)",
-    name: "Lich Touch",
   },
   {
     class: CharacterClass.WIZARD,
@@ -11522,12 +11486,6 @@ export const wizardSpells: Spell[] = [
     level: 6,
     link: "https://adnd2e.fandom.com/wiki/Suppress_Bloodline_(Wizard_Spell)",
     name: "Suppress Bloodline",
-  },
-  {
-    class: CharacterClass.WIZARD,
-    level: 6,
-    link: "https://adnd2e.fandom.com/wiki/Suspension_(Wizard_Spell)",
-    name: "Suspension",
   },
   {
     class: CharacterClass.WIZARD,
