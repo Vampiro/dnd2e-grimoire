@@ -11,6 +11,7 @@ Helps with the organization of spells and spellbooks in AD&D 2e.
 ## Ideas
 
 - Player notes for spells (spell name + spell class) that can simplify instructions or give guidance on rolls.
+  - type SpellNote = { spellName, spellClass, note }
 - Character notes.
 - Spellbook description.
 - Ability to add any spells to a bonus area that are from items and such.
