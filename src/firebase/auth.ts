@@ -1,6 +1,4 @@
-/**
- * Firebase Google Authentication helpers
- */
+/** Firebase Google Authentication helpers. */
 
 import { auth } from "./index";
 import {
@@ -35,7 +33,7 @@ export async function logout(): Promise<void> {
  */
 export function getCurrentUid(): string {
   const user = auth.currentUser;
-  if (!user) throw new Error("No user is logged in");
+  if (!user) throw new Error("No user is logged in.");
   console.log(user);
   return user.uid;
 }

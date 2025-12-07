@@ -1538,7 +1538,6 @@ export const wizardSpells: Spell[] = [
     link: "https://adnd2e.fandom.com/wiki/Zala's_Icejacket_(Wizard_Spell)",
     name: "Zala's Icejacket",
   },
-
   // --- Level 2 Spells ---
   {
     level: 2,
@@ -3300,7 +3299,6 @@ export const wizardSpells: Spell[] = [
     link: "https://adnd2e.fandom.com/wiki/Zephyr_(Wizard_Spell)",
     name: "Zephyr",
   },
-
   // --- Level 3 Spells ---
   {
     level: 3,
@@ -11497,7 +11495,6 @@ export const wizardSpells: Spell[] = [
     link: "https://adnd2e.fandom.com/wiki/Youth_(Wizard_Spell)",
     name: "Youth",
   },
-
   // --- Level 9 Spells ---
   {
     level: 9,
@@ -12259,7 +12256,6 @@ export const wizardSpells: Spell[] = [
     link: "https://adnd2e.fandom.com/wiki/Wrath_of_the_Just_(Wizard_Spell)",
     name: "Wrath of the Just",
   },
-
   // --- Level 10+ Spells ---
   {
     level: 10,

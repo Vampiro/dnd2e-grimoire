@@ -1,5 +1,5 @@
 import { useAtomValue } from "jotai";
-import { userAtom } from "./firebase/authAtom";
+import { userAtom } from "./globalState";
 import { signInWithGoogle, logout } from "./firebase/auth";
 
 export default function Login() {

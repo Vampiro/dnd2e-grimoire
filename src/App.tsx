@@ -1,12 +1,11 @@
+import { useAtomValue } from "jotai";
 import "./App.css";
 import CharacterList from "./CharacterList";
-import { useAuthListener } from "./firebase/hooks";
-import { useAuthUser } from "./firebase/useAuthUser";
 import Login from "./Login";
+import { userAtom } from "./globalState";
 
 function App() {
-  useAuthListener();
-  const user = useAuthUser();
+  const user = useAtomValue(userAtom);
   return (
     <div>
       <h1 className="text-3xl font-bold underline">Hello world!</h1>
