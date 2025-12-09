@@ -12,6 +12,8 @@ import {
   orderBy,
   updateDoc,
   deleteDoc,
+  CollectionReference,
+  DocumentReference,
 } from "firebase/firestore";
 import type { Character } from "../types/Character";
 import { getCurrentUserId } from "./auth";
@@ -21,7 +23,12 @@ import { charactersAtom, store } from "../globalState";
  * Returns the collection reference for a user's characters
  */
 function charactersCollection(uid: string) {
-  return collection(db, "users", uid, "characters");
+  return collection(
+    db,
+    "users",
+    uid,
+    "characters",
+  ) as CollectionReference<Character>;
 }
 
 /**
@@ -29,7 +36,10 @@ function charactersCollection(uid: string) {
  * @param characterId - Character document ID
  */
 function characterDoc(uid: string, characterId: string) {
-  return doc(db, `users/${uid}/characters/${characterId}`);
+  return doc(
+    db,
+    `users/${uid}/characters/${characterId}`,
+  ) as DocumentReference<Character>;
 }
 
 /**
