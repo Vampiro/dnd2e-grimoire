@@ -59,6 +59,7 @@ export async function createCharacter(
   const char: Character = {
     ...data,
     id,
+    revision: 1,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -83,7 +84,7 @@ async function getCharacters(): Promise<Character[]> {
   const q = query(col, orderBy("createdAt", "asc"));
   const snap = await getDocs(q);
 
-  return snap.docs.map((d) => d.data() as Character);
+  return snap.docs.map((d) => d.data());
 }
 
 /** Refreshes the global state list of characters. */
