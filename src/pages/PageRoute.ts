@@ -6,4 +6,6 @@ export const PageRoute = {
   WIZARD: (characterId: string) => `/characters/${characterId}/wizard`,
   WIZARD_EDIT: (characterId: string) =>
     `/characters/${characterId}/wizard/edit`,
+  WIZARD_SPELLBOOKS: (characterId: string) =>
+    `/characters/${characterId}/wizard/spellbooks`,
 };

@@ -17,6 +17,11 @@ import {
   getDoc,
 } from "firebase/firestore";
 import type { Character } from "../types/Character";
+import {
+  CharacterClass,
+  WizardClassProgression,
+  WizardSpellbook,
+} from "../types/ClassProgression";
 import { getCurrentUserId } from "./auth";
 import { charactersAtom, store } from "../globalState";
 
@@ -187,6 +192,144 @@ async function updateCharacterWithRevisionCheck(
     // Unknown or network error
     return { ok: false, error: err };
   }
+}
+
+/**
+ * Create a new wizard spellbook for a character and persist it to Firestore.
+ */
+export async function addWizardSpellbook(
+  characterId: string,
+  spellbook: Omit<WizardSpellbook, "id" | "spells"> & {
+    id?: string;
+    spells?: string[];
+  },
+) {
+  const uid = getCurrentUserId();
+  if (!uid) throw new Error("Not logged in");
+
+  const chars = store.get(charactersAtom);
+  const existing = chars.find((c) => c.id === characterId);
+  if (!existing) throw new Error("Character not found");
+
+  const wizard = existing.classes.find(
+    (c) => c.className === CharacterClass.WIZARD,
+  ) as WizardClassProgression | undefined;
+  if (!wizard) throw new Error("Character has no wizard progression");
+
+  const newSpellbook: WizardSpellbook = {
+    id: spellbook.id ?? shortId(),
+    name: spellbook.name,
+    numberOfPages: spellbook.numberOfPages,
+    spells: spellbook.spells ?? [],
+  };
+
+  const updatedWizard: WizardClassProgression = {
+    ...wizard,
+    spellbooks: [...wizard.spellbooks, newSpellbook],
+  };
+
+  const updatedClasses = existing.classes.map((c) =>
+    c.className === CharacterClass.WIZARD ? updatedWizard : c,
+  );
+
+  const revision = existing.revision + 1;
+  const updatedAt = Date.now();
+
+  const result = await updateCharacterWithRevisionCheck(characterId, {
+    classes: updatedClasses as Character["classes"],
+    revision,
+    updatedAt,
+  });
+
+  if (result.ok === false) {
+    throw new Error("Failed to update character with new spellbook");
+  }
+
+  // Update local state to reflect the new spellbook immediately
+  const updatedChar: Character = {
+    ...existing,
+    classes: updatedClasses as Character["classes"],
+    revision,
+    updatedAt,
+  };
+
+  store.set(
+    charactersAtom,
+    chars.map((c) => (c.id === characterId ? updatedChar : c)),
+  );
+
+  return newSpellbook;
+}
+
+/**
+ * Add a spell to a specific wizard spellbook, persisting to Firestore and local state.
+ */
+export async function addSpellToWizardSpellbook(
+  characterId: string,
+  spellbookId: string,
+  spellId: string,
+) {
+  const uid = getCurrentUserId();
+  if (!uid) throw new Error("Not logged in");
+
+  const chars = store.get(charactersAtom);
+  const existing = chars.find((c) => c.id === characterId);
+  if (!existing) throw new Error("Character not found");
+
+  const wizard = existing.classes.find(
+    (c) => c.className === CharacterClass.WIZARD,
+  ) as WizardClassProgression | undefined;
+  if (!wizard) throw new Error("Character has no wizard progression");
+
+  const spellbook = wizard.spellbooks.find((sb) => sb.id === spellbookId);
+  if (!spellbook) throw new Error("Spellbook not found");
+
+  if (spellbook.spells.includes(spellId)) {
+    return spellbook; // already present; no-op
+  }
+
+  const updatedSpellbook: WizardSpellbook = {
+    ...spellbook,
+    spells: [...spellbook.spells, spellId],
+  };
+
+  const updatedWizard: WizardClassProgression = {
+    ...wizard,
+    spellbooks: wizard.spellbooks.map((sb) =>
+      sb.id === spellbookId ? updatedSpellbook : sb,
+    ),
+  };
+
+  const updatedClasses = existing.classes.map((c) =>
+    c.className === CharacterClass.WIZARD ? updatedWizard : c,
+  );
+
+  const revision = existing.revision + 1;
+  const updatedAt = Date.now();
+
+  const result = await updateCharacterWithRevisionCheck(characterId, {
+    classes: updatedClasses as Character["classes"],
+    revision,
+    updatedAt,
+  });
+
+  if (result.ok === false) {
+    throw new Error("Failed to add spell to spellbook");
+  }
+
+  const updatedChar: Character = {
+    ...existing,
+    classes: updatedClasses as Character["classes"],
+    revision,
+    updatedAt,
+  };
+
+  store.set(
+    charactersAtom,
+    chars.map((c) => (c.id === characterId ? updatedChar : c)),
+  );
+
+  return updatedSpellbook;
 }
 
 /**

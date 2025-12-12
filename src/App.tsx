@@ -11,6 +11,7 @@ import { CharacterPage } from "./pages/CharacterPage";
 import { CharacterEditPage } from "./pages/CharacterEditPage";
 import { WizardPage } from "./pages/WizardPage";
 import { WizardEditPage } from "./pages/WizardEditPage";
+import { WizardSpellbooksPage } from "./pages/WizardSpellbooksPage";
 import { Navbar } from "./components/custom/Navbar";
 import { Toaster } from "sonner";
 
@@ -45,6 +46,10 @@ function App() {
           <Route
             path="/characters/:characterId/wizard/edit"
             element={<WizardEditPage />}
+          />
+          <Route
+            path="/characters/:characterId/wizard/spellbooks"
+            element={<WizardSpellbooksPage />}
           />
           <Route path="/characters" element={<CharactersPage />} />
         </Routes>
