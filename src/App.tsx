@@ -8,6 +8,9 @@ import { refreshCharacters } from "./firebase/characters";
 import { Route, Routes } from "react-router-dom";
 import { CharactersPage } from "./pages/CharactersPage";
 import { CharacterPage } from "./pages/CharacterPage";
+import { CharacterEditPage } from "./pages/CharacterEditPage";
+import { WizardPage } from "./pages/WizardPage";
+import { WizardEditPage } from "./pages/WizardEditPage";
 import { Navbar } from "./components/custom/Navbar";
 import { Toaster } from "sonner";
 
@@ -31,6 +34,9 @@ function App() {
       {user && (
         <Routes>
           <Route path="/characters/:id" element={<CharacterPage />} />
+          <Route path="/characters/:characterId/edit" element={<CharacterEditPage />} />
+          <Route path="/characters/:characterId/wizard" element={<WizardPage />} />
+          <Route path="/characters/:characterId/wizard/edit" element={<WizardEditPage />} />
           <Route path="/characters" element={<CharactersPage />} />
         </Routes>
       )}
