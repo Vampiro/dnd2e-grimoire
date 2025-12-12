@@ -1,26 +1,13 @@
-import { charactersAtom } from "@/globalState";
-import { useAtomValue } from "jotai/react";
-import { useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "sonner";
+import { useCharacterById } from "@/hooks/useCharacterById";
+import { useParams } from "react-router-dom";
 
 export function WizardPage() {
   const { characterId } = useParams();
-  const navigate = useNavigate();
-  const characters = useAtomValue(charactersAtom);
+  const { character, isLoading } = useCharacterById(characterId);
 
-  // Find the character by id
-  const character = characters.find((c) => c.id === characterId);
-
-  // Redirect if not found
-  useEffect(() => {
-    if (!character) {
-      toast(`Character with ID ${characterId} not found.`, {
-        duration: 2000,
-      });
-      navigate("/characters", { replace: true });
-    }
-  }, [character, navigate, characterId]);
+  if (isLoading) {
+    return <div>Loading character...</div>;
+  }
 
   if (!character) {
     return <div>No Character with id {characterId}</div>;

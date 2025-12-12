@@ -88,10 +88,28 @@ async function getCharacters(): Promise<Character[]> {
   return snap.docs.map((d) => d.data());
 }
 
-/** Refreshes the global state list of characters. */
-export async function refreshCharacters(): Promise<void> {
-  const chars = await getCharacters();
-  store.set(charactersAtom, chars);
+/** Tracks in-flight refresh promise to deduplicate concurrent calls */
+let refreshPromise: Promise<void> | null = null;
+
+/**
+ * Refreshes the global state list of characters.
+ * If a refresh is already in progress, returns that promise instead of starting a new one.
+ */
+export function refreshCharacters(): Promise<void> {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  refreshPromise = (async () => {
+    try {
+      const chars = await getCharacters();
+      store.set(charactersAtom, chars);
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
 }
 
 /**
