@@ -9,8 +9,7 @@ import { Route, Routes } from "react-router-dom";
 import { CharactersPage } from "./pages/CharactersPage";
 import { CharacterPage } from "./pages/CharacterPage";
 import { Navbar } from "./components/custom/Navbar";
-import { wizardSpells } from "./data/wizardSpells";
-import { SpellViewer } from "./components/custom/SpellViewer";
+import { Toaster } from "sonner";
 
 function App() {
   const user = useAtomValue(userAtom);
@@ -26,20 +25,15 @@ function App() {
 
   return (
     <div>
+      <Toaster />
       <Navbar />
 
       {user && (
         <Routes>
+          <Route path="/characters/:id" element={<CharacterPage />} />
           <Route path="/characters" element={<CharactersPage />} />
-          <Route path="/character" element={<CharacterPage />} />
         </Routes>
       )}
-
-      <SpellViewer
-        spell={
-          wizardSpells.find((s) => s.name === "Fireball") ?? wizardSpells[0]
-        }
-      />
     </div>
   );
 }

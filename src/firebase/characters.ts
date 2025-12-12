@@ -14,6 +14,7 @@ import {
   deleteDoc,
   CollectionReference,
   DocumentReference,
+  getDoc,
 } from "firebase/firestore";
 import type { Character } from "../types/Character";
 import { getCurrentUserId } from "./auth";
@@ -54,7 +55,7 @@ export async function createCharacter(
   }
 
   const col = charactersCollection(uid);
-  const id = crypto.randomUUID();
+  const id = shortId();
 
   const char: Character = {
     ...data,
@@ -98,33 +99,75 @@ export async function refreshCharacters(): Promise<void> {
  * @param id ID of the character.
  * @param data Attributes to update.
  */
-export async function updateCharacter(id: string, data: Partial<Character>) {
+export async function updateCharacter(
+  id: string,
+  data: Partial<Character> & { revision: number },
+) {
+  updateCharacterWithRevisionCheck(id, data);
+  // const uid = getCurrentUserId();
+  // if (!uid) {
+  //   throw new Error("Not logged in");
+  // }
+
+  // const ref = doc(db, "users", uid, "characters", id);
+  // const updatedAt = Date.now();
+  // await updateDoc(ref, {
+  //   ...data,
+  //   updatedAt,
+  // });
+
+  // const chars = store.get(charactersAtom);
+  // const char = chars.find((c) => c.id === id);
+  // if (char) {
+  //   const newChars = chars.filter((c) => c.id !== id);
+  //   const updatedChar: Character = {
+  //     ...char,
+  //     ...data,
+  //     updatedAt,
+  //   };
+  //   newChars.push(updatedChar);
+  //   store.set(
+  //     charactersAtom,
+  //     chars.filter((c) => c.id !== id),
+  //   );
+  // }
+}
+
+async function updateCharacterWithRevisionCheck(
+  id: string,
+  update: Partial<Character> & { revision: number },
+) {
   const uid = getCurrentUserId();
-  if (!uid) {
-    throw new Error("Not logged in");
-  }
+  if (!uid) throw new Error("Not logged in");
 
-  const ref = doc(db, "users", uid, "characters", id);
-  const updatedAt = Date.now();
-  await updateDoc(ref, {
-    ...data,
-    updatedAt,
-  });
+  const ref = characterDoc(uid, id);
 
-  const chars = store.get(charactersAtom);
-  const char = chars.find((c) => c.id === id);
-  if (char) {
-    const newChars = chars.filter((c) => c.id !== id);
-    const updatedChar: Character = {
-      ...char,
-      ...data,
-      updatedAt,
-    };
-    newChars.push(updatedChar);
-    store.set(
-      charactersAtom,
-      chars.filter((c) => c.id !== id),
-    );
+  try {
+    await updateDoc(ref, update);
+    return { ok: true };
+  } catch (err: any) {
+    if (err.code === "permission-denied") {
+      // Fetch server state to see WHY it was denied
+      const snap = await getDoc(ref);
+
+      if (!snap.exists()) {
+        return { ok: false, deleted: true };
+      }
+
+      const serverRevision = snap.data().revision;
+
+      if (update.revision !== serverRevision + 1) {
+        return {
+          ok: false,
+          conflict: true,
+          serverRevision,
+          expectedRevision: serverRevision + 1,
+        };
+      }
+    }
+
+    // Unknown or network error
+    return { ok: false, error: err };
   }
 }
 
@@ -147,4 +190,10 @@ export async function deleteCharacter(id: string): Promise<void> {
     charactersAtom,
     chars.filter((c) => c.id !== id),
   );
+}
+
+function shortId(length = 6): string {
+  return Array.from({ length }, () =>
+    Math.floor(Math.random() * 36).toString(36),
+  ).join("");
 }
