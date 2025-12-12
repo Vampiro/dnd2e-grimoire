@@ -34,9 +34,18 @@ function App() {
       {user && (
         <Routes>
           <Route path="/characters/:id" element={<CharacterPage />} />
-          <Route path="/characters/:characterId/edit" element={<CharacterEditPage />} />
-          <Route path="/characters/:characterId/wizard" element={<WizardPage />} />
-          <Route path="/characters/:characterId/wizard/edit" element={<WizardEditPage />} />
+          <Route
+            path="/characters/:characterId/edit"
+            element={<CharacterEditPage />}
+          />
+          <Route
+            path="/characters/:characterId/wizard"
+            element={<WizardPage />}
+          />
+          <Route
+            path="/characters/:characterId/wizard/edit"
+            element={<WizardEditPage />}
+          />
           <Route path="/characters" element={<CharactersPage />} />
         </Routes>
       )}
