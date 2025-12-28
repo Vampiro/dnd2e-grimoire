@@ -1,5 +1,4 @@
-// Base wizard slots by level (1-20), spell levels 1-9
-
+/** Base wizard slots by level (1-20), spell levels 1-9. */
 export const wizardBaseSlots: number[][] = [
   [1, 0, 0, 0, 0, 0, 0, 0, 0], // 1
   [2, 0, 0, 0, 0, 0, 0, 0, 0], // 2

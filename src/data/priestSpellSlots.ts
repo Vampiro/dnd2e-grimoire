@@ -1,5 +1,4 @@
-// Base priest slots by level (1-20), spell levels 1-7
-
+/** Base priest slots by level (1-20), spell levels 1-7. */
 export const priestBaseSlots: number[][] = [
   [1, 0, 0, 0, 0, 0, 0], // 1
   [2, 0, 0, 0, 0, 0, 0], // 2
