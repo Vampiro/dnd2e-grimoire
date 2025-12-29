@@ -251,19 +251,25 @@ export function WizardPreparedSpells({
                     <Button
                       size="sm"
                       variant="outline"
-                      className="relative h-10 w-20 p-0 cursor-pointer disabled:cursor-not-allowed"
+                      className="relative h-10 w-14 p-0 cursor-pointer disabled:cursor-not-allowed"
                       disabled={isUpdating}
                       title="Adjust prepared/remaining copies"
                     >
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                         <div className="h-full border-l border-muted-foreground origin-center rotate-45" />
                       </div>
-                      <span className="absolute top-1 left-2 text-sm font-semibold">
-                        {remaining}
-                      </span>
-                      <span className="absolute bottom-1 right-2 text-sm font-semibold">
-                        {total}
-                      </span>
+                      <div className="pointer-events-none absolute inset-0 grid grid-cols-2 grid-rows-2 z-[1]">
+                        <div className="col-start-1 row-start-1 flex items-center justify-end">
+                          <span className="text-sm font-semibold leading-none pr-[2px]">
+                            {remaining}
+                          </span>
+                        </div>
+                        <div className="col-start-2 row-start-2 flex items-center justify-start">
+                          <span className="text-sm font-semibold leading-none pl-[2px]">
+                            {total}
+                          </span>
+                        </div>
+                      </div>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-80">
