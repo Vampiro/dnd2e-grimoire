@@ -44,6 +44,14 @@ export function WizardPreparedSpells({
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [flashSpellId, setFlashSpellId] = useState<string | null>(null);
+
+  const flashRow = (spellId: string) => {
+    setFlashSpellId(spellId);
+    window.setTimeout(() => {
+      setFlashSpellId((current) => (current === spellId ? null : current));
+    }, 700);
+  };
 
   const updateLevelSpells = async (
     mutate: (current: PreparedSpell[]) => PreparedSpell[],
@@ -119,7 +127,12 @@ export function WizardPreparedSpells({
   const deleteSpellGroup = (spellId: string) =>
     updateSpellGroup(spellId, () => []);
 
-  const handleAddSpell = (spellId: string) => adjustTotal(spellId, 1);
+  const handleAddSpell = (spellId: string) => {
+    flashRow(spellId);
+    return adjustTotal(spellId, 1);
+  };
+
+  const handleIncreaseCopies = (spellId: string) => adjustTotal(spellId, 1);
 
   return (
     <div className="space-y-2">
@@ -264,8 +277,15 @@ export function WizardPreparedSpells({
                     const remaining = group.filter((s) => !s.used).length;
                     const total = group.length;
 
+                    const isFlashing = flashSpellId === spellId;
+
                     return (
-                      <tr key={spellId} className="border-b last:border-0">
+                      <tr
+                        key={spellId}
+                        className={`border-b last:border-0 ${
+                          isFlashing ? "flash-added-row" : ""
+                        }`}
+                      >
                         <td className="py-2 pr-3 align-middle whitespace-nowrap">
                           <div className="flex items-center">
                             <Button
@@ -342,7 +362,7 @@ export function WizardPreparedSpells({
                               variant="outline"
                               className="h-7 w-7 rounded-l-none cursor-pointer disabled:cursor-not-allowed"
                               disabled={isUpdating}
-                              onClick={() => adjustTotal(spellId, 1)}
+                              onClick={() => handleIncreaseCopies(spellId)}
                               title="Increase prepared copies"
                             >
                               <Plus className="h-4 w-4" />
