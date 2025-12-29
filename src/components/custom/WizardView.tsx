@@ -18,6 +18,7 @@ import {
 import { PageRoute } from "@/pages/PageRoute";
 import { Character } from "@/types/Character";
 import { WizardClassProgression } from "@/types/ClassProgression";
+import { getWizardProgressionSpellSlots } from "@/lib/spellSlots";
 import { SpellViewer } from "./SpellViewer";
 import { WizardPreparedSpells } from "./WizardPreparedSpells";
 import type { Spell } from "@/types/Spell";
@@ -31,6 +32,10 @@ export function WizardView({ character, wizardProgression }: WizardViewProps) {
   const navigate = useNavigate();
   const [selectedSpellForViewer, setSelectedSpellForViewer] =
     useState<Spell | null>(null);
+  const slotMap = getWizardProgressionSpellSlots(wizardProgression);
+  const availableLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9].filter(
+    (lvl) => (slotMap[lvl] ?? 0) > 0,
+  );
 
   return (
     <>
@@ -57,7 +62,7 @@ export function WizardView({ character, wizardProgression }: WizardViewProps) {
 
         <CardContent className="space-y-6">
           <div className="space-y-4">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((spellLevel) => {
+            {availableLevels.map((spellLevel) => {
               return (
                 <WizardPreparedSpells
                   key={spellLevel}
