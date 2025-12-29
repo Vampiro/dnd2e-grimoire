@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Popover,
   PopoverContent,
@@ -14,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Link } from "react-router-dom";
-import { Plus, Info, Trash2 } from "lucide-react";
+import { Plus, Info, Trash2, Minus } from "lucide-react";
 import { findSpellById } from "@/lib/spellLookup";
 import {
   WizardClassProgression,
@@ -46,6 +45,7 @@ export function WizardPreparedSpells({
   const slotMap = getWizardProgressionSpellSlots(progression);
   const maxSlots = slotMap[spellLevel] || 0;
   const castable = spells.filter((s) => !s.used).length;
+  const totalPrepared = spells.length;
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,25 +72,85 @@ export function WizardPreparedSpells({
     }
   };
 
-  const handleToggleSpellUsed = (spellId: string, used: boolean) =>
-    updateLevelSpells((current) =>
-      current.map((s) => (s.spellId === spellId ? { ...s, used } : s)),
-    );
+  const updateSpellGroup = (
+    spellId: string,
+    mutate: (group: PreparedSpell[]) => PreparedSpell[],
+  ) =>
+    updateLevelSpells((current) => {
+      const others = current.filter((s) => s.spellId !== spellId);
+      const group = current.filter((s) => s.spellId === spellId);
+      const nextGroup = mutate(group);
+      return [...others, ...nextGroup];
+    });
 
-  const handleRemoveSpell = (spellId: string) =>
-    updateLevelSpells((current) =>
-      current.filter((s) => s.spellId !== spellId),
-    );
+  const adjustRemaining = (spellId: string, delta: number, total: number) =>
+    updateSpellGroup(spellId, (group) => {
+      const currentRemaining = group.filter((s) => !s.used).length;
+      const nextRemaining = Math.min(
+        Math.max(currentRemaining + delta, 0),
+        total,
+      );
+      const used = Math.max(total - nextRemaining, 0);
+      return [
+        ...Array.from({ length: nextRemaining }, () => ({
+          spellId,
+          used: false,
+        })),
+        ...Array.from({ length: used }, () => ({ spellId, used: true })),
+      ];
+    });
 
-  const handleAddSpell = (spellId: string) =>
-    updateLevelSpells((current) => [...current, { spellId, used: false }]);
+  const adjustTotal = (spellId: string, delta: number) =>
+    updateSpellGroup(spellId, (group) => {
+      const total = Math.max(0, group.length + delta);
+      if (total === 0) return [];
+
+      const unused = group.filter((s) => !s.used);
+      const used = group.filter((s) => s.used);
+
+      if (delta < 0) {
+        const removeCount = Math.min(group.length, Math.abs(delta));
+        const ordered = [...unused, ...used];
+        return ordered.slice(0, group.length - removeCount);
+      }
+
+      // delta > 0, add fresh unused slots
+      return [
+        ...group,
+        ...Array.from({ length: delta }, () => ({ spellId, used: false })),
+      ];
+    });
+
+  const deleteSpellGroup = (spellId: string) =>
+    updateSpellGroup(spellId, () => []);
+
+  const handleAddSpell = (spellId: string) => adjustTotal(spellId, 1);
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold">
-          Level {spellLevel} ({castable}/{maxSlots})
-        </h3>
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="font-semibold">Level {spellLevel}</h3>
+          <span className="text-sm text-muted-foreground">
+            ({castable} remaining)
+          </span>
+          <span
+            className={`text-sm font-medium ${
+              totalPrepared > maxSlots
+                ? "text-destructive"
+                : totalPrepared < maxSlots
+                  ? "text-amber-500"
+                  : "text-foreground"
+            }`}
+          >
+            ({totalPrepared}/{maxSlots})
+          </span>
+          {totalPrepared > maxSlots && (
+            <span className="text-xs text-destructive">
+              Too many memorized spells.
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <Button asChild size="sm" variant="ghost">
             <Link to={PageRoute.WIZARD_SPELLBOOKS(characterId)}>
@@ -176,48 +236,139 @@ export function WizardPreparedSpells({
 
       {/* Spells for this level */}
       <div className="space-y-2 pl-4">
-        {spells.map((preparedSpell, idx) => {
-          const spell = findSpellById(preparedSpell.spellId);
-          const spellName = spell?.name || preparedSpell.spellId;
+        {Object.entries(
+          spells.reduce<Record<string, PreparedSpell[]>>((acc, s) => {
+            acc[s.spellId] = acc[s.spellId] ? [...acc[s.spellId], s] : [s];
+            return acc;
+          }, {}),
+        )
+          .sort((a, b) =>
+            (findSpellById(a[0])?.name || a[0]).localeCompare(
+              findSpellById(b[0])?.name || b[0],
+            ),
+          )
+          .map(([spellId, group]) => {
+            const spell = findSpellById(spellId);
+            const spellName = spell?.name || spellId;
+            const remaining = group.filter((s) => !s.used).length;
+            const total = group.length;
 
-          return (
-            <div key={idx} className="flex items-center gap-2">
-              <Checkbox
-                checked={preparedSpell.used}
-                onCheckedChange={(checked) => {
-                  handleToggleSpellUsed(
-                    preparedSpell.spellId,
-                    checked === true,
-                  );
-                }}
-                title="Mark as cast"
-                disabled={isUpdating}
-              />
-              <div className="flex-1 text-sm">{spellName}</div>
-              {spell && (
+            return (
+              <div key={spellId} className="flex items-center gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="relative h-10 w-20 p-0"
+                      disabled={isUpdating}
+                      title="Adjust prepared/remaining copies"
+                    >
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="h-full border-l border-muted-foreground origin-center rotate-45" />
+                      </div>
+                      <span className="absolute top-1 left-2 text-sm font-semibold">
+                        {remaining}
+                      </span>
+                      <span className="absolute bottom-1 right-2 text-sm font-semibold">
+                        {total}
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div className="space-y-3">
+                      <div className="relative h-28 rounded-md border p-4">
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="h-full border-l border-muted-foreground origin-center rotate-45" />
+                        </div>
+
+                        <div className="absolute top-3 left-3 flex items-center gap-2">
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            disabled={isUpdating || remaining <= 0}
+                            onClick={() => adjustRemaining(spellId, -1, total)}
+                            title="Mark one as cast"
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            disabled={isUpdating || remaining >= total}
+                            onClick={() => adjustRemaining(spellId, 1, total)}
+                            title="Restore one use"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                          {total <= 1 ? (
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              disabled={isUpdating || total === 0}
+                              onClick={() => deleteSpellGroup(spellId)}
+                              title="Remove this spell from prepared"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              disabled={isUpdating || total === 0}
+                              onClick={() => adjustTotal(spellId, -1)}
+                              title="Decrease prepared copies"
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            disabled={isUpdating}
+                            onClick={() => adjustTotal(spellId, 1)}
+                            title="Increase prepared copies"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        <div className="absolute top-2 right-3 text-xs text-muted-foreground">
+                          Remaining / Prepared
+                        </div>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                <div className="flex-1 text-sm">{spellName}</div>
+                {spell && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 w-6 p-0"
+                    onClick={() => onViewSpell && onViewSpell(spell)}
+                    title="View spell details"
+                  >
+                    <Info className="h-4 w-4" />
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="ghost"
                   className="h-6 w-6 p-0"
-                  onClick={() => onViewSpell && onViewSpell(spell)}
-                  title="View spell details"
+                  onClick={() => deleteSpellGroup(spellId)}
+                  title="Remove spell from prepared list"
+                  disabled={isUpdating}
                 >
-                  <Info className="h-4 w-4" />
+                  <Trash2 className="h-3 w-3" />
                 </Button>
-              )}
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-6 w-6 p-0"
-                onClick={() => handleRemoveSpell(preparedSpell.spellId)}
-                title="Remove spell"
-                disabled={isUpdating}
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
-          );
-        })}
+              </div>
+            );
+          })}
 
         {error && <p className="text-xs text-destructive">{error}</p>}
       </div>
