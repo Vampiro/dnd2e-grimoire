@@ -128,7 +128,7 @@ export function WizardPreparedSpells({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="font-semibold">Level {spellLevel}</h3>
           <span className="text-sm text-muted-foreground">
@@ -160,8 +160,9 @@ export function WizardPreparedSpells({
             }}
           >
             <SelectTrigger
-              className="h-9 w-9 justify-center p-0 [&_svg:last-child]:hidden"
+              className="w-7 justify-center p-0 [&_svg:last-child]:hidden"
               aria-label="Add prepared spell"
+              size="sm"
             >
               <Plus className="h-4 w-4" />
             </SelectTrigger>
