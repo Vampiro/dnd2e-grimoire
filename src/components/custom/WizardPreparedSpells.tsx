@@ -160,11 +160,11 @@ export function WizardPreparedSpells({
             }}
           >
             <SelectTrigger
-              className="w-7 justify-center p-0 cursor-pointer disabled:cursor-not-allowed [&_svg:last-child]:hidden"
+              className="h-7 w-7 justify-center p-0 cursor-pointer disabled:cursor-not-allowed data-[size=sm]:h-7 data-[size=sm]:min-h-7 [&_svg:last-child]:hidden"
               aria-label="Add prepared spell"
               size="sm"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-3 w-3" />
             </SelectTrigger>
             <SelectContent className="max-h-72">
               {(() => {
