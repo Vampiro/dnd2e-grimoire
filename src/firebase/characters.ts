@@ -15,6 +15,8 @@ import {
   CollectionReference,
   DocumentReference,
   getDoc,
+  onSnapshot,
+  type Unsubscribe,
 } from "firebase/firestore";
 import type { Character } from "../types/Character";
 import {
@@ -26,6 +28,49 @@ import {
 } from "../types/ClassProgression";
 import { getCurrentUserId } from "./auth";
 import { charactersAtom, store } from "../globalState";
+
+let charactersRealtimeUnsub: Unsubscribe | null = null;
+
+/**
+ * Starts a Firestore real-time subscription for the current user's characters.
+ * Keeps `charactersAtom` in sync across devices (and replays cached data offline).
+ */
+export function startCharactersRealtimeSync(): Unsubscribe {
+  if (charactersRealtimeUnsub) {
+    return charactersRealtimeUnsub;
+  }
+
+  const uid = getCurrentUserId();
+  if (!uid) {
+    throw new Error("Not logged in");
+  }
+
+  const col = charactersCollection(uid);
+  const q = query(col, orderBy("createdAt", "asc"));
+
+  charactersRealtimeUnsub = onSnapshot(
+    q,
+    (snap) => {
+      store.set(
+        charactersAtom,
+        snap.docs.map((d) => d.data()),
+      );
+    },
+    (err) => {
+      console.error("Characters realtime sync error:", err);
+    },
+  );
+
+  return charactersRealtimeUnsub;
+}
+
+/** Stops the active characters real-time subscription (if any). */
+export function stopCharactersRealtimeSync() {
+  if (charactersRealtimeUnsub) {
+    charactersRealtimeUnsub();
+    charactersRealtimeUnsub = null;
+  }
+}
 
 /** Serializes writes per-character to avoid revision races during rapid UI updates. */
 const characterWriteQueue = new Map<string, Promise<unknown>>();

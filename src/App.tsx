@@ -4,7 +4,11 @@ import { store, userAtom } from "./globalState";
 import { useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
-import { refreshCharacters } from "./firebase/characters";
+import {
+  refreshCharacters,
+  startCharactersRealtimeSync,
+  stopCharactersRealtimeSync,
+} from "./firebase/characters";
 import { Route, Routes } from "react-router-dom";
 import { CharactersPage } from "./pages/CharactersPage";
 import { CharacterPage } from "./pages/CharacterPage";
@@ -14,17 +18,34 @@ import { WizardEditPage } from "./pages/WizardEditPage";
 import { WizardSpellbooksPage } from "./pages/WizardSpellbooksPage";
 import { Navbar } from "./components/custom/Navbar";
 import { Toaster } from "sonner";
+import { charactersAtom } from "./globalState";
 
 function App() {
   const user = useAtomValue(userAtom);
 
   useEffect(() => {
-    onAuthStateChanged(auth, (u) => {
+    const unsub = onAuthStateChanged(auth, (u) => {
       // update user atom with new user (or no user)
       store.set(userAtom, u);
-      // refresh characters
-      refreshCharacters();
+
+      if (!u) {
+        stopCharactersRealtimeSync();
+        store.set(charactersAtom, []);
+        return;
+      }
+
+      try {
+        startCharactersRealtimeSync();
+      } catch {
+        // Fall back to one-shot refresh if the realtime listener can't start.
+        refreshCharacters();
+      }
     });
+
+    return () => {
+      unsub();
+      stopCharactersRealtimeSync();
+    };
   }, []);
 
   return (
