@@ -1,6 +1,6 @@
 import { priestBaseSlots } from "@/data/priestSpellSlots";
 import { wizardBaseSlots } from "@/data/wizardSpellSlots";
-import { SpellSlotModifier } from "@/types/ClassProgressionBase";
+import { SpellSlotModifier } from "@/types/ClassProgression";
 import { PriestClassProgression } from "@/types/PriestClassProgression";
 import { WizardClassProgression } from "@/types/WizardClassProgression";
 

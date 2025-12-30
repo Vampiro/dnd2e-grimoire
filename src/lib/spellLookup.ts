@@ -2,7 +2,7 @@ import { Spell } from "@/types/Spell";
 import { wizardSpells } from "@/data/wizardSpells";
 import { priestSpells } from "@/data/priestSpells";
 import { parseSpellId } from "./spellId";
-import { CharacterClass } from "@/types/ClassProgressionBase";
+import { CharacterClass } from "@/types/ClassProgression";
 
 /** All available spells indexed by class */
 const allSpells: Record<string, Spell[]> = {

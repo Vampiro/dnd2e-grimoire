@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import { Plus, Trash2, Minus } from "lucide-react";
 import { findSpellById } from "@/lib/spellLookup";
-import { PreparedSpellCounts } from "@/types/ClassProgressionBase";
+import { PreparedSpellCounts } from "@/types/ClassProgression";
 import { WizardClassProgression } from "@/types/WizardClassProgression";
 import { getWizardProgressionSpellSlots } from "@/lib/spellSlots";
 import { updateWizardPreparedSpellsLevel } from "@/firebase/characters";

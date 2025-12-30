@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/command";
 import { useCharacterById } from "@/hooks/useCharacterById";
 import { PageRoute } from "@/pages/PageRoute";
-import { CharacterClass } from "@/types/ClassProgressionBase";
+import { CharacterClass } from "@/types/ClassProgression";
 import {
   WizardClassProgression,
   WizardSpellbook,

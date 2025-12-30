@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { SpellSlotModifier } from "@/types/ClassProgressionBase";
+import { SpellSlotModifier } from "@/types/ClassProgression";
 import { WizardClassProgression } from "@/types/WizardClassProgression";
 import { getWizardSpellSlots } from "@/lib/spellSlots";
 import { updateWizardProgression } from "@/firebase/characters";
