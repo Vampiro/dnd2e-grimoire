@@ -121,7 +121,7 @@ function App() {
       <Navbar />
 
       {user && (
-        <main className="mx-auto w-full max-w-6xl px-4">
+        <main className="mx-auto w-full max-w-6xl">
           {spellStatus.loading && !spellStatus.error && (
             <div className="py-6 text-sm text-muted-foreground">
               Loading spell data...
