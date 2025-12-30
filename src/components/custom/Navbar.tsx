@@ -46,6 +46,13 @@ export function Navbar() {
                   >
                     Characters
                   </Link>
+                  <Link
+                    to={PageRoute.SETTINGS}
+                    className="px-2 py-2 rounded hover:bg-accent cursor-pointer"
+                    onClick={closeMenu}
+                  >
+                    Settings
+                  </Link>
                   <button
                     className="text-left px-2 py-2 rounded hover:bg-accent cursor-pointer"
                     onClick={() => {

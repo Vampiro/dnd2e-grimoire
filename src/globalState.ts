@@ -51,3 +51,16 @@ export const spellDataStatusAtom = atom<SpellDataStatus>({
 export const wizardSpellsAtom = atom<Spell[]>([]);
 /** Priest spell list loaded at runtime (see `loadSpellData`). */
 export const priestSpellsAtom = atom<Spell[]>([]);
+
+/**
+ * Global UI scale multiplier.
+ *
+ * @remarks
+ * Applied by setting the root (`html`) font-size so Tailwind/shadcn (rem-based)
+ * components scale consistently.
+ *
+ * - `1` = default sizing
+ * - Values > 1 make UI larger
+ * - Values < 1 make UI smaller
+ */
+export const uiScaleAtom = atom<number>(1);

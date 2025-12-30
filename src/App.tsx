@@ -3,6 +3,7 @@ import "./App.css";
 import {
   spellDataStatusAtom,
   store,
+  uiScaleAtom,
   userAtom,
 } from "./globalState";
 import { useEffect } from "react";
@@ -24,11 +25,19 @@ import { Navbar } from "./components/custom/Navbar";
 import { Toaster } from "sonner";
 import { charactersAtom } from "./globalState";
 import { loadSpellData } from "./lib/spellLookup";
+import { SettingsPage } from "./pages/SettingsPage";
+import { subscribeToUserSettings } from "./firebase/userSettings";
 
 /** Root application component. */
 function App() {
   const user = useAtomValue(userAtom);
   const spellStatus = useAtomValue(spellDataStatusAtom);
+  const uiScale = useAtomValue(uiScaleAtom);
+
+  useEffect(() => {
+    const clamped = Math.min(1.5, Math.max(0.75, uiScale));
+    document.documentElement.style.fontSize = `${clamped * 100}%`;
+  }, [uiScale]);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,15 +73,32 @@ function App() {
   }, []);
 
   useEffect(() => {
+    let unsubUserSettings: (() => void) | null = null;
+
     const unsub = onAuthStateChanged(auth, (u) => {
       // update user atom with new user (or no user)
       store.set(userAtom, u);
 
+      if (unsubUserSettings) {
+        unsubUserSettings();
+        unsubUserSettings = null;
+      }
+
       if (!u) {
         stopCharactersRealtimeSync();
         store.set(charactersAtom, []);
+        store.set(uiScaleAtom, 1);
         return;
       }
+
+      unsubUserSettings = subscribeToUserSettings(u.uid, (settings) => {
+        const next = settings.uiScale;
+        if (typeof next === "number" && Number.isFinite(next)) {
+          store.set(uiScaleAtom, next);
+        } else {
+          store.set(uiScaleAtom, 1);
+        }
+      });
 
       try {
         startCharactersRealtimeSync();
@@ -84,6 +110,7 @@ function App() {
 
     return () => {
       unsub();
+      if (unsubUserSettings) unsubUserSettings();
       stopCharactersRealtimeSync();
     };
   }, []);
@@ -123,6 +150,7 @@ function App() {
               path="/characters/:characterId/wizard/spellbooks"
               element={<WizardSpellbooksPage />}
             />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/characters" element={<CharactersPage />} />
           </Routes>
         </main>
