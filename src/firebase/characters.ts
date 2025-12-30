@@ -15,6 +15,7 @@ import {
   CollectionReference,
   DocumentReference,
   onSnapshot,
+  FieldPath,
   type Unsubscribe,
 } from "firebase/firestore";
 import type { Character } from "../types/Character";
@@ -186,10 +187,7 @@ export async function updateCharacter(id: string, data: Partial<Character>) {
  */
 export async function addWizardSpellbook(
   characterId: string,
-  spellbook: Omit<WizardSpellbook, "id" | "spells"> & {
-    id?: string;
-    spells?: string[];
-  },
+  spellbook: Omit<WizardSpellbook, "id" | "spellsById"> & { id?: string },
 ) {
   const uid = getCurrentUserId();
   if (!uid) throw new Error("Not logged in");
@@ -205,20 +203,17 @@ export async function addWizardSpellbook(
     id: spellbook.id ?? shortId(),
     name: spellbook.name,
     numberOfPages: spellbook.numberOfPages,
-    spells: spellbook.spells ?? [],
+    spellsById: {},
   };
 
-  const updatedWizard: WizardClassProgression = {
-    ...wizard,
-    spellbooks: [...wizard.spellbooks, newSpellbook],
-  };
-
-  await updateCharacterDoc(characterId, {
-    class: {
-      ...existing.class,
-      wizard: updatedWizard,
-    },
-  });
+  const ref = characterDoc(uid, characterId);
+  await updateDoc(
+    ref,
+    new FieldPath("class", "wizard", "spellbooksById", newSpellbook.id),
+    newSpellbook,
+    "updatedAt",
+    Date.now(),
+  );
 
   return newSpellbook;
 }
@@ -241,33 +236,26 @@ export async function addSpellToWizardSpellbook(
   const wizard = existing.class.wizard as WizardClassProgression | undefined;
   if (!wizard) throw new Error("Character has no wizard progression");
 
-  const spellbook = wizard.spellbooks.find((sb) => sb.id === spellbookId);
+  const spellbook = wizard.spellbooksById[spellbookId];
   if (!spellbook) throw new Error("Spellbook not found");
 
-  if (spellbook.spells.includes(spellId)) {
-    return spellbook; // already present; no-op
-  }
-
-  const updatedSpellbook: WizardSpellbook = {
-    ...spellbook,
-    spells: [...spellbook.spells, spellId],
-  };
-
-  const updatedWizard: WizardClassProgression = {
-    ...wizard,
-    spellbooks: wizard.spellbooks.map((sb) =>
-      sb.id === spellbookId ? updatedSpellbook : sb,
+  const ref = characterDoc(uid, characterId);
+  await updateDoc(
+    ref,
+    new FieldPath(
+      "class",
+      "wizard",
+      "spellbooksById",
+      spellbookId,
+      "spellsById",
+      spellId,
     ),
-  };
+    true,
+    "updatedAt",
+    Date.now(),
+  );
 
-  await updateCharacterDoc(characterId, {
-    class: {
-      ...existing.class,
-      wizard: updatedWizard,
-    },
-  });
-
-  return updatedSpellbook;
+  return spellbook;
 }
 
 /** Update wizard level and/or spell slot modifiers. */

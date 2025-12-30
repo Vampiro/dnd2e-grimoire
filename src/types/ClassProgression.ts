@@ -40,8 +40,11 @@ export interface WizardSpellbook {
   id: string;
   name: string;
   numberOfPages: number;
-  /** Array of spell IDs in format "ClassName - Spell Name" */
-  spells: string[];
+  /**
+   * Map of spell IDs in format "SpellId - true".
+   * Stored as a set-like map to reduce cross-device conflicts.
+   */
+  spellsById: Record<string, true>;
 }
 
 /** For caster classes with a certain number of prepared spell slots per level. */
@@ -58,8 +61,8 @@ export interface PreparedCasterProgression extends ClassProgression {
 export interface WizardClassProgression extends PreparedCasterProgression {
   /** The wizard class. */
   className: CharacterClass.WIZARD;
-  /** Spellbooks that contain learned spells. */
-  spellbooks: WizardSpellbook[];
+  /** Spellbook for wizard spells. */
+  spellbooksById: Record<string, WizardSpellbook>;
 }
 
 export interface PriestClassProgression extends PreparedCasterProgression {

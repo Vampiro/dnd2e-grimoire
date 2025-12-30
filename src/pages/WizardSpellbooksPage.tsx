@@ -84,7 +84,7 @@ export function WizardSpellbooksPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {wizardProgression.spellbooks.map((spellbook) => (
+        {Object.values(wizardProgression.spellbooksById).map((spellbook) => (
           <SpellbookCard
             key={spellbook.id}
             characterId={character.id}
@@ -93,7 +93,7 @@ export function WizardSpellbooksPage() {
           />
         ))}
 
-        {wizardProgression.spellbooks.length === 0 && (
+        {Object.keys(wizardProgression.spellbooksById).length === 0 && (
           <Card>
             <CardHeader>
               <CardTitle>No spellbooks</CardTitle>
@@ -142,7 +142,7 @@ function SpellbookCard({
 }) {
   const spellsByLevel = useMemo(() => {
     const grouped: Record<number, Spell[]> = {};
-    spellbook.spells.forEach((id) => {
+    Object.keys(spellbook.spellsById).forEach((id) => {
       const spell = findSpellById(id);
       if (spell) {
         grouped[spell.level] = grouped[spell.level] || [];
@@ -150,7 +150,7 @@ function SpellbookCard({
       }
     });
     return grouped;
-  }, [spellbook.spells]);
+  }, [spellbook.spellsById]);
 
   const [selectedLevel, setSelectedLevel] = useState<number | undefined>(1);
   const [spellPopoverOpen, setSpellPopoverOpen] = useState(false);
@@ -313,7 +313,6 @@ function AddSpellbookForm({ characterId }: { characterId: string }) {
       await addWizardSpellbook(characterId, {
         name: trimmedName,
         numberOfPages,
-        spells: [],
       });
 
       setName("");

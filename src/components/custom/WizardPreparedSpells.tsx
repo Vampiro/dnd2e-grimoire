@@ -200,8 +200,8 @@ export function WizardPreparedSpells({
             <SelectContent className="max-h-72">
               {(() => {
                 const availableMap = new Map<string, Spell>();
-                progression.spellbooks.forEach((book) => {
-                  book.spells.forEach((spellId) => {
+                Object.values(progression.spellbooksById).forEach((book) => {
+                  Object.keys(book.spellsById).forEach((spellId) => {
                     const spell = findSpellById(spellId);
                     if (!spell || spell.level !== spellLevel) return;
                     if (preparedIds.has(spellId)) return;
