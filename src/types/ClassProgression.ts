@@ -15,6 +15,14 @@ export interface PreparedSpell {
   used: boolean;
 }
 
+/** Merge-friendly prepared spell state (avoids per-slot arrays). */
+export interface PreparedSpellCounts {
+  /** Total prepared copies of this spell after resting. */
+  total: number;
+  /** How many of the prepared copies have been used (cast). */
+  used: number;
+}
+
 /** Additional slots applied on top of base spell tables. */
 export interface SpellSlotModifier {
   /** Target spell level; use "all" to apply to every spell level. */
@@ -38,8 +46,11 @@ export interface WizardSpellbook {
 
 /** For caster classes with a certain number of prepared spell slots per level. */
 export interface PreparedCasterProgression extends ClassProgression {
-  /** The prepared spells for each level. `<level, prepared spell list for that level>` */
-  preparedSpells: Record<number, PreparedSpell[]>;
+  /**
+   * Prepared spells by spell level, keyed by spell id.
+   * Stored as counters (`total`/`used`) to reduce cross-device conflicts.
+   */
+  preparedSpells: Record<number, Record<string, PreparedSpellCounts>>;
   /** Optional modifiers applied to base spell slot tables. */
   spellSlotModifiers?: SpellSlotModifier[];
 }

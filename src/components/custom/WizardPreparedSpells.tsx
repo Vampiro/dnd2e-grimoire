@@ -11,7 +11,7 @@ import { Plus, Trash2, Minus } from "lucide-react";
 import { findSpellById } from "@/lib/spellLookup";
 import {
   WizardClassProgression,
-  PreparedSpell,
+  PreparedSpellCounts,
 } from "@/types/ClassProgression";
 import { getWizardProgressionSpellSlots } from "@/lib/spellSlots";
 import { updateWizardPreparedSpellsLevel } from "@/firebase/characters";
@@ -35,20 +35,27 @@ export function WizardPreparedSpells({
   characterId,
   onViewSpell,
 }: WizardPreparedSpellsProps) {
-  const [localSpells, setLocalSpells] = useState<PreparedSpell[]>(
-    progression.preparedSpells[spellLevel] || [],
-  );
+  const [localSpells, setLocalSpells] = useState<
+    Record<string, PreparedSpellCounts>
+  >(progression.preparedSpells[spellLevel] || {});
 
   useEffect(() => {
-    setLocalSpells(progression.preparedSpells[spellLevel] || []);
+    setLocalSpells(progression.preparedSpells[spellLevel] || {});
   }, [progression.preparedSpells, spellLevel]);
 
   const spells = localSpells;
+  const spellRowCount = Object.keys(spells).length;
   const slotMap = getWizardProgressionSpellSlots(progression);
   const maxSlots = slotMap[spellLevel] || 0;
-  const castable = spells.filter((s) => !s.used).length;
-  const totalPrepared = spells.length;
-  const preparedIds = new Set(spells.map((s) => s.spellId));
+  const castable = Object.values(spells).reduce(
+    (sum, s) => sum + Math.max(0, (s.total ?? 0) - (s.used ?? 0)),
+    0,
+  );
+  const totalPrepared = Object.values(spells).reduce(
+    (sum, s) => sum + Math.max(0, s.total ?? 0),
+    0,
+  );
+  const preparedIds = new Set(Object.keys(spells));
 
   const [error, setError] = useState<string | null>(null);
   const [flashSpellId, setFlashSpellId] = useState<string | null>(null);
@@ -61,7 +68,9 @@ export function WizardPreparedSpells({
   };
 
   const updateLevelSpells = (
-    mutate: (current: PreparedSpell[]) => PreparedSpell[],
+    mutate: (
+      current: Record<string, PreparedSpellCounts>,
+    ) => Record<string, PreparedSpellCounts>,
   ) => {
     setError(null);
 
@@ -86,62 +95,66 @@ export function WizardPreparedSpells({
     });
   };
 
-  const updateSpellGroup = (
-    spellId: string,
-    mutate: (group: PreparedSpell[]) => PreparedSpell[],
-  ) =>
+  const adjustRemaining = (spellId: string, deltaRemaining: number) =>
     updateLevelSpells((current) => {
-      const others = current.filter((s) => s.spellId !== spellId);
-      const group = current.filter((s) => s.spellId === spellId);
-      const nextGroup = mutate(group);
-      return [...others, ...nextGroup];
-    });
+      const prev = current[spellId];
+      if (!prev) return current;
 
-  const adjustRemaining = (spellId: string, delta: number, total: number) =>
-    updateSpellGroup(spellId, (group) => {
-      const currentRemaining = group.filter((s) => !s.used).length;
-      const nextRemaining = Math.min(
-        Math.max(currentRemaining + delta, 0),
-        total,
+      const nextTotal = Math.max(0, prev.total ?? 0);
+      const nextUsed = Math.min(
+        Math.max((prev.used ?? 0) - deltaRemaining, 0),
+        nextTotal,
       );
-      const used = Math.max(total - nextRemaining, 0);
-      return [
-        ...Array.from({ length: nextRemaining }, () => ({
-          spellId,
-          used: false,
-        })),
-        ...Array.from({ length: used }, () => ({ spellId, used: true })),
-      ];
+
+      return {
+        ...current,
+        [spellId]: { total: nextTotal, used: nextUsed },
+      };
     });
 
   const adjustTotal = (spellId: string, delta: number) =>
-    updateSpellGroup(spellId, (group) => {
-      const total = Math.max(0, group.length + delta);
-      if (total === 0) return [];
+    updateLevelSpells((current) => {
+      const prev = current[spellId] ?? { total: 0, used: 0 };
+      const nextTotal = Math.max(0, (prev.total ?? 0) + delta);
 
-      const unused = group.filter((s) => !s.used);
-      const used = group.filter((s) => s.used);
-
-      if (delta < 0) {
-        const removeCount = Math.min(group.length, Math.abs(delta));
-        const ordered = [...unused, ...used];
-        return ordered.slice(0, group.length - removeCount);
+      if (nextTotal === 0) {
+        const { [spellId]: _removed, ...rest } = current;
+        return rest;
       }
 
-      // delta > 0, add fresh unused slots
-      return [
-        ...group,
-        ...Array.from({ length: delta }, () => ({ spellId, used: false })),
-      ];
+      const nextUsed = Math.min(Math.max(prev.used ?? 0, 0), nextTotal);
+      return {
+        ...current,
+        [spellId]: { total: nextTotal, used: nextUsed },
+      };
     });
 
   const deleteSpellGroup = (spellId: string) =>
-    updateSpellGroup(spellId, () => []);
+    updateLevelSpells((current) => {
+      if (!current[spellId]) return current;
+      const { [spellId]: _removed, ...rest } = current;
+      return rest;
+    });
 
-  const handleAddSpell = (spellId: string) => {
-    flashRow(spellId);
-    return adjustTotal(spellId, 1);
-  };
+  const handleAddSpell = (spellId: string) =>
+    updateLevelSpells((current) => {
+      const prev = current[spellId];
+      if (!prev) {
+        flashRow(spellId);
+        return {
+          ...current,
+          [spellId]: { total: 1, used: 0 },
+        };
+      }
+
+      // If already present, treat it as increasing copies (no flash).
+      const nextTotal = Math.max(0, (prev.total ?? 0) + 1);
+      const nextUsed = Math.min(Math.max(prev.used ?? 0, 0), nextTotal);
+      return {
+        ...current,
+        [spellId]: { total: nextTotal, used: nextUsed },
+      };
+    });
 
   const handleIncreaseCopies = (spellId: string) => adjustTotal(spellId, 1);
 
@@ -234,7 +247,7 @@ export function WizardPreparedSpells({
 
       {/* Spells for this level */}
       <div className="space-y-2 pl-4">
-        {spells.length === 0 && (
+        {spellRowCount === 0 && (
           <div className="rounded-md border border-dashed bg-muted/40 p-3 text-sm">
             <p className="font-semibold text-foreground">
               No level {spellLevel} prepared spells yet.
@@ -245,7 +258,7 @@ export function WizardPreparedSpells({
           </div>
         )}
 
-        {spells.length > 0 && (
+        {spellRowCount > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full table-auto text-left text-sm">
               <thead>
@@ -268,24 +281,18 @@ export function WizardPreparedSpells({
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(
-                  spells.reduce<Record<string, PreparedSpell[]>>((acc, s) => {
-                    acc[s.spellId] = acc[s.spellId]
-                      ? [...acc[s.spellId], s]
-                      : [s];
-                    return acc;
-                  }, {}),
-                )
+                {Object.entries(spells)
                   .sort((a, b) =>
                     (findSpellById(a[0])?.name || a[0]).localeCompare(
                       findSpellById(b[0])?.name || b[0],
                     ),
                   )
-                  .map(([spellId, group]) => {
+                  .map(([spellId, counts]) => {
                     const spell = findSpellById(spellId);
                     const spellName = spell?.name || spellId;
-                    const remaining = group.filter((s) => !s.used).length;
-                    const total = group.length;
+                    const total = Math.max(0, counts.total ?? 0);
+                    const used = Math.min(Math.max(counts.used ?? 0, 0), total);
+                    const remaining = Math.max(0, total - used);
 
                     const isFlashing = flashSpellId === spellId;
 
@@ -303,9 +310,7 @@ export function WizardPreparedSpells({
                               variant="outline"
                               className="h-8 w-8 rounded-r-none cursor-pointer disabled:cursor-not-allowed"
                               disabled={remaining <= 0}
-                              onClick={() =>
-                                adjustRemaining(spellId, -1, total)
-                              }
+                              onClick={() => adjustRemaining(spellId, -1)}
                               title="Decrease remaining casts"
                             >
                               <Minus className="h-4 w-4" />
@@ -318,7 +323,7 @@ export function WizardPreparedSpells({
                               variant="outline"
                               className="h-8 w-8 rounded-l-none cursor-pointer disabled:cursor-not-allowed"
                               disabled={remaining >= total}
-                              onClick={() => adjustRemaining(spellId, 1, total)}
+                              onClick={() => adjustRemaining(spellId, 1)}
                               title="Increase remaining casts"
                             >
                               <Plus className="h-4 w-4" />

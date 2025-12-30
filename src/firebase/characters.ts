@@ -19,7 +19,7 @@ import {
 } from "firebase/firestore";
 import type { Character } from "../types/Character";
 import {
-  PreparedSpell,
+  PreparedSpellCounts,
   WizardClassProgression,
   WizardSpellbook,
   SpellSlotModifier,
@@ -310,7 +310,7 @@ export async function updateWizardProgression(
  */
 export async function updateWizardPreparedSpells(
   characterId: string,
-  preparedSpells: Record<number, PreparedSpell[]>,
+  preparedSpells: Record<number, Record<string, PreparedSpellCounts>>,
 ) {
   const uid = getCurrentUserId();
   if (!uid) throw new Error("Not logged in");
@@ -345,7 +345,7 @@ export async function updateWizardPreparedSpells(
 export async function updateWizardPreparedSpellsLevel(
   characterId: string,
   spellLevel: number,
-  levelSpells: PreparedSpell[],
+  levelSpells: Record<string, PreparedSpellCounts>,
 ) {
   const chars = store.get(charactersAtom);
   const existing = chars.find((c) => c.id === characterId);
@@ -357,7 +357,7 @@ export async function updateWizardPreparedSpellsLevel(
   const preparedSpells = {
     ...(wizard.preparedSpells ?? {}),
     [spellLevel]: levelSpells,
-  } as Record<number, PreparedSpell[]>;
+  } as Record<number, Record<string, PreparedSpellCounts>>;
 
   return updateWizardPreparedSpells(characterId, preparedSpells);
 }
