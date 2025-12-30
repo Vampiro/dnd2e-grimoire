@@ -33,26 +33,28 @@ function App() {
       <Navbar />
 
       {user && (
-        <Routes>
-          <Route path="/characters/:id" element={<CharacterPage />} />
-          <Route
-            path="/characters/:characterId/edit"
-            element={<CharacterEditPage />}
-          />
-          <Route
-            path="/characters/:characterId/wizard"
-            element={<WizardPage />}
-          />
-          <Route
-            path="/characters/:characterId/wizard/edit"
-            element={<WizardEditPage />}
-          />
-          <Route
-            path="/characters/:characterId/wizard/spellbooks"
-            element={<WizardSpellbooksPage />}
-          />
-          <Route path="/characters" element={<CharactersPage />} />
-        </Routes>
+        <main className="mx-auto w-full max-w-6xl px-4">
+          <Routes>
+            <Route path="/characters/:id" element={<CharacterPage />} />
+            <Route
+              path="/characters/:characterId/edit"
+              element={<CharacterEditPage />}
+            />
+            <Route
+              path="/characters/:characterId/wizard"
+              element={<WizardPage />}
+            />
+            <Route
+              path="/characters/:characterId/wizard/edit"
+              element={<WizardEditPage />}
+            />
+            <Route
+              path="/characters/:characterId/wizard/spellbooks"
+              element={<WizardSpellbooksPage />}
+            />
+            <Route path="/characters" element={<CharactersPage />} />
+          </Routes>
+        </main>
       )}
     </div>
   );

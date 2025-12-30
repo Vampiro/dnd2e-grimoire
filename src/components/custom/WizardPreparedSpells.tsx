@@ -237,19 +237,19 @@ export function WizardPreparedSpells({
 
         {spells.length > 0 && (
           <div className="overflow-x-auto">
-            <table className="w-auto table-auto text-left text-sm">
+            <table className="w-full table-auto text-left text-sm">
               <thead>
                 <tr>
-                  <th className="py-1 pr-3 text-xs font-semibold text-muted-foreground whitespace-nowrap">
+                  <th className="w-px py-1 pr-0 text-xs font-semibold text-muted-foreground whitespace-nowrap">
                     Remaining
                     <div className="text-[10px] font-normal">
                       − cast / + restore
                     </div>
                   </th>
-                  <th className="py-1 pr-3 text-xs font-semibold text-muted-foreground whitespace-nowrap">
+                  <th className="py-1 pl-0 pr-2 text-xs font-semibold text-muted-foreground">
                     Spell
                   </th>
-                  <th className="py-1 text-right text-xs font-semibold text-muted-foreground whitespace-nowrap">
+                  <th className="w-px py-1 text-right text-xs font-semibold text-muted-foreground whitespace-nowrap">
                     Rested Copies
                     <div className="text-[10px] font-normal">
                       − remove / + add
@@ -282,11 +282,11 @@ export function WizardPreparedSpells({
                     return (
                       <tr
                         key={spellId}
-                        className={`border-b last:border-0 ${
+                        className={`border-b last:border-0 transition-colors hover:bg-muted/30 ${
                           isFlashing ? "flash-added-row" : ""
                         }`}
                       >
-                        <td className="py-2 pr-3 align-middle whitespace-nowrap">
+                        <td className="w-px py-2 pr-4 align-middle whitespace-nowrap">
                           <div className="flex items-center">
                             <Button
                               size="icon"
@@ -316,7 +316,7 @@ export function WizardPreparedSpells({
                           </div>
                         </td>
 
-                        <td className="py-2 pr-3 align-middle">
+                        <td className="py-2 pl-0 pr-2 align-middle">
                           <button
                             type="button"
                             className="cursor-pointer text-left text-sm text-primary hover:underline disabled:cursor-default disabled:text-muted-foreground"
@@ -329,7 +329,7 @@ export function WizardPreparedSpells({
                           </button>
                         </td>
 
-                        <td className="py-2 align-middle whitespace-nowrap">
+                        <td className="w-px py-2 align-middle whitespace-nowrap">
                           <div className="flex items-center justify-end">
                             {total <= 1 ? (
                               <Button
