@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { PageRoute } from "@/pages/PageRoute";
 import { Character } from "@/types/Character";
-import { WizardClassProgression } from "@/types/ClassProgression";
+import { WizardClassProgression } from "@/types/WizardClassProgression";
 import { getWizardProgressionSpellSlots } from "@/lib/spellSlots";
 import { SpellViewer } from "./SpellViewer";
 import { WizardPreparedSpells } from "./WizardPreparedSpells";

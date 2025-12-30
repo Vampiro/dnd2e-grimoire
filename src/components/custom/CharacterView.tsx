@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PageRoute } from "@/pages/PageRoute";
 import { Character } from "@/types/Character";
-import { WizardClassProgression } from "@/types/ClassProgression";
+import { WizardClassProgression } from "@/types/WizardClassProgression";
 import { WizardView } from "./WizardView";
 
 interface CharacterViewProps {

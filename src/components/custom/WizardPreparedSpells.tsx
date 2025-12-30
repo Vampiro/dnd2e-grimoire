@@ -9,10 +9,8 @@ import {
 } from "@/components/ui/select";
 import { Plus, Trash2, Minus } from "lucide-react";
 import { findSpellById } from "@/lib/spellLookup";
-import {
-  WizardClassProgression,
-  PreparedSpellCounts,
-} from "@/types/ClassProgression";
+import { PreparedSpellCounts } from "@/types/ClassProgressionBase";
+import { WizardClassProgression } from "@/types/WizardClassProgression";
 import { getWizardProgressionSpellSlots } from "@/lib/spellSlots";
 import { updateWizardPreparedSpellsLevel } from "@/firebase/characters";
 import { PageRoute } from "@/pages/PageRoute";

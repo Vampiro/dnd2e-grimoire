@@ -10,11 +10,6 @@ export interface ClassProgression {
   level: number;
 }
 
-export interface PreparedSpell {
-  spellId: string;
-  used: boolean;
-}
-
 /** Merge-friendly prepared spell state (avoids per-slot arrays). */
 export interface PreparedSpellCounts {
   /** Total prepared copies of this spell after resting. */
@@ -25,47 +20,20 @@ export interface PreparedSpellCounts {
 
 /** Additional slots applied on top of base spell tables. */
 export interface SpellSlotModifier {
-  /** Target spell level; use "all" to apply to every spell level. */
-  spellLevel: number | "all";
   /** When true, add the base slots again (effectively doubling base for that level). */
   addBase: boolean;
   /** Flat bonus (can be negative) applied after base and optional extra base. */
   bonus: number;
   /** When true, only applies to spell levels the caster can actually cast. */
   requiresSpellLevelAccess: boolean;
-}
-
-/** A wizard's spellbook containing learned spells. */
-export interface WizardSpellbook {
-  id: string;
-  name: string;
-  numberOfPages: number;
-  /**
-   * Map of spell IDs in format "SpellId - true".
-   * Stored as a set-like map to reduce cross-device conflicts.
-   */
-  spellsById: Record<string, true>;
+  /** Target spell level; use "all" to apply to every spell level. */
+  spellLevel: number | "all";
 }
 
 /** For caster classes with a certain number of prepared spell slots per level. */
 export interface PreparedCasterProgression extends ClassProgression {
-  /**
-   * Prepared spells by spell level, keyed by spell id.
-   * Stored as counters (`total`/`used`) to reduce cross-device conflicts.
-   */
+  /** Prepared spells by spell level, keyed by spell id. */
   preparedSpells: Record<number, Record<string, PreparedSpellCounts>>;
   /** Optional modifiers applied to base spell slot tables. */
   spellSlotModifiers?: SpellSlotModifier[];
-}
-
-export interface WizardClassProgression extends PreparedCasterProgression {
-  /** The wizard class. */
-  className: CharacterClass.WIZARD;
-  /** Spellbook for wizard spells. */
-  spellbooksById: Record<string, WizardSpellbook>;
-}
-
-export interface PriestClassProgression extends PreparedCasterProgression {
-  /** The priest class. */
-  className: CharacterClass.PRIEST;
 }

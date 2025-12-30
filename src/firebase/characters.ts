@@ -21,10 +21,12 @@ import {
 import type { Character } from "../types/Character";
 import {
   PreparedSpellCounts,
-  WizardClassProgression,
-  WizardSpellbook,
   SpellSlotModifier,
 } from "../types/ClassProgression";
+import {
+  WizardClassProgression,
+  WizardSpellbook,
+} from "../types/WizardClassProgression";
 import { getCurrentUserId } from "./auth";
 import { charactersAtom, store } from "../globalState";
 

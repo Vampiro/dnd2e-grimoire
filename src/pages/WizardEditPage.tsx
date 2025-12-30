@@ -9,10 +9,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  SpellSlotModifier,
-  WizardClassProgression,
-} from "@/types/ClassProgression";
+import { SpellSlotModifier } from "@/types/ClassProgressionBase";
+import { WizardClassProgression } from "@/types/WizardClassProgression";
 import { getWizardSpellSlots } from "@/lib/spellSlots";
 import { updateWizardProgression } from "@/firebase/characters";
 

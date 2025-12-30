@@ -1,7 +1,5 @@
-import {
-  PriestClassProgression,
-  WizardClassProgression,
-} from "./ClassProgression";
+import { PriestClassProgression } from "./PriestClassProgression";
+import { WizardClassProgression } from "./WizardClassProgression";
 
 /**
  * Represents a single D&D character.

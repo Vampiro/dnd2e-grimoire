@@ -1,10 +1,8 @@
 import { priestBaseSlots } from "@/data/priestSpellSlots";
 import { wizardBaseSlots } from "@/data/wizardSpellSlots";
-import {
-  PriestClassProgression,
-  SpellSlotModifier,
-  WizardClassProgression,
-} from "@/types/ClassProgression";
+import { SpellSlotModifier } from "@/types/ClassProgressionBase";
+import { PriestClassProgression } from "@/types/PriestClassProgression";
+import { WizardClassProgression } from "@/types/WizardClassProgression";
 
 /**
  * Clamp a caster level to the valid spell table range.
