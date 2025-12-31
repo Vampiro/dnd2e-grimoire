@@ -35,7 +35,9 @@ function parseInfoboxSpells(wikitext: string): {
   bodyAfterInfobox: string;
 } {
   const lines = wikitext.split(/\r?\n/);
-  const startIndex = lines.findIndex((l) => l.trim().startsWith("{{Infobox Spells"));
+  const startIndex = lines.findIndex((l) =>
+    l.trim().startsWith("{{Infobox Spells"),
+  );
   if (startIndex === -1) {
     return { infobox: {}, bodyAfterInfobox: wikitext };
   }

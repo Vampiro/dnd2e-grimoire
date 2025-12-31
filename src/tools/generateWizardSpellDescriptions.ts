@@ -27,8 +27,15 @@ function getRepoRootDir(): string {
   return path.resolve(__dirname, "..", "..");
 }
 
-async function readWizardSpellList(repoRoot: string): Promise<WizardSpellListEntry[]> {
-  const filePath = path.join(repoRoot, "public", "resources", "wizardSpells.json");
+async function readWizardSpellList(
+  repoRoot: string,
+): Promise<WizardSpellListEntry[]> {
+  const filePath = path.join(
+    repoRoot,
+    "public",
+    "resources",
+    "wizardSpells.json",
+  );
   const text = await fs.readFile(filePath, "utf8");
   const data = JSON.parse(text) as WizardSpellListEntry[];
   return data;
