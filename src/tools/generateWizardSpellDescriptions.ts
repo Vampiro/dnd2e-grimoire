@@ -62,14 +62,16 @@ async function main() {
     throw new Error("wizardSpells.json is empty");
   }
 
-  // Start small: only the first wizard spell.
-  const first = spells[0];
-  const pageName = getPageNameFromWikiLink(first.link);
+  // Start small: the Fireball spell.
+  const spell = spells.find((s) => s.name === "Fireball");
+  if (!spell) {
+    throw new Error('Could not find "Fireball" in wizardSpells.json');
+  }
+
+  const pageName = getPageNameFromWikiLink(spell.link);
 
   const page = await fetchAdnd2eWikiWikitext(pageName);
   const parsed = parseSpellWikitextToJson({
-    pageName,
-    pageId: page.pageId,
     title: page.title,
     wikitext: page.wikitext,
   });
@@ -78,7 +80,7 @@ async function main() {
     generatedAt: new Date().toISOString(),
     source: "https://adnd2e.fandom.com",
     spellsByName: {
-      [first.name]: parsed,
+      [spell.name]: parsed,
     },
   };
 
@@ -86,7 +88,7 @@ async function main() {
 
   // Minimal CLI output for npm scripts.
   console.log(
-    `Wrote wizard-spell-descriptions.json for: ${first.name} (${pageName})`,
+    `Wrote wizard-spell-descriptions.json for: ${spell.name} (${pageName})`,
   );
 }
 

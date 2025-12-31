@@ -6,7 +6,7 @@ import type {
 /**
  * Builds the AD&D 2e Fandom MediaWiki API URL to fetch a page's wikitext.
  */
-export function buildAdnd2eWikiRevisionsUrl(pageName: string): string {
+function buildAdnd2eWikiRevisionsUrl(pageName: string): string {
   const base = "https://adnd2e.fandom.com/api.php";
   const params = new URLSearchParams({
     action: "query",
@@ -50,7 +50,7 @@ export async function fetchAdnd2eWikiWikitext(
 /**
  * Extracts the first page's wikitext (`revisions[0].slots.main['*']`) from the API response.
  */
-export function extractFirstPageWikitext(
+function extractFirstPageWikitext(
   json: MediaWikiRevisionsResponse,
 ): MediaWikiWikitextPage {
   const pages = json.query?.pages;

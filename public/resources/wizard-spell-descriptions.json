@@ -1,34 +1,28 @@
 {
-  "generatedAt": "2025-12-31T14:10:09.364Z",
+  "generatedAt": "2025-12-31T14:28:48.039Z",
   "source": "https://adnd2e.fandom.com",
   "spellsByName": {
-    "Absolute Location": {
-      "pageName": "Absolute_Location_(Wizard_Spell)",
-      "pageId": 41711,
-      "title": "Absolute Location (Wizard Spell)",
-      "wikitext": "{{Infobox Spells\n| name = Absolute Location\n| class = Wizard\n| school = Divination\n| level = 1\n| range =  0\n| duration = Instant\n| aoe = Caster\n| verbal = 1\n| somatic = 1\n| material = 1\n| castingTime = 1\n| save = None\n| source = [[Mage on Deck! (Article)|Dragon Magazine #235]]\n}}\n\nTired of being blown off-course and having no idea where you are? This spell provides the mage with a navigational fix (the distance and direction) to a known landmark. The mage must be very familiar with the site. Suitable landmarks include the home port, an often-visited island, or a distinctive mountain. The navigational fix is accurate to within 200 yards. This is not accurate enough to navigate through shoals or reefs, but it is good enough to determine which way is “home.” The spell works over worldwide distances but only on the “home planet” of the mage casting the spell.\n\nThe material component of the spell (not consumed) is a map of the world worth at least 50 gp. The map does not have to be accurate.\n\n[[Category:Wizard Spells]]\n[[Category:Dragon Magazine Spells]]\n[[Category:Spells]]",
+    "Fireball": {
+      "title": "Fireball (Wizard Spell)",
+      "wikitext": "{{Infobox Spells\n| class = Wizard\n| level = 3\n| school = Invocation/Evocation{{br}}''(Fire)''\n| verbal = 1\n| somatic = 1\n| material = 1\n| range = 10 yds. + 10 yds./level\n| aoe = 20-ft. radius\n| castingTime = 3\n| duration = Instantaneous\n| save = {{frac|1|2}}\n| name = Fireball\n| source = Player's Handbook page 191\n}}\nA '''fireball''' is an explosive burst of flame, which detonates with a low roar and delivers damage proportional to the level of the wizard who cast it—1d6 points of damage for each level of experience of the spellcaster (up to a maximum of 10d6). The burst of the ''fireball'' creates little pressure and generally conforms to the shape of the area in which it occurs. The ''fireball'' fills an area equal to its normal spherical volume (roughly 33,000 cubic feet—thirty-three 10-foot x 10-foot x 10-foot cubes). Besides causing damage to creatures, the ''fireball'' ignites all combustible materials within its burst radius, and the heat of the ''fireball'' melts soft metals such as gold, copper, silver, etc. Exposed items require saving throws vs. magical fire to determine if they are affected, but items in the possession of a creature that rolls a successful saving throw are unaffected by the ''fireball''.\n\nThe wizard points his finger and speaks the range (distance and height) at which the ''fireball'' is to burst. A streak flashes from the pointing digit and, unless it impacts upon a material body or solid barrier prior to attaining the prescribed range, blossoms into the ''fireball'' (an early impact results in an early detonation). Creatures failing their saving throws each suffer full damage from the blast. Those who roll successful saving throws manage to dodge, fall flat, or roll aside, each receiving half damage (the DM rolls the damage and each affected creature suffers either full damage or half damage [round fractions down], depending on whether the creature saved or not).\n\nThe material component of this spell is a tiny ball of bat guano and sulphur.\n\n==Combat & Tactics==\nThis spell inflicts 1d2 points of structural damage against wooden targets (including those protected by wet hides) for every two dice of damage it normally inflicts; round fractions down. For example, a fireball from a 5th-level caster inflicts 2d2 points of structural damage. A ''fireball'' can set wooden constructions afire.\n\nSource: [[Escalades (POCT)#Fireball]]\n\n[[Category:Wizard Spells]]\n[[Category:Spells from Players Handbook]]\n[[Category:Spells]]\n[[Category:Spells from Wizard's Spell Compendium]]",
       "infobox": {
-        "name": "Absolute Location",
         "class": "Wizard",
-        "school": "Divination",
-        "level": "1",
-        "range": "0",
-        "duration": "Instant",
-        "aoe": "Caster",
+        "level": "3",
+        "school": "Invocation/Evocation{{br}}''(Fire)''",
         "verbal": "1",
         "somatic": "1",
         "material": "1",
-        "castingTime": "1",
-        "save": "None",
-        "source": "[[Mage on Deck! (Article)|Dragon Magazine #235]]"
+        "range": "10 yds. + 10 yds./level",
+        "aoe": "20-ft. radius",
+        "castingTime": "3",
+        "duration": "Instantaneous",
+        "save": "{{frac|1|2}}",
+        "name": "Fireball",
+        "source": "Player's Handbook page 191"
       },
-      "categories": [
-        "Wizard Spells",
-        "Dragon Magazine Spells",
-        "Spells"
-      ],
       "sections": {
-        "Introduction": "Tired of being blown off-course and having no idea where you are? This spell provides the mage with a navigational fix (the distance and direction) to a known landmark. The mage must be very familiar with the site. Suitable landmarks include the home port, an often-visited island, or a distinctive mountain. The navigational fix is accurate to within 200 yards. This is not accurate enough to navigate through shoals or reefs, but it is good enough to determine which way is “home.” The spell works over worldwide distances but only on the “home planet” of the mage casting the spell.\n\nThe material component of the spell (not consumed) is a map of the world worth at least 50 gp. The map does not have to be accurate."
+        "Introduction": "A '''fireball''' is an explosive burst of flame, which detonates with a low roar and delivers damage proportional to the level of the wizard who cast it—1d6 points of damage for each level of experience of the spellcaster (up to a maximum of 10d6). The burst of the ''fireball'' creates little pressure and generally conforms to the shape of the area in which it occurs. The ''fireball'' fills an area equal to its normal spherical volume (roughly 33,000 cubic feet—thirty-three 10-foot x 10-foot x 10-foot cubes). Besides causing damage to creatures, the ''fireball'' ignites all combustible materials within its burst radius, and the heat of the ''fireball'' melts soft metals such as gold, copper, silver, etc. Exposed items require saving throws vs. magical fire to determine if they are affected, but items in the possession of a creature that rolls a successful saving throw are unaffected by the ''fireball''.\n\nThe wizard points his finger and speaks the range (distance and height) at which the ''fireball'' is to burst. A streak flashes from the pointing digit and, unless it impacts upon a material body or solid barrier prior to attaining the prescribed range, blossoms into the ''fireball'' (an early impact results in an early detonation). Creatures failing their saving throws each suffer full damage from the blast. Those who roll successful saving throws manage to dodge, fall flat, or roll aside, each receiving half damage (the DM rolls the damage and each affected creature suffers either full damage or half damage [round fractions down], depending on whether the creature saved or not).\n\nThe material component of this spell is a tiny ball of bat guano and sulphur.",
+        "Combat & Tactics": "This spell inflicts 1d2 points of structural damage against wooden targets (including those protected by wet hides) for every two dice of damage it normally inflicts; round fractions down. For example, a fireball from a 5th-level caster inflicts 2d2 points of structural damage. A ''fireball'' can set wooden constructions afire.\n\nSource: [[Escalades (POCT)#Fireball]]"
       }
     }
   }

@@ -10,22 +10,16 @@ import type { SpellDescriptionJson } from "./types";
  * - `[[Category:...]]` tags
  */
 export function parseSpellWikitextToJson(opts: {
-  pageName: string;
-  pageId: number | null;
   title: string | null;
   wikitext: string;
 }): SpellDescriptionJson {
   const { infobox, bodyAfterInfobox } = parseInfoboxSpells(opts.wikitext);
-  const categories = parseCategories(opts.wikitext);
   const sections = parseSections(bodyAfterInfobox);
 
   return {
-    pageName: opts.pageName,
-    pageId: opts.pageId,
     title: opts.title,
     wikitext: opts.wikitext,
     infobox,
-    categories,
     sections,
   };
 }
@@ -71,28 +65,8 @@ function parseInfoboxSpells(wikitext: string): {
   return { infobox, bodyAfterInfobox };
 }
 
-function parseCategories(wikitext: string): string[] {
-  const categories = new Set<string>();
-  const re = /\[\[Category:([^\]]+)\]\]/g;
-  let match: RegExpExecArray | null = null;
-  while ((match = re.exec(wikitext))) {
-    const label = match[1]?.trim();
-    if (label) categories.add(label);
-  }
-  return Array.from(categories);
-}
-
-function stripCategoryLines(text: string): string {
-  return text
-    .split(/\r?\n/)
-    .filter((l) => !l.trim().startsWith("[[Category:"))
-    .join("\n")
-    .trim();
-}
-
 function parseSections(wikitext: string): Record<string, string> {
-  const text = stripCategoryLines(wikitext);
-  const lines = text.split(/\r?\n/);
+  const lines = wikitext.split(/\r?\n/);
 
   const sections: Record<string, string> = {};
   let currentHeading: string | null = null;
@@ -114,6 +88,8 @@ function parseSections(wikitext: string): Record<string, string> {
   const headingRe = /^(={2,})\s*(.*?)\s*\1\s*$/;
 
   for (const line of lines) {
+    if (line.trim().startsWith("[[Category:")) continue;
+
     const m = headingRe.exec(line.trim());
     if (m) {
       flush();
