@@ -1,10 +1,5 @@
+import { MediaWikiPageJson } from "@/types/MediaWiki";
 import { Spell } from "@/types/Spell";
-
-export interface WikiPageJson {
-  name: string;
-  sections: Record<string, { label: string; value: string }[]>;
-  description: string;
-}
 
 const serverProxyBaseUrl = import.meta.env.VITE_PROXY_BASE_URL;
 
@@ -14,7 +9,7 @@ const serverProxyBaseUrl = import.meta.env.VITE_PROXY_BASE_URL;
  * @param spell The spell to fetch.
  * @returns The parsed JSON from the Fandom API
  */
-export async function fetchSpell(spell: Spell): Promise<WikiPageJson> {
+export async function fetchSpell(spell: Spell): Promise<MediaWikiPageJson> {
   const spellPage = getSpellPageFromLink(spell.link);
   const encodedName = encodeURIComponent(spellPage);
   const url = `${serverProxyBaseUrl}/api/adnd2ewiki/${encodedName}`;
@@ -25,7 +20,7 @@ export async function fetchSpell(spell: Spell): Promise<WikiPageJson> {
   }
 
   const data = await res.json();
-  return data as WikiPageJson;
+  return data as MediaWikiPageJson;
 }
 
 /**

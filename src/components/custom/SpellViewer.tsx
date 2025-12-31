@@ -1,19 +1,24 @@
-import { fetchSpell, WikiPageJson } from "@/lib/wikiFetch";
+import { fetchSpell } from "@/lib/wikiFetch";
+import { MediaWikiPageJson } from "@/types/MediaWiki";
 import { Spell } from "@/types/Spell";
-import { useState, useEffect, Fragment } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { useEffect, useMemo, useState } from "react";
 
 interface SpellViewerProps {
   spell: Spell;
 }
 
 /**
+ * Displays details for a spell fetched from the AD&D 2e wiki proxy.
  *
- * @param props Component props.
- * @returns
+ * @remarks
+ * The backend returns a {@link MediaWikiPageJson} containing a title, infobox fields,
+ * categories, and section content. This component renders those in a readable layout.
  */
 export function SpellViewer(props: SpellViewerProps) {
   const { spell } = props;
-  const [data, setData] = useState<WikiPageJson | null>(null);
+  const [data, setData] = useState<MediaWikiPageJson | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,64 +45,93 @@ export function SpellViewer(props: SpellViewerProps) {
     };
   }, [spell]);
 
-  if (loading) return <p>Loading {spell.name}...</p>;
+  const infoboxEntries = useMemo(() => {
+    if (!data?.infobox) return [] as Array<[string, string]>;
+
+    return Object.entries(data.infobox)
+      .map(([k, v]) => [k.trim(), String(v ?? "").trim()] as [string, string])
+      .filter(([k, v]) => k.length > 0 && v.length > 0)
+      .sort((a, b) => a[0].localeCompare(b[0]));
+  }, [data]);
+
+  const sectionEntries = useMemo(() => {
+    if (!data?.sections) return [] as Array<[string, string]>;
+
+    return Object.entries(data.sections)
+      .map(([k, v]) => [k.trim(), String(v ?? "").trim()] as [string, string])
+      .filter(([k, v]) => k.length > 0 && v.length > 0)
+      .sort((a, b) => a[0].localeCompare(b[0]));
+  }, [data]);
+
+  if (loading)
+    return (
+      <div className="text-sm text-muted-foreground">
+        Loading {spell.name}...
+      </div>
+    );
+
   if (error)
     return (
-      <p>
+      <div className="text-sm text-destructive">
         Error loading {spell.name}: {error}
-      </p>
+      </div>
     );
 
   if (data) {
-    data.sections;
-
     return (
-      <div className="p-4 border rounded-md bg-card text-card-foreground">
-        <div className="grid grid-cols-[400px_1fr] gap-4">
-          <div className="border-r border-border pr-4">
-            <SpellSections name={spell.name} sections={data.sections} />
+      <Card>
+        <CardContent className="space-y-6 p-4">
+          <div className="space-y-1">
+            <div className="text-lg font-semibold leading-tight">
+              {data.title || spell.name}
+            </div>
+            {Array.isArray(data.categories) && data.categories.length > 0 && (
+              <div className="text-xs text-muted-foreground">
+                Categories: {data.categories.join(", ")}
+              </div>
+            )}
           </div>
-          <div>
-            <div
-              className="mt-2 [&_p]:my-3 [&_h1]:text-3xl [&_h2]:text-2xl [&_h3]:text-xl [&_h4]:text-lg [&_a]:underline"
-              dangerouslySetInnerHTML={{ __html: data?.description || "" }}
-            />
-          </div>
-        </div>
-      </div>
+
+          {infoboxEntries.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-sm font-semibold">Details</div>
+              <Table>
+                <TableBody>
+                  {infoboxEntries.map(([k, v]) => (
+                    <TableRow key={k}>
+                      <TableCell className="w-px pr-4 font-medium text-muted-foreground whitespace-nowrap">
+                        {k}
+                      </TableCell>
+                      <TableCell className="whitespace-pre-wrap break-words">
+                        {v}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {sectionEntries.length > 0 ? (
+            <div className="space-y-6">
+              {sectionEntries.map(([heading, content]) => (
+                <section key={heading} className="space-y-2">
+                  <h3 className="text-sm font-semibold">{heading}</h3>
+                  <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                    {content}
+                  </div>
+                </section>
+              ))}
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground">
+              No page sections available.
+            </div>
+          )}
+        </CardContent>
+      </Card>
     );
   }
 
-  return <div>No data.</div>;
+  return <div className="text-sm text-muted-foreground">No data.</div>;
 }
-
-const SpellSections = ({
-  name,
-  sections,
-}: {
-  name: string;
-  sections: WikiPageJson["sections"];
-}) => {
-  return (
-    <div>
-      <h2 className="text-3xl font-bold mb-4">{name}</h2>
-      <div
-        className="grid grid-cols-[minmax(0,max-content)_1fr] gap-x-4 gap-y-2"
-        style={{ height: "fit-content" }}
-      >
-        {Object.entries(sections).map(([sectionName, items]) => (
-          <Fragment key={sectionName}>
-            {items.map((item) => (
-              <Fragment key={item.label}>
-                <div className="font-semibold" style={{ maxWidth: 150 }}>
-                  {item.label}
-                </div>
-                <div className="break-words">{item.value}</div>
-              </Fragment>
-            ))}
-          </Fragment>
-        ))}
-      </div>
-    </div>
-  );
-};
