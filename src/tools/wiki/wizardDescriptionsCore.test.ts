@@ -5,8 +5,16 @@ import { buildWizardDescriptionsForFireball } from "./wizardDescriptionsCore";
 describe("buildWizardDescriptionsForFireball", () => {
   it("builds an in-memory JSON output without writing files", async () => {
     const spells = [
-      { level: 1, name: "Magic Missile", link: "https://adnd2e.fandom.com/wiki/Magic_Missile" },
-      { level: 3, name: "Fireball", link: "https://adnd2e.fandom.com/wiki/Fireball" },
+      {
+        level: 1,
+        name: "Magic Missile",
+        link: "https://adnd2e.fandom.com/wiki/Magic_Missile",
+      },
+      {
+        level: 3,
+        name: "Fireball",
+        link: "https://adnd2e.fandom.com/wiki/Fireball",
+      },
     ];
 
     const out = await buildWizardDescriptionsForFireball(spells, async () => ({

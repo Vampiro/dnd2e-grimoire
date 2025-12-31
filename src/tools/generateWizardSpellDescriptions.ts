@@ -53,7 +53,8 @@ async function main() {
     throw new Error("wizardSpells.json is empty");
   }
 
-  const out: WizardSpellDescriptionsFile = await buildWizardDescriptionsForFireball(spells);
+  const out: WizardSpellDescriptionsFile =
+    await buildWizardDescriptionsForFireball(spells);
 
   await writeWizardDescriptions(repoRoot, out);
 

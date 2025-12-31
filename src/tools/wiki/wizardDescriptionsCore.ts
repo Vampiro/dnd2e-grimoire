@@ -18,11 +18,14 @@ export type WizardSpellListEntry = {
  */
 export async function buildWizardDescriptionsForFireball(
   spells: WizardSpellListEntry[],
-  fetchWikitext: (pageName: string) => Promise<{ title: string | null; wikitext: string }> =
-    async (pageName) => {
-      const page = await fetchAdnd2eWikiWikitext(pageName);
-      return { title: page.title, wikitext: page.wikitext };
-    },
+  fetchWikitext: (
+    pageName: string,
+  ) => Promise<{ title: string | null; wikitext: string }> = async (
+    pageName,
+  ) => {
+    const page = await fetchAdnd2eWikiWikitext(pageName);
+    return { title: page.title, wikitext: page.wikitext };
+  },
 ): Promise<WizardSpellDescriptionsFile> {
   const spell = spells.find((s) => s.name === "Fireball");
   if (!spell) {
