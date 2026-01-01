@@ -133,7 +133,9 @@ function parseBatchFileToDescriptions(opts: {
     let spellKey = baseName;
     if (spellsByName[spellKey]) {
       const fallbackKey = `${baseName} (${page.title ?? `pageid:${page.pageid}`})`;
-      spellKey = spellsByName[fallbackKey] ? `${baseName} (${page.pageid})` : fallbackKey;
+      spellKey = spellsByName[fallbackKey]
+        ? `${baseName} (${page.pageid})`
+        : fallbackKey;
     }
 
     if (spellsByName[spellKey]) {
