@@ -13,7 +13,7 @@ dist-ssr
 *.local
 .env
 docs/
-data/reports
+data/wiki/reports
 
 # Editor directories and files
 .vscode/*

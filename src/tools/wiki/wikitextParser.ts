@@ -72,7 +72,7 @@ function tryParseWithWtfWikipedia(opts: {
         for (const [key, value] of Object.entries(
           raw as Record<string, unknown>,
         )) {
-          const text = extractWtfValueText(value);
+          const text = normalizeInfoboxValue(extractWtfValueText(value));
           if (key && text) infobox[key] = text;
         }
       }
@@ -81,7 +81,7 @@ function tryParseWithWtfWikipedia(opts: {
     const sections: Record<string, string> = {};
     for (const section of doc.sections?.() ?? []) {
       const heading = (section.title?.() ?? "").trim() || "Introduction";
-      const content = (section.text?.() ?? "").trim();
+      const content = normalizeSectionText(section.text?.() ?? "");
       if (!content) continue;
 
       if (!sections[heading]) {
@@ -113,6 +113,44 @@ function extractWtfValueText(value: unknown): string {
     if (typeof maybeText === "string") return maybeText.trim();
   }
   return String(value).trim();
+}
+
+/**
+ * Normalizes infobox values for UI rendering.
+ *
+ * @remarks
+ * Requirements:
+ * - Replace NBSP with normal spaces.
+ * - Replace newlines inside infobox values with spaces.
+ */
+function normalizeInfoboxValue(value: string): string {
+  return value
+    .replace(/\u00A0/g, " ")
+    .replace(/\r\n?/g, "\n")
+    .replace(/\n+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Normalizes section text for UI rendering.
+ *
+ * @remarks
+ * Requirements:
+ * - Replace NBSP with normal spaces.
+ * - Preserve newlines in section content.
+ */
+function normalizeSectionText(value: string): string {
+  return (
+    value
+      .replace(/\u00A0/g, " ")
+      .replace(/\r\n?/g, "\n")
+      // Some wiki content contains hard line-wrapping that can split words.
+      // Preserve paragraph breaks, but remove newlines that occur *within* words.
+      .replace(/-\n(?=[A-Za-z])/g, "-")
+      .replace(/([A-Za-z])\n(?=[A-Za-z])/g, "$1")
+      .trim()
+  );
 }
 
 /**
@@ -153,7 +191,7 @@ function parseInfoboxSpells(wikitext: string): {
     const value = withoutPipe.slice(eq + 1).trim();
 
     if (key && value) {
-      infobox[key] = value;
+      infobox[key] = normalizeInfoboxValue(value);
     }
   }
 
@@ -176,7 +214,7 @@ function parseSections(wikitext: string): Record<string, string> {
   let currentLines: string[] = [];
 
   const flush = () => {
-    const content = currentLines.join("\n").trim();
+    const content = normalizeSectionText(currentLines.join("\n"));
     if (!content) return;
 
     const key = currentHeading ?? "Introduction";
@@ -201,7 +239,7 @@ function parseSections(wikitext: string): Record<string, string> {
       continue;
     }
 
-    currentLines.push(line);
+    currentLines.push(line.replace(/\u00A0/g, " "));
   }
 
   flush();

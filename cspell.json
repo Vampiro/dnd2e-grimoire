@@ -1,0 +1,26 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "useGitignore": true,
+  "ignorePaths": [
+    "node_modules/**",
+    "dist/**",
+    "docs/**",
+    "public/resources/**/*.json"
+  ],
+  "dictionaryDefinitions": [
+    {
+      "name": "dnd",
+      "path": "./cspell-dnd-words.txt",
+      "addWords": true
+    }
+  ],
+  "dictionaries": ["dnd"],
+  "ignoreRegExpList": [
+    "/\\b[A-Za-z]+\\\u0027[A-Za-z]+\\b/g",
+    "/\\b[A-Za-z]+\\\u0027s\\b/g",
+    "/\\b[A-Za-z]+s\\\u0027\\b/g",
+    "/\\bTHAC0\\b/g",
+    "/\\bTHAC\\b/g"
+  ]
+}
