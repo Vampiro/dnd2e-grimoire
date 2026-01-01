@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-01-01T04:19:54.669Z",
+  "generatedAt": "2026-01-01T05:53:05.893Z",
   "source": "https://adnd2e.fandom.com",
   "categoryName": "Priest Spells",
   "spellsByTitle": {
@@ -25011,7 +25011,16 @@
       "infobox": {
         "name": "Karsus's Avatar",
         "source": "Priest's Spell Compendium Vol 2",
-        "level": "12"
+        "level": "12",
+        "class": "Priest",
+        "school": "Invocation/Evocation, Enchantment/Charm, Alteration",
+        "verbal": "1",
+        "material": "1",
+        "range": "Unknown, probably 0",
+        "aoe": "The caster",
+        "castingTime": "Unknown",
+        "duration": "Unknown, limited",
+        "save": "Unknown"
       },
       "sections": {
         "Introduction": "Lost spell. Reputed to be the only 12th-level spell known in the Realms, this incantation enabled Karsus to temporarily steal part of the power of a deity. All notes and information developed by Karsus regarding the casting of this spell were destroyed by Mystra, successor of Mystryl. Even if these were recovered, this spell cannot be cast again, since Mystra has since changed the way magic works. This spell required many unique material components that are now impossible to acquire. For example, Karsus had to dip a gold dragon's gizzard in a brew of tarrasque blood and bile from a 12-headed hydra just to enchant one of the many material components required to cast the spell."

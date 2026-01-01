@@ -132,6 +132,20 @@ export interface SpellDescriptionJson {
 }
 
 /**
+ * User-provided overrides applied on top of parsed spell descriptions.
+ *
+ * @remarks
+ * This is intended for patching/augmenting the wiki-derived output without
+ * editing the upstream wiki or cached wikitext files.
+ */
+export interface SpellDescriptionOverride {
+  /** Infobox fields to add/overwrite. */
+  infobox?: Record<string, string>;
+  /** Sections to add/overwrite (by heading). */
+  sections?: Record<string, string>;
+}
+
+/**
  * Output file format for generated wizard spell descriptions.
  */
 export type WizardSpellDescriptionsFile = {

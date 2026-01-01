@@ -3,7 +3,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { parseSpellWikitextToJson } from "./wikitextParser";
-import type { SpellDescriptionJson, SpellWikitextBatchFile } from "./types";
+import type {
+  SpellDescriptionJson,
+  SpellDescriptionOverride,
+  SpellWikitextBatchFile,
+} from "./types";
 
 /** Output file format for parsed spell descriptions derived from cached wikitext. */
 export type SpellDescriptionsFile = {
@@ -34,9 +38,52 @@ async function readSpellWikitextBatchFile(
   return JSON.parse(text) as SpellWikitextBatchFile;
 }
 
+type SpellDescriptionOverridesFile = {
+  /** Spell titles to omit from output (exact MediaWiki page titles). */
+  excludeTitles?: string[];
+  /** Map keyed by MediaWiki page title (includes class suffix). */
+  spellsByTitle: Record<string, SpellDescriptionOverride>;
+};
+
+async function readSpellDescriptionOverridesFile(
+  filePath: string,
+): Promise<SpellDescriptionOverridesFile | null> {
+  try {
+    const text = await fs.readFile(filePath, "utf8");
+    const parsed = JSON.parse(text) as SpellDescriptionOverridesFile;
+    if (!parsed || typeof parsed !== "object") return null;
+    if (!parsed.spellsByTitle || typeof parsed.spellsByTitle !== "object") {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function mergeCaseInsensitiveRecord(
+  base: Record<string, string>,
+  overrides: Record<string, string>,
+): Record<string, string> {
+  const out: Record<string, string> = { ...base };
+  const baseKeysByLower = new Map<string, string>();
+  for (const k of Object.keys(out)) baseKeysByLower.set(k.toLowerCase(), k);
+
+  for (const [k, v] of Object.entries(overrides)) {
+    const existingKey = baseKeysByLower.get(k.toLowerCase());
+    if (existingKey && existingKey !== k) delete out[existingKey];
+    out[k] = v;
+    baseKeysByLower.set(k.toLowerCase(), k);
+  }
+
+  return out;
+}
+
 /** Parses a batch file into a `spellsByTitle` map. */
 function parseBatchFileToDescriptions(opts: {
   batch: SpellWikitextBatchFile;
+  overridesByTitle?: Record<string, SpellDescriptionOverride>;
+  excludeTitles?: Set<string>;
 }): {
   spellsByTitle: Record<string, SpellDescriptionJson>;
   errors: Array<{ title: string; message: string }>;
@@ -46,6 +93,10 @@ function parseBatchFileToDescriptions(opts: {
 
   for (const page of opts.batch.pages) {
     const title = page.title ?? `pageid:${page.pageid}`;
+
+    if (opts.excludeTitles?.has(title)) {
+      continue;
+    }
 
     const parsed = parseSpellWikitextToJson({
       title: page.title,
@@ -61,7 +112,20 @@ function parseBatchFileToDescriptions(opts: {
       continue;
     }
 
-    spellsByTitle[title] = parsed;
+    const override = opts.overridesByTitle?.[title];
+    if (override) {
+      spellsByTitle[title] = {
+        ...parsed,
+        infobox: override.infobox
+          ? mergeCaseInsensitiveRecord(parsed.infobox, override.infobox)
+          : parsed.infobox,
+        sections: override.sections
+          ? { ...parsed.sections, ...override.sections }
+          : parsed.sections,
+      };
+    } else {
+      spellsByTitle[title] = parsed;
+    }
   }
 
   return { spellsByTitle, errors };
@@ -101,8 +165,28 @@ async function main() {
   const wizard = await readSpellWikitextBatchFile(wizardInPath);
   const priest = await readSpellWikitextBatchFile(priestInPath);
 
-  const wizardParsed = parseBatchFileToDescriptions({ batch: wizard });
-  const priestParsed = parseBatchFileToDescriptions({ batch: priest });
+  const overridesPath = path.join(
+    repoRoot,
+    "data",
+    "wiki",
+    "spellDescriptionOverrides.json",
+  );
+  const overridesFile = await readSpellDescriptionOverridesFile(overridesPath);
+  const overridesByTitle = overridesFile?.spellsByTitle ?? undefined;
+  const excludeTitles = overridesFile?.excludeTitles?.length
+    ? new Set(overridesFile.excludeTitles)
+    : undefined;
+
+  const wizardParsed = parseBatchFileToDescriptions({
+    batch: wizard,
+    overridesByTitle,
+    excludeTitles,
+  });
+  const priestParsed = parseBatchFileToDescriptions({
+    batch: priest,
+    overridesByTitle,
+    excludeTitles,
+  });
 
   const wizardOut: SpellDescriptionsFile = {
     generatedAt: new Date().toISOString(),
