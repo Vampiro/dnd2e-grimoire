@@ -58,12 +58,13 @@ This repo includes Node-based generator scripts that cache spell data from the A
 type SpellDescription = {
   metadata: Record<string, string>; // plain text, infobox-derived (post overrides)
   sections: Record<string, string>; // HTML, keyed by heading (Introduction fallback)
+  wikiPageId?: number; // MediaWiki page id for traceability
 };
 type SpellDescriptionsFile = {
   generatedAt: string;
   source: "https://adnd2e.fandom.com";
   categoryName: string;
-  spellsByName: Record<string, SpellDescription>;
+  spellsByWikiPageId: Record<string, SpellDescription>; // keyed by MediaWiki pageid
   errors: Array<{ title: string; message: string }>;
 };
 ```
@@ -83,6 +84,8 @@ type SpellDescriptionsFile = {
   - Headings from wiki sections; default heading `Introduction` when none.
   - Strip `[[Category:...]]` lines; remove simple `{{...}}` template artifacts (e.g., `{{Highlight: ...}}`).
   - Normalize HTML via `wtf_wikipedia` with HTML plugin; fallback parser uses escaped text + `<br>`; duplicate headings append with `<br><br>`.
+
+- Keys use the MediaWiki `pageid`; if multiple pages share a `pageid`, only the first is kept and later duplicates are reported in `errors`.
 
 - Overrides file: `data/wiki/spellDescriptionOverrides.json`
   - `excludeTitles`: exact page titles to drop.

@@ -41,6 +41,8 @@ export interface SpellDescriptionJson {
   metadata: SpellDescriptionMetadata;
   /** Section bodies keyed by heading (e.g. `Combat & Tactics`). */
   sections: Record<string, string>;
+  /** MediaWiki page id the spell was sourced from. */
+  wikiPageId?: number;
 }
 
 /**
@@ -53,8 +55,8 @@ export type SpellDescriptionsFile = {
   source: "https://adnd2e.fandom.com";
   /** Category name for traceability. */
   categoryName: string;
-  /** Descriptions keyed by spell name (from metadata.name when present). */
-  spellsByName: Record<string, SpellDescriptionJson>;
+  /** Descriptions keyed by MediaWiki page id (stringified). */
+  spellsByWikiPageId: Record<string, SpellDescriptionJson>;
   /** Parsing errors encountered by this generator (not page fetch errors). */
   errors: Array<{ title: string; message: string }>;
 };

@@ -122,16 +122,16 @@ const stripTemplateArtifacts = (html: string): string =>
     .replace(/\}\}/g, "")
     .trim();
 
-/** Parses a batch file into a `spellsByName` map. */
+/** Parses a batch file into a `spellsByWikiPageId` map. */
 function parseBatchFileToDescriptions(opts: {
   batch: SpellWikitextBatchFile;
   overridesByTitle?: Record<string, SpellDescriptionOverride>;
   excludeTitles?: Set<string>;
 }): {
-  spellsByName: Record<string, SpellDescriptionJson>;
+  spellsByWikiPageId: Record<string, SpellDescriptionJson>;
   errors: Array<{ title: string; message: string }>;
 } {
-  const spellsByName: Record<string, SpellDescriptionJson> = {};
+  const spellsByWikiPageId: Record<string, SpellDescriptionJson> = {};
   const errors: Array<{ title: string; message: string }> = [];
 
   const toTextValue = (v: string) => v.replace(/\r?\n/g, " ").trim();
@@ -193,46 +193,50 @@ function parseBatchFileToDescriptions(opts: {
     );
 
     const merged: SpellDescriptionJson = {
+      wikiPageId: page.pageid,
       metadata: filterKnownMetadata(mergedMetadata),
       sections: mergedSections,
     };
 
-    const baseName = getNameFromMetadata(
+    const resolvedName = getNameFromMetadata(
       merged.metadata,
       page.title ?? `pageid:${page.pageid}`,
     );
-
-    let spellKey = baseName;
-    if (spellsByName[spellKey]) {
-      const fallbackKey = `${baseName} (${page.title ?? `pageid:${page.pageid}`})`;
-      spellKey = spellsByName[fallbackKey]
-        ? `${baseName} (${page.pageid})`
-        : fallbackKey;
+    if (!merged.metadata.name && resolvedName) {
+      merged.metadata.name = resolvedName;
     }
 
-    if (spellsByName[spellKey]) {
+    const pageIdKey = page.pageid ? String(page.pageid) : "";
+    if (!pageIdKey) {
       errors.push({
-        title: spellKey,
-        message:
-          "Duplicate spell name encountered after overrides (even after suffixing)",
+        title: page.title ?? "<unknown page>",
+        message: "Missing pageid; skipping spell entry",
       });
       continue;
     }
 
-    spellsByName[spellKey] = merged;
+    if (spellsByWikiPageId[pageIdKey]) {
+      errors.push({
+        title: page.title ?? pageIdKey,
+        message: `Duplicate pageid ${pageIdKey} encountered; skipping subsequent entry`,
+      });
+      continue;
+    }
+
+    spellsByWikiPageId[pageIdKey] = merged;
   }
 
-  for (const [spellKey, spell] of Object.entries(spellsByName)) {
+  for (const [spellKey, spell] of Object.entries(spellsByWikiPageId)) {
     spell.sections = Object.fromEntries(
       Object.entries(spell.sections).map(([k, v]) => [
         k,
         stripTemplateArtifacts(v),
       ]),
     );
-    spellsByName[spellKey] = spell;
+    spellsByWikiPageId[spellKey] = spell;
   }
 
-  return { spellsByName, errors };
+  return { spellsByWikiPageId, errors };
 }
 
 /**
@@ -296,14 +300,14 @@ async function main() {
     generatedAt: new Date().toISOString(),
     source: "https://adnd2e.fandom.com",
     categoryName: wizard.categoryName,
-    spellsByName: wizardParsed.spellsByName,
+    spellsByWikiPageId: wizardParsed.spellsByWikiPageId,
     errors: wizardParsed.errors,
   };
   const priestOut: SpellDescriptionsFile = {
     generatedAt: new Date().toISOString(),
     source: "https://adnd2e.fandom.com",
     categoryName: priest.categoryName,
-    spellsByName: priestParsed.spellsByName,
+    spellsByWikiPageId: priestParsed.spellsByWikiPageId,
     errors: priestParsed.errors,
   };
 
@@ -320,10 +324,10 @@ async function main() {
   );
 
   console.log(
-    `Wrote wizardSpellDescriptions.json (${Object.keys(wizardOut.spellsByName).length} spells; ${wizardOut.errors.length} parse errors)`,
+    `Wrote wizardSpellDescriptions.json (${Object.keys(wizardOut.spellsByWikiPageId).length} spells; ${wizardOut.errors.length} parse errors)`,
   );
   console.log(
-    `Wrote priestSpellDescriptions.json (${Object.keys(priestOut.spellsByName).length} spells; ${priestOut.errors.length} parse errors)`,
+    `Wrote priestSpellDescriptions.json (${Object.keys(priestOut.spellsByWikiPageId).length} spells; ${priestOut.errors.length} parse errors)`,
   );
 }
 

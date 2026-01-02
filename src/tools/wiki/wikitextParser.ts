@@ -175,7 +175,7 @@ function normalizeInfoboxValue(key: string, value: string): string {
 
   const newlineReplacement = normalizedKey === "source" ? ", " : " ";
 
-  return value
+  const cleaned = value
     .replace(/\u00A0/g, " ")
     .replace(/\r\n?/g, "\n")
     .replace(/\n+/g, newlineReplacement)
@@ -184,6 +184,21 @@ function normalizeInfoboxValue(key: string, value: string): string {
     .replace(/(?:,\s*){2,}/g, ", ")
     .trim()
     .replace(/,$/, "");
+
+  if (normalizedKey === "level") {
+    const lower = cleaned.toLowerCase();
+    const fixups: Record<string, string> = {
+      "quest spell": "Quest",
+      cantrip: "0",
+      orison: "0",
+      "2 - cbn 1 - wsc": "1",
+      "3 (sha'ir) 4 (wsc)": "4",
+      "6 (pftm) 5 (em)": "5",
+    };
+    if (fixups[lower]) return fixups[lower];
+  }
+
+  return cleaned;
 }
 
 function normalizeInfoboxKey(key: string): string {
