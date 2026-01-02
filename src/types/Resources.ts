@@ -10,8 +10,8 @@
  * be added as we encounter new canonical infobox attributes.
  */
 export interface SpellDescriptionMetadata {
-  name?: string;
-  source?: string;
+  name: string;
+  source: string;
   class?: string;
   level?: string;
   school?: string;
@@ -42,8 +42,16 @@ export interface SpellDescriptionJson {
   /** Section bodies keyed by heading (e.g. `Combat & Tactics`). */
   sections: Record<string, string>;
   /** MediaWiki page id the spell was sourced from. */
-  wikiPageId?: number;
+  id?: number;
   /** Direct link to the originating wiki page (curid-based for stability). */
+  wikiLink?: string;
+}
+
+/** Minimal spell list entry derived from spell descriptions. */
+export interface SpellListEntry {
+  level: number;
+  name: string;
+  id: number;
   wikiLink?: string;
 }
 
@@ -58,7 +66,7 @@ export type SpellDescriptionsFile = {
   /** Category name for traceability. */
   categoryName: string;
   /** Descriptions keyed by MediaWiki page id (stringified). */
-  spellsByWikiPageId: Record<string, SpellDescriptionJson>;
+  spellsById: Record<string, SpellDescriptionJson>;
   /** Parsing errors encountered by this generator (not page fetch errors). */
   errors: Array<{ title: string; message: string }>;
 };

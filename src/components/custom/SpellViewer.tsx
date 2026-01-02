@@ -1,9 +1,15 @@
-import { fetchSpell } from "@/lib/wikiFetch";
-import { MediaWikiPageJson } from "@/types/MediaWiki";
 import { Spell } from "@/types/Spell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useAtomValue } from "jotai";
+import {
+  priestSpellDescriptionsAtom,
+  spellDataStatusAtom,
+  wizardSpellDescriptionsAtom,
+} from "@/globalState";
+import type { SpellDescriptionJson } from "@/types/Resources";
+import "./SpellViewer.css";
 
 interface SpellViewerProps {
   spell: Spell;
@@ -18,120 +24,112 @@ interface SpellViewerProps {
  */
 export function SpellViewer(props: SpellViewerProps) {
   const { spell } = props;
-  const [data, setData] = useState<MediaWikiPageJson | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const wizardDescriptions = useAtomValue(wizardSpellDescriptionsAtom);
+  const priestDescriptions = useAtomValue(priestSpellDescriptionsAtom);
+  const spellStatus = useAtomValue(spellDataStatusAtom);
 
-  useEffect(() => {
-    let canceled = false;
-
-    async function loadSpell() {
-      setLoading(true);
-      setError(null);
-      try {
-        const spellData = await fetchSpell(spell);
-        if (!canceled) setData(spellData);
-      } catch (err: any) {
-        if (!canceled) setError(err.message || "Failed to fetch spell");
-      } finally {
-        if (!canceled) setLoading(false);
-      }
+  const description: SpellDescriptionJson | undefined = useMemo(() => {
+    const key = String(spell.id);
+    if (spell.spellClass === "wizard") {
+      return wizardDescriptions[key] ?? priestDescriptions[key];
     }
+    if (spell.spellClass === "priest") {
+      return priestDescriptions[key] ?? wizardDescriptions[key];
+    }
+    return wizardDescriptions[key] ?? priestDescriptions[key];
+  }, [priestDescriptions, spell.id, spell.spellClass, wizardDescriptions]);
 
-    loadSpell();
-
-    return () => {
-      canceled = true;
-    };
-  }, [spell]);
-
-  const infoboxEntries = useMemo(() => {
-    if (!data?.infobox) return [] as Array<[string, string]>;
-
-    return Object.entries(data.infobox)
+  const metadataEntries = useMemo(() => {
+    if (!description) return [] as Array<[string, string]>;
+    return Object.entries(description.metadata)
+      .filter(([, v]) => v !== undefined && String(v).trim().length > 0)
       .map(([k, v]) => [k.trim(), String(v ?? "").trim()] as [string, string])
-      .filter(([k, v]) => k.length > 0 && v.length > 0)
+      .filter(([k, v]) => k.length > 0 && v.length > 0 && k !== "name")
       .sort((a, b) => a[0].localeCompare(b[0]));
-  }, [data]);
+  }, [description]);
 
   const sectionEntries = useMemo(() => {
-    if (!data?.sections) return [] as Array<[string, string]>;
-
-    return Object.entries(data.sections)
+    if (!description) return [] as Array<[string, string]>;
+    // Preserve section order from source; do not sort.
+    return Object.entries(description.sections)
       .map(([k, v]) => [k.trim(), String(v ?? "").trim()] as [string, string])
-      .filter(([k, v]) => k.length > 0 && v.length > 0)
-      .sort((a, b) => a[0].localeCompare(b[0]));
-  }, [data]);
+      .filter(([k, v]) => k.length > 0 && v.length > 0);
+  }, [description]);
 
-  if (loading)
+  const formatValue = (value: string) =>
+    value.replace(/<br\s*\/?>(\s*)/gi, "\n").trim();
+
+  if (!spellStatus.ready) {
     return (
       <div className="text-sm text-muted-foreground">
-        Loading {spell.name}...
+        Loading spell descriptions...
       </div>
-    );
-
-  if (error)
-    return (
-      <div className="text-sm text-destructive">
-        Error loading {spell.name}: {error}
-      </div>
-    );
-
-  if (data) {
-    return (
-      <Card>
-        <CardContent className="space-y-6 p-4">
-          <div className="space-y-1">
-            <div className="text-lg font-semibold leading-tight">
-              {data.title || spell.name}
-            </div>
-            {Array.isArray(data.categories) && data.categories.length > 0 && (
-              <div className="text-xs text-muted-foreground">
-                Categories: {data.categories.join(", ")}
-              </div>
-            )}
-          </div>
-
-          {infoboxEntries.length > 0 && (
-            <div className="space-y-2">
-              <div className="text-sm font-semibold">Details</div>
-              <Table>
-                <TableBody>
-                  {infoboxEntries.map(([k, v]) => (
-                    <TableRow key={k}>
-                      <TableCell className="w-px pr-4 font-medium text-muted-foreground whitespace-nowrap">
-                        {k}
-                      </TableCell>
-                      <TableCell className="whitespace-pre-wrap break-words">
-                        {v}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-
-          {sectionEntries.length > 0 ? (
-            <div className="space-y-6">
-              {sectionEntries.map(([heading, content]) => (
-                <section key={heading} className="space-y-2">
-                  <h3 className="text-sm font-semibold">{heading}</h3>
-                  <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                    {content}
-                  </div>
-                </section>
-              ))}
-            </div>
-          ) : (
-            <div className="text-sm text-muted-foreground">
-              No page sections available.
-            </div>
-          )}
-        </CardContent>
-      </Card>
     );
   }
 
-  return <div className="text-sm text-muted-foreground">No data.</div>;
+  if (!description) {
+    return (
+      <div className="text-sm text-muted-foreground">
+        No description found for {spell.name} (page {spell.id}).
+      </div>
+    );
+  }
+
+  return (
+    <Card>
+      <CardContent className="space-y-6 p-4">
+        <div className="space-y-1">
+          <div className="text-lg font-semibold leading-tight">
+            {description.metadata.name}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {spell.spellClass.toUpperCase()} · Level {spell.level} · page{" "}
+            {spell.id}
+          </div>
+          {description.wikiLink && (
+            <div className="text-xs text-muted-foreground">
+              Source: {description.wikiLink}
+            </div>
+          )}
+        </div>
+
+        {metadataEntries.length > 0 && (
+          <div className="space-y-2">
+            <div className="text-sm font-semibold">Details</div>
+            <Table>
+              <TableBody>
+                {metadataEntries.map(([k, v]) => (
+                  <TableRow key={k}>
+                    <TableCell className="w-px pr-4 font-medium text-muted-foreground whitespace-nowrap">
+                      {k}
+                    </TableCell>
+                    <TableCell className="whitespace-pre-wrap break-words">
+                      {formatValue(v)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+
+        {sectionEntries.length > 0 ? (
+          <div className="space-y-6">
+            {sectionEntries.map(([heading, content], index) => (
+              <section key={`${heading}-${index}`} className="space-y-2">
+                <div
+                  className="prose prose-sm max-w-none text-sm leading-relaxed break-words"
+                  dangerouslySetInnerHTML={{ __html: content }}
+                />
+              </section>
+            ))}
+          </div>
+        ) : (
+          <div className="text-sm text-muted-foreground">
+            No page sections available.
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }

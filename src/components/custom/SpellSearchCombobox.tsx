@@ -9,6 +9,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { priestSpellsAtom, wizardSpellsAtom } from "@/globalState";
+import { openSpellViewer } from "@/lib/spellLookup";
 
 export function SpellSearchCombobox({ closeMenu }: { closeMenu: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -29,7 +30,7 @@ export function SpellSearchCombobox({ closeMenu }: { closeMenu: () => void }) {
     const spell = allSpells.find((s) => s.name === name);
     if (!spell) return;
     closeMenu();
-    window.open(spell.link, "_blank"); // ← open in new tab/window
+    openSpellViewer(spell);
   };
 
   return (

@@ -1,6 +1,9 @@
 import wtf from "wtf_wikipedia";
 import wtfHtml from "wtf-plugin-html";
-import type { SpellDescriptionJson } from "../../types/Resources";
+import type {
+  SpellDescriptionJson,
+  SpellDescriptionMetadata,
+} from "../../types/Resources";
 
 let htmlPluginApplied = false;
 function ensureWtfHtmlPlugin(): void {
@@ -68,7 +71,7 @@ export function parseSpellWikitextToJson(opts: {
   const { sectionsHtml } = parseSections(bodyAfterInfobox);
 
   return {
-    metadata: infoboxText,
+    metadata: withRequiredMetadataDefaults(infoboxText),
     sections: sectionsHtml,
   };
 }
@@ -139,12 +142,26 @@ function tryParseWithWtfWikipedia(opts: {
     }
 
     return {
-      metadata: infoboxText,
+      metadata: withRequiredMetadataDefaults(infoboxText),
       sections: sectionsHtml,
     };
   } catch {
     return null;
   }
+}
+
+/**
+ * Ensures required metadata fields are present (name/source) for downstream typing.
+ * Values may still be empty; required checks happen in the generator.
+ */
+function withRequiredMetadataDefaults(
+  metadata: Record<string, string>,
+): SpellDescriptionMetadata {
+  return {
+    name: metadata.name ?? "",
+    source: metadata.source ?? "",
+    ...metadata,
+  } as SpellDescriptionMetadata;
 }
 
 /**

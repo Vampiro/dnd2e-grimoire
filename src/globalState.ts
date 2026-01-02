@@ -2,6 +2,7 @@ import { type User } from "firebase/auth";
 import { atom, getDefaultStore } from "jotai";
 import { Character } from "./types/Character";
 import type { Spell } from "./types/Spell";
+import type { SpellDescriptionJson } from "./types/Resources";
 
 /**
  * Global Jotai store instance.
@@ -51,6 +52,19 @@ export const spellDataStatusAtom = atom<SpellDataStatus>({
 export const wizardSpellsAtom = atom<Spell[]>([]);
 /** Priest spell list loaded at runtime (see `loadSpellData`). */
 export const priestSpellsAtom = atom<Spell[]>([]);
+
+/** Full wizard spell descriptions keyed by spell id. */
+export const wizardSpellDescriptionsAtom = atom<
+  Record<string, SpellDescriptionJson>
+>({});
+
+/** Full priest spell descriptions keyed by spell id. */
+export const priestSpellDescriptionsAtom = atom<
+  Record<string, SpellDescriptionJson>
+>({});
+
+/** Globally selected spell for viewer dialogs. */
+export const activeSpellForViewerAtom = atom<Spell | null>(null);
 
 /**
  * Global UI scale multiplier.

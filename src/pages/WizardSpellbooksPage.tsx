@@ -41,13 +41,16 @@ import {
   WizardClassProgression,
   WizardSpellbook,
 } from "@/types/WizardClassProgression";
-import { findWizardSpellByName, getWizardSpellsByLevel } from "@/lib/spellLookup";
+import { findWizardSpellById, getWizardSpellsByLevel } from "@/lib/spellLookup";
 import type { Spell } from "@/types/Spell";
 import { Info } from "lucide-react";
+import { SpellViewer } from "@/components/custom/SpellViewer";
 import {
   addSpellToWizardSpellbook,
   addWizardSpellbook,
 } from "@/firebase/characters";
+
+const SPELL_LEVELS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 export function WizardSpellbooksPage() {
   const { characterId } = useParams();
@@ -117,13 +120,7 @@ export function WizardSpellbooksPage() {
               Level {selectedSpell?.level} Spell
             </DialogDescription>
           </DialogHeader>
-          {selectedSpell && (
-            <div className="space-y-2">
-              <div className="text-sm text-muted-foreground">
-                Link: {selectedSpell.link}
-              </div>
-            </div>
-          )}
+          {selectedSpell && <SpellViewer spell={selectedSpell} />}
         </DialogContent>
       </Dialog>
     </div>
@@ -141,35 +138,35 @@ function SpellbookCard({
 }) {
   const spellsByLevel = useMemo(() => {
     const grouped: Record<number, Spell[]> = {};
-    Object.keys(spellbook.spellsByName).forEach((name) => {
-      const spell = findWizardSpellByName(name);
-      if (spell) {
-        grouped[spell.level] = grouped[spell.level] || [];
-        grouped[spell.level].push(spell);
-      }
+    const spellsById = spellbook.spellsById ?? {};
+    Object.keys(spellsById).forEach((idKey) => {
+      const spellId = Number(idKey);
+      const spell = Number.isNaN(spellId) ? null : findWizardSpellById(spellId);
+      if (!spell) return;
+      grouped[spell.level] = grouped[spell.level] || [];
+      grouped[spell.level].push(spell);
     });
     return grouped;
-  }, [spellbook.spellsByName]);
+  }, [spellbook.spellsById]);
 
   const [selectedLevel, setSelectedLevel] = useState<number | undefined>(1);
   const [spellPopoverOpen, setSpellPopoverOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
-  const availableSpells = selectedLevel
-    ? getWizardSpellsByLevel(selectedLevel)
-    : [];
+  const availableSpells =
+    selectedLevel !== undefined ? getWizardSpellsByLevel(selectedLevel) : [];
+  const availableSpellsSorted = [...availableSpells].sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 
-  const handleSelectSpell = async (spellName: string) => {
-    const spell = availableSpells.find((s) => s.name === spellName);
+  const handleSelectSpell = async (spellId: string) => {
+    const numericId = Number(spellId);
+    const spell = availableSpells.find((s) => s.id === numericId);
     if (!spell) return;
     setAdding(true);
     setAddError(null);
     try {
-      await addSpellToWizardSpellbook(
-        characterId,
-        spellbook.id,
-        spell.name,
-      );
+      await addSpellToWizardSpellbook(characterId, spellbook.id, spell.id);
       setSpellPopoverOpen(false);
     } catch (err) {
       setAddError(err instanceof Error ? err.message : "Failed to add spell");
@@ -196,7 +193,7 @@ function SpellbookCard({
                 <SelectValue placeholder="Level" />
               </SelectTrigger>
               <SelectContent>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((lvl) => (
+                {SPELL_LEVELS.map((lvl) => (
                   <SelectItem
                     key={lvl}
                     value={String(lvl)}
@@ -227,12 +224,12 @@ function SpellbookCard({
                   <CommandList>
                     <CommandEmpty>No spells found.</CommandEmpty>
                     <CommandGroup heading={`Level ${selectedLevel ?? ""}`}>
-                      {availableSpells.map((spell) => (
+                      {availableSpellsSorted.map((spell) => (
                         <CommandItem
-                          key={spell.name}
+                          key={spell.id}
                           value={spell.name}
                           className="cursor-pointer"
-                          onSelect={() => handleSelectSpell(spell.name)}
+                          onSelect={() => handleSelectSpell(String(spell.id))}
                         >
                           {spell.name}
                         </CommandItem>
@@ -248,7 +245,7 @@ function SpellbookCard({
 
         {/* Spells grouped by level */}
         <div className="space-y-3">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((lvl) => {
+          {SPELL_LEVELS.map((lvl) => {
             const spells = (spellsByLevel[lvl] || [])
               .slice()
               .sort((a, b) => a.name.localeCompare(b.name));
@@ -259,7 +256,7 @@ function SpellbookCard({
                 <div className="space-y-1">
                   {spells.map((spell) => (
                     <div
-                      key={spell.name}
+                      key={spell.id}
                       className="flex items-center gap-2 text-sm"
                     >
                       <span>{spell.name}</span>

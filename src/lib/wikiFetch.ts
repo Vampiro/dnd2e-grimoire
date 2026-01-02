@@ -10,7 +10,11 @@ const serverProxyBaseUrl = import.meta.env.VITE_PROXY_BASE_URL;
  * @returns The parsed JSON from the Fandom API
  */
 export async function fetchSpell(spell: Spell): Promise<MediaWikiPageJson> {
-  const spellPage = getSpellPageFromLink(spell.link);
+  const link = spell.wikiLink;
+  if (!link) {
+    throw new Error("Spell is missing wikiLink");
+  }
+  const spellPage = getSpellPageFromLink(link);
   const encodedName = encodeURIComponent(spellPage);
   const url = `${serverProxyBaseUrl}/api/adnd2ewiki/${encodedName}`;
 

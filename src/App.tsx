@@ -27,6 +27,7 @@ import { charactersAtom } from "./globalState";
 import { loadSpellData } from "./lib/spellLookup";
 import { SettingsPage } from "./pages/SettingsPage";
 import { subscribeToUserSettings } from "./firebase/userSettings";
+import { SpellViewerDialog } from "./components/custom/SpellViewerDialog";
 
 /** Root application component. */
 function App() {
@@ -119,6 +120,7 @@ function App() {
     <div>
       <Toaster />
       <Navbar />
+      <SpellViewerDialog />
 
       {user && (
         <main className="mx-auto w-full max-w-6xl">

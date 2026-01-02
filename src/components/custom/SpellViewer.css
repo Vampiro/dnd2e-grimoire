@@ -1,0 +1,64 @@
+:root {
+  /* Placeholder theme hooks for wiki-derived content. */
+}
+
+/* Container wrappers used by the wiki HTML payloads. */
+.section {
+  margin: 0;
+  padding: 0;
+}
+
+.section .text {
+  display: block;
+}
+
+.section .paragraph {
+  margin: 0 0 0.5rem 0;
+}
+
+.section .sentence {
+  display: inline;
+}
+
+/* List placeholders */
+.section ul,
+.section ol {
+  margin: 0.5rem 0 0.5rem 1.25rem;
+}
+
+.section li {
+  margin: 0.25rem 0;
+}
+
+/* Table placeholders */
+.section table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5rem 0;
+}
+
+.section th,
+.section td {
+  border: 1px solid hsl(0 0% 88%);
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+}
+
+.section th {
+  background: hsl(0 0% 96%);
+  font-weight: 600;
+}
+
+/* Highlight placeholder */
+.highlight {
+  background: hsl(48 100% 90%);
+  padding: 0 0.15rem;
+}
+
+/* Headings inside wiki HTML */
+.section h1 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  margin-bottom: 0.35rem;
+}

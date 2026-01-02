@@ -5,11 +5,10 @@
  * Increment a value to invalidate IndexedDB caches and force a refetch.
  */
 export const LATEST_RESOURCE_VERSIONS = {
-  wizardSpells: 1,
-  priestSpells: 1,
+  priestSpellDescriptions: 8,
+  priestSpells: 4,
+  wizardSpellDescriptions: 10,
+  wizardSpells: 4,
 } as const;
 
-/**
- * Strongly-typed view of {@link LATEST_RESOURCE_VERSIONS}.
- */
 export type LatestResourceVersions = typeof LATEST_RESOURCE_VERSIONS;

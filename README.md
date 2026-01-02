@@ -58,16 +58,18 @@ This repo includes Node-based generator scripts that cache spell data from the A
 type SpellDescription = {
   metadata: Record<string, string | boolean>; // plain text (booleans for components), infobox-derived (post overrides)
   sections: Record<string, string>; // HTML, keyed by heading (Introduction fallback)
-  wikiPageId?: number; // MediaWiki page id for traceability
+  id?: number; // MediaWiki page id for traceability
 };
 type SpellDescriptionsFile = {
   generatedAt: string;
   source: "https://adnd2e.fandom.com";
   categoryName: string;
-  spellsByWikiPageId: Record<string, SpellDescription>; // keyed by MediaWiki pageid
+  spellsById: Record<string, SpellDescription>; // keyed by MediaWiki pageid
   errors: Array<{ title: string; message: string }>;
 };
 ```
+
+- `id` equals the MediaWiki `pageid` (curid) and is the canonical key for lookups/storage (spellbooks, prepared spells, descriptions).
 
 - Infobox fields we expect (all optional; others are preserved as-is):
   - `name`, `source`, `class`, `level`, `school`, `sphere`

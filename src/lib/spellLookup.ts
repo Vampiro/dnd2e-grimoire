@@ -1,13 +1,19 @@
 import { Spell } from "@/types/Spell";
 import { getResourceCached } from "./resourceCache";
 import { LATEST_RESOURCE_VERSIONS } from "@/resources/latestResourceVersions";
-import { priestSpellsAtom, store, wizardSpellsAtom } from "@/globalState";
-
-type SpellJson = {
-  level: number;
-  name: string;
-  link: string;
-};
+import {
+  activeSpellForViewerAtom,
+  priestSpellDescriptionsAtom,
+  priestSpellsAtom,
+  store,
+  wizardSpellDescriptionsAtom,
+  wizardSpellsAtom,
+} from "@/globalState";
+import type {
+  SpellDescriptionJson,
+  SpellDescriptionsFile,
+  SpellListEntry,
+} from "@/types/Resources";
 
 let spellDataLoadPromise: Promise<void> | null = null;
 
@@ -23,38 +29,55 @@ export function loadSpellData(): Promise<void> {
 
   spellDataLoadPromise = (async () => {
     const versions = LATEST_RESOURCE_VERSIONS;
-
     const baseUrl = import.meta.env.BASE_URL;
-    const wizardUrl = `${baseUrl}resources/wizardSpells.json?v=${versions.wizardSpells}`;
-    const priestUrl = `${baseUrl}resources/priestSpells.json?v=${versions.priestSpells}`;
 
-    const [wizard, priest] = await Promise.all([
-      getResourceCached<SpellJson[]>({
-        name: "wizardSpells",
-        version: versions.wizardSpells,
-        url: wizardUrl,
-      }),
-      getResourceCached<SpellJson[]>({
-        name: "priestSpells",
-        version: versions.priestSpells,
-        url: priestUrl,
-      }),
-    ]);
+    const [wizardList, priestList, wizardDescriptions, priestDescriptions] =
+      await Promise.all([
+        getResourceCached<SpellListEntry[]>({
+          name: "wizardSpells",
+          version: versions.wizardSpells,
+          url: `${baseUrl}resources/wizardSpells.json?v=${versions.wizardSpells}`,
+        }),
+        getResourceCached<SpellListEntry[]>({
+          name: "priestSpells",
+          version: versions.priestSpells,
+          url: `${baseUrl}resources/priestSpells.json?v=${versions.priestSpells}`,
+        }),
+        getResourceCached<SpellDescriptionsFile>({
+          name: "wizardSpellDescriptions",
+          version: versions.wizardSpellDescriptions,
+          url: `${baseUrl}resources/wizardSpellDescriptions.json?v=${versions.wizardSpellDescriptions}`,
+        }),
+        getResourceCached<SpellDescriptionsFile>({
+          name: "priestSpellDescriptions",
+          version: versions.priestSpellDescriptions,
+          url: `${baseUrl}resources/priestSpellDescriptions.json?v=${versions.priestSpellDescriptions}`,
+        }),
+      ]);
 
-    const wizardSpells: Spell[] = wizard.map((s) => ({
+    const wizardSpellMap = wizardDescriptions.spellsById ?? {};
+    const priestSpellMap = priestDescriptions.spellsById ?? {};
+
+    const wizardSpells: Spell[] = wizardList.map((s) => ({
       level: s.level,
       name: s.name,
-      link: s.link,
+      id: s.id,
+      wikiLink: s.wikiLink ?? wizardSpellMap[String(s.id)]?.wikiLink,
+      spellClass: "wizard",
     }));
 
-    const priestSpells: Spell[] = priest.map((s) => ({
+    const priestSpells: Spell[] = priestList.map((s) => ({
       level: s.level,
       name: s.name,
-      link: s.link,
+      id: s.id,
+      wikiLink: s.wikiLink ?? priestSpellMap[String(s.id)]?.wikiLink,
+      spellClass: "priest",
     }));
 
     store.set(wizardSpellsAtom, wizardSpells);
     store.set(priestSpellsAtom, priestSpells);
+    store.set(wizardSpellDescriptionsAtom, wizardSpellMap);
+    store.set(priestSpellDescriptionsAtom, priestSpellMap);
   })();
 
   return spellDataLoadPromise;
@@ -92,4 +115,33 @@ export function getWizardSpellsByLevel(level: number): Spell[] {
  */
 export function getPriestSpellsByLevel(level: number): Spell[] {
   return store.get(priestSpellsAtom).filter((s) => s.level === level);
+}
+
+/** Returns a spell description by spell id (checks both classes). */
+export function getSpellDescriptionById(
+  id: number,
+): SpellDescriptionJson | undefined {
+  const key = String(id);
+  return (
+    store.get(wizardSpellDescriptionsAtom)[key] ||
+    store.get(priestSpellDescriptionsAtom)[key]
+  );
+}
+
+export function findWizardSpellById(id: number): Spell | null {
+  return store.get(wizardSpellsAtom).find((s) => s.id === id) ?? null;
+}
+
+export function findPriestSpellById(id: number): Spell | null {
+  return store.get(priestSpellsAtom).find((s) => s.id === id) ?? null;
+}
+
+/** Opens the global spell viewer dialog for the provided spell. */
+export function openSpellViewer(spell: Spell): void {
+  store.set(activeSpellForViewerAtom, spell);
+}
+
+/** Clears any active spell viewer dialog. */
+export function closeSpellViewer(): void {
+  store.set(activeSpellForViewerAtom, null);
 }

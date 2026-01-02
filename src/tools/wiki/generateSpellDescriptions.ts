@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { parseSpellWikitextToJson } from "./wikitextParser";
 import type { SpellDescriptionOverride, SpellWikitextBatchFile } from "./types";
@@ -8,6 +8,7 @@ import type {
   SpellDescriptionJson,
   SpellDescriptionsFile,
   SpellDescriptionMetadata,
+  SpellListEntry,
 } from "../../types/Resources";
 
 /** Resolves the repository root directory from the current script path. */
@@ -77,12 +78,24 @@ const allowedKeysByLower = new Map<string, keyof SpellDescriptionMetadata>(
 );
 
 const WIKI_BASE_URL = "https://adnd2e.fandom.com/wiki";
+const RESOURCE_VERSIONS_PATH = path.resolve(
+  getRepoRootDir(),
+  "src",
+  "resources",
+  "latestResourceVersions.ts",
+);
+
+type ResourceVersionMap = Record<string, number>;
+type MetadataMap = Record<
+  keyof SpellDescriptionMetadata,
+  SpellDescriptionMetadata[keyof SpellDescriptionMetadata]
+>;
 
 function mergeCaseInsensitiveRecord(
   base: SpellDescriptionMetadata,
   overrides: Record<string, string | undefined>,
 ): SpellDescriptionMetadata {
-  const out: SpellDescriptionMetadata = { ...base };
+  const out: MetadataMap = { ...base } as MetadataMap;
   const existingKeysByLower = new Map<string, keyof SpellDescriptionMetadata>();
   for (const k of Object.keys(out) as Array<keyof SpellDescriptionMetadata>) {
     existingKeysByLower.set(k.toLowerCase(), k);
@@ -97,30 +110,30 @@ function mergeCaseInsensitiveRecord(
     if (existingKey && existingKey !== normalizedKey) {
       delete out[existingKey];
     }
-    (out as Record<string, string | boolean | undefined>)[normalizedKey] = v;
+    out[normalizedKey] = v as MetadataMap[keyof SpellDescriptionMetadata];
     existingKeysByLower.set(lower, normalizedKey);
   }
 
-  return out;
+  return out as SpellDescriptionMetadata;
 }
 
 function filterKnownMetadata(
   metadata: SpellDescriptionMetadata,
 ): SpellDescriptionMetadata {
-  const out: SpellDescriptionMetadata = {};
+  const out: Partial<MetadataMap> = { name: "", source: "" };
   for (const key of allowedMetadataKeys) {
     const val = metadata[key];
     if (val !== undefined) {
-      (out as Record<string, string | boolean | undefined>)[key] = val;
+      out[key] = val as MetadataMap[keyof SpellDescriptionMetadata];
     }
   }
-  return out;
+  return out as SpellDescriptionMetadata;
 }
 
 function normalizeComponentFlags(
   metadata: SpellDescriptionMetadata,
 ): SpellDescriptionMetadata {
-  const out: SpellDescriptionMetadata = { ...metadata };
+  const out: MetadataMap = { ...metadata } as MetadataMap;
   const componentKeys: Array<keyof SpellDescriptionMetadata> = [
     "verbal",
     "somatic",
@@ -132,13 +145,13 @@ function normalizeComponentFlags(
     if (raw === undefined) continue;
     const value = String(raw).trim().toLowerCase();
     if (value === "1" || value === "true") {
-      (out as Record<string, boolean>)[key] = true;
+      out[key] = true as MetadataMap[keyof SpellDescriptionMetadata];
     } else {
       delete out[key];
     }
   }
 
-  return out;
+  return out as SpellDescriptionMetadata;
 }
 
 const stripTemplateArtifacts = (html: string): string =>
@@ -148,18 +161,94 @@ const stripTemplateArtifacts = (html: string): string =>
     .replace(/\}\}/g, "")
     .trim();
 
-/** Parses a batch file into a `spellsByWikiPageId` map. */
+const parseLevelNumber = (raw: string | undefined): number => {
+  if (!raw) return 0;
+  const match = String(raw).match(/\d+/);
+  return match ? Number(match[0]) : 0;
+};
+
+type WriteJsonOpts = { ignoreKeys?: string[] };
+
+const stripKeys = (value: unknown, ignore: Set<string>): unknown => {
+  if (!ignore.size) return value;
+  if (Array.isArray(value)) return value.map((v) => stripKeys(v, ignore));
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([k]) => !ignore.has(k))
+        .map(([k, v]) => [k, stripKeys(v, ignore)]),
+    );
+  }
+  return value;
+};
+
+async function writeJsonIfChanged(
+  outPath: string,
+  data: unknown,
+  opts?: WriteJsonOpts,
+): Promise<boolean> {
+  const ignoreKeys = new Set(opts?.ignoreKeys ?? []);
+  const serialize = (val: unknown) =>
+    JSON.stringify(stripKeys(val, ignoreKeys), null, 2) + "\n";
+
+  const next = serialize(data);
+  try {
+    const currentRaw = await fs.readFile(outPath, "utf8");
+    const currentParsed = JSON.parse(currentRaw) as unknown;
+    const current = serialize(currentParsed);
+    if (current === next) {
+      return false;
+    }
+  } catch {
+    // File missing or parse failed; will write below.
+  }
+
+  await fs.mkdir(path.dirname(outPath), { recursive: true });
+  await fs.writeFile(outPath, JSON.stringify(data, null, 2) + "\n", "utf8");
+  return true;
+}
+
+async function readResourceVersions(): Promise<ResourceVersionMap> {
+  try {
+    const mod = (await import(pathToFileURL(RESOURCE_VERSIONS_PATH).href)) as {
+      LATEST_RESOURCE_VERSIONS?: ResourceVersionMap;
+    };
+    if (mod?.LATEST_RESOURCE_VERSIONS)
+      return { ...mod.LATEST_RESOURCE_VERSIONS };
+  } catch {
+    // Fall back to defaults below.
+  }
+  return {};
+}
+
+async function writeResourceVersions(
+  versions: ResourceVersionMap,
+): Promise<void> {
+  const sortedEntries = Object.entries(versions).sort(([a], [b]) =>
+    a.localeCompare(b),
+  );
+  const objLiteral = sortedEntries.map(([k, v]) => `  ${k}: ${v},`).join("\n");
+  const content = `/**\n * Latest known versions for runtime-loaded resources.\n *\n * @remarks\n * Increment a value to invalidate IndexedDB caches and force a refetch.\n */\nexport const LATEST_RESOURCE_VERSIONS = {\n${objLiteral}\n} as const;\n\nexport type LatestResourceVersions = typeof LATEST_RESOURCE_VERSIONS;\n`;
+
+  const existing = await fs
+    .readFile(RESOURCE_VERSIONS_PATH, "utf8")
+    .catch(() => "");
+  if (existing === content) return;
+  await fs.writeFile(RESOURCE_VERSIONS_PATH, content, "utf8");
+}
+
+/** Parses a batch file into a `spellsById` map. */
 function parseBatchFileToDescriptions(opts: {
   batch: SpellWikitextBatchFile;
   overridesByTitle?: Record<string, SpellDescriptionOverride>;
   excludeTitles?: Set<string>;
   wikiBaseUrl?: string;
 }): {
-  spellsByWikiPageId: Record<string, SpellDescriptionJson>;
+  spellsById: Record<string, SpellDescriptionJson>;
   errors: Array<{ title: string; message: string }>;
 } {
   const wikiBaseUrl = opts.wikiBaseUrl ?? WIKI_BASE_URL;
-  const spellsByWikiPageId: Record<string, SpellDescriptionJson> = {};
+  const spellsById: Record<string, SpellDescriptionJson> = {};
   const errors: Array<{ title: string; message: string }> = [];
 
   const toTextValue = (v: string) => v.replace(/\r?\n/g, " ").trim();
@@ -224,22 +313,41 @@ function parseBatchFileToDescriptions(opts: {
       ]),
     );
 
+    const filteredMetadata = filterKnownMetadata(mergedMetadataWithComponents);
+    const resolvedName = getNameFromMetadata(
+      filteredMetadata,
+      page.title ?? `pageid:${page.pageid}`,
+    ).trim();
+
+    if (!resolvedName) {
+      errors.push({
+        title: page.title ?? `pageid:${page.pageid}`,
+        message: "Missing spell name; skipping spell entry",
+      });
+      continue;
+    }
+
+    filteredMetadata.name = resolvedName;
+
+    const resolvedSource = String(filteredMetadata.source ?? "").trim();
+    if (!resolvedSource) {
+      errors.push({
+        title: page.title ?? `pageid:${page.pageid}`,
+        message: "Missing spell source; skipping spell entry",
+      });
+      continue;
+    }
+
+    filteredMetadata.source = resolvedSource;
+
     const merged: SpellDescriptionJson = {
-      wikiPageId: page.pageid,
+      id: page.pageid,
       wikiLink: page.pageid
         ? `${wikiBaseUrl}/?curid=${page.pageid}`
         : undefined,
-      metadata: filterKnownMetadata(mergedMetadataWithComponents),
+      metadata: filteredMetadata,
       sections: mergedSections,
     };
-
-    const resolvedName = getNameFromMetadata(
-      merged.metadata,
-      page.title ?? `pageid:${page.pageid}`,
-    );
-    if (!merged.metadata.name && resolvedName) {
-      merged.metadata.name = resolvedName;
-    }
 
     const pageIdKey = page.pageid ? String(page.pageid) : "";
     if (!pageIdKey) {
@@ -250,7 +358,7 @@ function parseBatchFileToDescriptions(opts: {
       continue;
     }
 
-    if (spellsByWikiPageId[pageIdKey]) {
+    if (spellsById[pageIdKey]) {
       errors.push({
         title: page.title ?? pageIdKey,
         message: `Duplicate pageid ${pageIdKey} encountered; skipping subsequent entry`,
@@ -258,20 +366,35 @@ function parseBatchFileToDescriptions(opts: {
       continue;
     }
 
-    spellsByWikiPageId[pageIdKey] = merged;
+    spellsById[pageIdKey] = merged;
   }
 
-  for (const [spellKey, spell] of Object.entries(spellsByWikiPageId)) {
+  for (const [spellKey, spell] of Object.entries(spellsById)) {
     spell.sections = Object.fromEntries(
       Object.entries(spell.sections).map(([k, v]) => [
         k,
         stripTemplateArtifacts(v),
       ]),
     );
-    spellsByWikiPageId[spellKey] = spell;
+    spellsById[spellKey] = spell;
   }
 
-  return { spellsByWikiPageId, errors };
+  return { spellsById, errors };
+}
+
+function buildSpellListEntries(
+  spellsById: Record<string, SpellDescriptionJson>,
+): SpellListEntry[] {
+  return Object.entries(spellsById).map(([id, spell]) => {
+    const level = parseLevelNumber(spell.metadata.level);
+    const name = spell.metadata.name || `pageid:${id}`;
+    return {
+      level,
+      name,
+      id: Number(id),
+      wikiLink: spell.wikiLink,
+    } satisfies SpellListEntry;
+  });
 }
 
 /**
@@ -303,6 +426,19 @@ async function main() {
     "public",
     "resources",
     "priestSpellDescriptions.json",
+  );
+
+  const wizardListOutPath = path.join(
+    repoRoot,
+    "public",
+    "resources",
+    "wizardSpells.json",
+  );
+  const priestListOutPath = path.join(
+    repoRoot,
+    "public",
+    "resources",
+    "priestSpells.json",
   );
 
   const wizard = await readSpellWikitextBatchFile(wizardInPath);
@@ -337,34 +473,67 @@ async function main() {
     generatedAt: new Date().toISOString(),
     source: "https://adnd2e.fandom.com",
     categoryName: wizard.categoryName,
-    spellsByWikiPageId: wizardParsed.spellsByWikiPageId,
+    spellsById: wizardParsed.spellsById,
     errors: wizardParsed.errors,
   };
   const priestOut: SpellDescriptionsFile = {
     generatedAt: new Date().toISOString(),
     source: "https://adnd2e.fandom.com",
     categoryName: priest.categoryName,
-    spellsByWikiPageId: priestParsed.spellsByWikiPageId,
+    spellsById: priestParsed.spellsById,
     errors: priestParsed.errors,
   };
 
-  await fs.mkdir(path.dirname(wizardOutPath), { recursive: true });
-  await fs.writeFile(
-    wizardOutPath,
-    JSON.stringify(wizardOut, null, 2) + "\n",
-    "utf8",
-  );
-  await fs.writeFile(
-    priestOutPath,
-    JSON.stringify(priestOut, null, 2) + "\n",
-    "utf8",
-  );
+  const wizardList = buildSpellListEntries(wizardOut.spellsById);
+  const priestList = buildSpellListEntries(priestOut.spellsById);
+
+  const changes: Record<string, boolean> = {
+    wizardSpellDescriptions: await writeJsonIfChanged(
+      wizardOutPath,
+      wizardOut,
+      {
+        ignoreKeys: ["generatedAt"],
+      },
+    ),
+    priestSpellDescriptions: await writeJsonIfChanged(
+      priestOutPath,
+      priestOut,
+      {
+        ignoreKeys: ["generatedAt"],
+      },
+    ),
+    wizardSpells: await writeJsonIfChanged(wizardListOutPath, wizardList),
+    priestSpells: await writeJsonIfChanged(priestListOutPath, priestList),
+  };
+
+  const currentVersions = await readResourceVersions();
+  const nextVersions: ResourceVersionMap = {
+    ...currentVersions,
+    wizardSpellDescriptions: currentVersions.wizardSpellDescriptions ?? 1,
+    priestSpellDescriptions: currentVersions.priestSpellDescriptions ?? 1,
+    wizardSpells: currentVersions.wizardSpells ?? 1,
+    priestSpells: currentVersions.priestSpells ?? 1,
+  };
+
+  for (const [key, changed] of Object.entries(changes)) {
+    if (changed) {
+      nextVersions[key] = (currentVersions[key] ?? 1) + 1;
+    }
+  }
+
+  await writeResourceVersions(nextVersions);
 
   console.log(
-    `Wrote wizardSpellDescriptions.json (${Object.keys(wizardOut.spellsByWikiPageId).length} spells; ${wizardOut.errors.length} parse errors)`,
+    `wizardSpellDescriptions.json: ${Object.keys(wizardOut.spellsById).length} spells; ${wizardOut.errors.length} parse errors (${changes.wizardSpellDescriptions ? "updated" : "unchanged"})`,
   );
   console.log(
-    `Wrote priestSpellDescriptions.json (${Object.keys(priestOut.spellsByWikiPageId).length} spells; ${priestOut.errors.length} parse errors)`,
+    `priestSpellDescriptions.json: ${Object.keys(priestOut.spellsById).length} spells; ${priestOut.errors.length} parse errors (${changes.priestSpellDescriptions ? "updated" : "unchanged"})`,
+  );
+  console.log(
+    `wizardSpells.json (derived list): ${wizardList.length} spells (${changes.wizardSpells ? "updated" : "unchanged"})`,
+  );
+  console.log(
+    `priestSpells.json (derived list): ${priestList.length} spells (${changes.priestSpells ? "updated" : "unchanged"})`,
   );
 }
 
