@@ -193,9 +193,7 @@ function normalizeInfoboxValue(key: string, value: string): string {
 function normalizeSectionText(value: string): string {
   return (
     value
-      .replace(/\u00A0/g, " ")
       .replace(/\r\n?/g, "\n")
-      // Some wiki content contains hard line-wrapping that can split words.
       // Preserve paragraph breaks, but remove newlines that occur *within* words.
       .replace(/-\n(?=[A-Za-z])/g, "-")
       .replace(/([A-Za-z])\n(?=[A-Za-z])/g, "$1")
@@ -292,7 +290,7 @@ function parseSections(wikitext: string): {
       continue;
     }
 
-    currentLines.push(line.replace(/\u00A0/g, " "));
+    currentLines.push(line);
   }
 
   flush();
