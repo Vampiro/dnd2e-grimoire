@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { SpellViewer } from "./SpellViewer";
-import "./SpellViewerDialog.css";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 /** Global spell viewer dialog driven by atoms. */
 export function SpellViewerDialog() {
@@ -19,7 +19,7 @@ export function SpellViewerDialog() {
 
   return (
     <Dialog open={!!activeSpell} onOpenChange={(open) => !open && close()}>
-      <DialogContent className="w-[96vw] max-w-none sm:max-w-none md:max-w-6xl lg:max-w-8xl max-h-[80vh] overflow-y-auto spell-viewer-scroll">
+      <DialogContent className="w-[96vw] max-w-none sm:max-w-none md:max-w-6xl lg:max-w-7xl h-[80vh] overflow-hidden grid-rows-[auto,1fr]">
         <DialogHeader>
           <DialogTitle>{activeSpell?.name ?? "Spell"}</DialogTitle>
           {activeSpell && (
@@ -28,15 +28,17 @@ export function SpellViewerDialog() {
             </DialogDescription>
           )}
         </DialogHeader>
-        {activeSpell ? (
-          spellStatus.ready ? (
-            <SpellViewer spell={activeSpell} />
-          ) : (
-            <div className="text-sm text-muted-foreground">
-              Loading spell descriptions...
-            </div>
-          )
-        ) : null}
+        <ScrollArea type="always" className="h-full min-h-0 pr-4">
+          {activeSpell ? (
+            spellStatus.ready ? (
+              <SpellViewer spell={activeSpell} />
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                Loading spell descriptions...
+              </div>
+            )
+          ) : null}
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

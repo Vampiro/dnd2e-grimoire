@@ -16,11 +16,11 @@ interface SpellViewerProps {
 }
 
 /**
- * Displays details for a spell fetched from the AD&D 2e wiki proxy.
+ * Displays detailed information about a spell, including its description and metadata.
  *
- * @remarks
- * The backend returns a {@link MediaWikiPageJson} containing a title, infobox fields,
- * categories, and section content. This component renders those in a readable layout.
+ * @param props - The component props
+ * @param props.spell - The spell to display
+ * @returns The SpellViewer component
  */
 export function SpellViewer(props: SpellViewerProps) {
   const { spell } = props;
