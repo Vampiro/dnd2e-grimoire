@@ -168,7 +168,7 @@ function SpellbookCard({
               <SelectTrigger size="sm" className="w-24 cursor-pointer">
                 <SelectValue placeholder="Level" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="w-max min-w-max">
                 {SPELL_LEVELS.map((lvl) => (
                   <SelectItem
                     key={lvl}

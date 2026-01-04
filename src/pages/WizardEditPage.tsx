@@ -9,6 +9,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { SpellSlotModifier } from "@/types/ClassProgression";
 import { WizardClassProgression } from "@/types/WizardClassProgression";
 import { getWizardSpellSlots } from "@/lib/spellSlots";
@@ -152,18 +159,21 @@ function WizardEditor({
               Wizard Level
             </label>
 
-            <select
-              id={levelInputId}
-              className="w-16 rounded-md border border-input bg-background px-3 py-2 text-sm cursor-pointer"
-              value={level}
-              onChange={(e) => setLevel(Number(e.target.value))}
+            <Select
+              value={String(level)}
+              onValueChange={(val) => setLevel(Number(val))}
             >
-              {Array.from({ length: 20 }, (_, idx) => idx + 1).map((lvl) => (
-                <option key={lvl} value={lvl}>
-                  {lvl}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id={levelInputId} className="w-16 cursor-pointer">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="w-max min-w-max">
+                {Array.from({ length: 20 }, (_, idx) => idx + 1).map((lvl) => (
+                  <SelectItem key={lvl} value={String(lvl)}>
+                    {lvl}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -287,25 +297,26 @@ function SpellSlotModifiersEditor({
             {modifiers.map((mod, idx) => (
               <tr key={idx} className="border-b last:border-0">
                 <td className="px-2 py-1">
-                  <select
-                    value={mod.spellLevel}
-                    onChange={(e) =>
+                  <Select
+                    value={String(mod.spellLevel)}
+                    onValueChange={(value) =>
                       onChangeModifier(idx, {
-                        spellLevel:
-                          e.target.value === "all"
-                            ? "all"
-                            : Number(e.target.value),
+                        spellLevel: value === "all" ? "all" : Number(value),
                       })
                     }
-                    className="rounded-md border border-input bg-background px-2 py-1 text-sm cursor-pointer"
                   >
-                    <option value="all">All</option>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((lvl) => (
-                      <option key={lvl} value={lvl}>
-                        Level {lvl}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-max cursor-pointer">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="w-max min-w-max">
+                      <SelectItem value="all">All</SelectItem>
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((lvl) => (
+                        <SelectItem key={lvl} value={String(lvl)}>
+                          Level {lvl}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </td>
                 <td className="px-2 py-1 text-left">
                   <input
