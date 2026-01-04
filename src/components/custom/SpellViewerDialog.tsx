@@ -22,7 +22,7 @@ export function SpellViewerDialog() {
 
   return (
     <Dialog open={!!activeSpell} onOpenChange={(open) => !open && close()}>
-      <DialogContent className="h-[80vh] w-[90vw] max-w-none sm:max-w-none xl:max-w-[80vw] 2xl:max-w-[70vw] gap-4">
+      <DialogContent className="h-[80vh] w-[90vw] grid-rows-[auto_1fr] max-w-none sm:max-w-none xl:max-w-[80vw] 2xl:max-w-[70vw] gap-4">
         {activeSpell && description && (
           <DialogHeader>
             <DialogTitle>{description.metadata.name}</DialogTitle>

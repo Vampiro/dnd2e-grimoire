@@ -169,7 +169,6 @@ export function SpellViewer(props: SpellViewerProps) {
 
       {metadataEntries.length > 0 && (
         <div className="space-y-2">
-          <div className="text-sm font-semibold">Details</div>
           <Table>
             <TableBody>
               {metadataEntries.map(([k, v]) => (
