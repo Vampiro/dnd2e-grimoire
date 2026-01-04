@@ -20,7 +20,7 @@ export function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
 
   return (
-    <nav className="w-full h-14 bg-background border-b flex items-center px-4 justify-between">
+    <nav className="w-full h-14 bg-background border-b flex items-center justify-between">
       {/* Left side (logo or title) */}
       <div className="text-xl font-semibold">Grimoire</div>
 
