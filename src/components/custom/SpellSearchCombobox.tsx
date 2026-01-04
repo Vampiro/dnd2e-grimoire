@@ -48,7 +48,7 @@ export function SpellSearchCombobox({ closeMenu }: { closeMenu: () => void }) {
         <CommandGroup heading="Wizard Spells">
           {wizardSpells.map((spell) => (
             <CommandItem
-              key={spell.name}
+              key={spell.id}
               value={spell.name}
               className="cursor-pointer"
               onSelect={handleSelect}
@@ -62,7 +62,7 @@ export function SpellSearchCombobox({ closeMenu }: { closeMenu: () => void }) {
         <CommandGroup heading="Priest Spells">
           {priestSpells.map((spell) => (
             <CommandItem
-              key={spell.name}
+              key={spell.id}
               value={spell.name}
               className="cursor-pointer"
               onSelect={handleSelect}
