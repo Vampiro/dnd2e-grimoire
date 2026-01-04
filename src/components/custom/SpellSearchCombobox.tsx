@@ -104,8 +104,8 @@ export function SpellSearchCombobox({ closeMenu }: { closeMenu: () => void }) {
                     className="cursor-pointer"
                     onSelect={() => handleSelect(spell.id)}
                   >
-                    <div className="flex w-full items-center gap-3">
-                      <span className="min-w-0 flex-1 truncate">
+                    <div className="flex w-full items-start gap-3">
+                      <span className="min-w-0 flex-1 whitespace-normal break-words">
                         {spell.name}
                       </span>
                       <span className="text-muted-foreground shrink-0 text-right">
