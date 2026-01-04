@@ -27,7 +27,7 @@ export function SpellViewerDialog() {
           <DialogHeader>
             <DialogTitle>{description.metadata.name}</DialogTitle>
             {/* Subtitle shown directly under the title in the dialog header. */}
-            <div className="text-xs text-muted-foreground capitalize">
+            <div className="text-sm text-muted-foreground capitalize">
               {activeSpell.spellClass} Spell Level: {activeSpell.level}
             </div>
           </DialogHeader>

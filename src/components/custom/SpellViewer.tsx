@@ -131,7 +131,7 @@ export function SpellViewer(props: SpellViewerProps) {
             {description.metadata.name}
           </div>
           {/* Small subtitle line requested for both dialog + inline viewer. */}
-          <div className="text-xs text-muted-foreground capitalize">
+          <div className="text-sm text-muted-foreground capitalize">
             {spell.spellClass} Spell Level: {spell.level}
           </div>
         </div>
