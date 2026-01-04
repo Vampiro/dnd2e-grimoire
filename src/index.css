@@ -129,15 +129,15 @@
   }
 }
 
-@keyframes flash-added-row {
+@keyframes flash-added-element {
   0% {
-    background-color: rgba(255, 255, 255, 0.85);
+    background-color: rgba(255, 255, 255, 0.25);
   }
   100% {
     background-color: transparent;
   }
 }
 
-.flash-added-row {
-  animation: flash-added-row 650ms ease-out;
+.flash-added-element {
+  animation: flash-added-element 500ms ease-out;
 }

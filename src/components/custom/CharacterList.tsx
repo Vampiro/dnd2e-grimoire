@@ -1,58 +1,161 @@
-import { createCharacter, deleteCharacter } from "../../firebase/characters";
+import { useState } from "react";
 import { useAtomValue } from "jotai";
-import { charactersAtom } from "../../globalState";
-import { CharacterClass } from "../../types/ClassProgression";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { charactersAtom } from "@/globalState";
+import { deleteCharacter } from "@/firebase/characters";
+import { PageRoute } from "@/pages/PageRoute";
 
 export function CharacterList() {
   const characters = useAtomValue(charactersAtom);
-  async function onCreate() {
-    await createCharacter({
-      name: `New Wizard`,
-      class: {
-        wizard: {
-          className: CharacterClass.WIZARD,
-          level: 1,
-          preparedSpells: {},
-          spellbooksById: {},
-          spellSlotModifiers: [],
-        },
-      },
-    });
-  }
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const sortedCharacters = [...characters].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+  );
 
   /** Delete a character and refresh list */
   const handleDelete = async (characterId: string) => {
-    await deleteCharacter(characterId);
+    setDeletingId(characterId);
+    setError(null);
+    try {
+      await deleteCharacter(characterId);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to delete character",
+      );
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (
-    <div>
-      <button onClick={onCreate}>Create Character</button>
-      <ul>
-        {characters.map((c) => (
-          <li key={c.id}>
-            <span>
-              {`${c.name} - ${c.id}`} —{" "}
-              {[c.class.wizard?.className, c.class.priest?.className]
-                .filter(Boolean)
-                .join(" / ")}
-            </span>
-            <button
-              onClick={() => handleDelete(c.id)}
-              className="bg-red-500 text-white px-2 py-1 rounded cursor-pointer"
-            >
-              Delete
-            </button>
-            <Link
-              to={`/characters/${c.id}`}
-              className="text-blue-600 hover:underline"
-            >
-              Link to character
-            </Link>
-          </li>
-        ))}
-      </ul>
+    <div className="space-y-6">
+      {error && <div className="text-sm text-destructive">{error}</div>}
+      <div className="space-y-3">
+        {sortedCharacters.map((c) => {
+          const classSummary = [
+            c.class.wizard
+              ? `${c.class.wizard.className} (Level ${c.class.wizard.level})`
+              : null,
+            c.class.priest
+              ? `${c.class.priest.className} (Level ${c.class.priest.level})`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" / ");
+
+          return (
+            <Card key={c.id}>
+              <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <Link
+                    to={PageRoute.CHARACTER_VIEW(c.id)}
+                    className="block truncate text-xl font-semibold hover:underline"
+                  >
+                    {c.name}
+                  </Link>
+                  <div className="text-sm text-muted-foreground">
+                    {classSummary || "No class"}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="cursor-pointer"
+                  >
+                    <Link to={PageRoute.CHARACTER_VIEW(c.id)}>View</Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="cursor-pointer"
+                  >
+                    <Link to={PageRoute.CHARACTER_EDIT(c.id)}>Edit</Link>
+                  </Button>
+                  <Popover
+                    open={confirmDeleteId === c.id}
+                    onOpenChange={(open) =>
+                      setConfirmDeleteId(open ? c.id : null)
+                    }
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="cursor-pointer"
+                        disabled={deletingId === c.id}
+                      >
+                        {deletingId === c.id ? "Deleting..." : "Delete"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-64">
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium">
+                            Delete character?
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            This will permanently delete{" "}
+                            <span className="font-medium">{c.name}</span>.
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="cursor-pointer"
+                            disabled={deletingId === c.id}
+                            onClick={() => setConfirmDeleteId(null)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="cursor-pointer"
+                            disabled={deletingId === c.id}
+                            onClick={() => {
+                              setConfirmDeleteId(null);
+                              void handleDelete(c.id);
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+
+        {sortedCharacters.length === 0 && (
+          <div className="rounded-md border border-dashed bg-muted/40 p-4 text-sm">
+            <div className="font-semibold">No characters yet.</div>
+            <div className="text-muted-foreground">
+              Use the + button to create one.
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

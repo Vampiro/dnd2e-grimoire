@@ -294,7 +294,7 @@ export function WizardPreparedSpells({
                       <tr
                         key={spellId}
                         className={`border-b last:border-0 transition-colors hover:bg-muted/30 ${
-                          isFlashing ? "flash-added-row" : ""
+                          isFlashing ? "flash-added-element" : ""
                         }`}
                       >
                         <td className="w-px py-2 pr-4 align-middle whitespace-nowrap">
