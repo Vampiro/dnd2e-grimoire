@@ -248,7 +248,7 @@ export function WizardPreparedSpells({
                 <tr>
                   <th className="w-px py-1 pr-0 text-xs font-semibold text-muted-foreground whitespace-nowrap">
                     Remaining ({castable})
-                    <div className="text-[10px] font-normal">
+                    <div className="text-xxs font-normal">
                       − cast / + restore
                     </div>
                   </th>
@@ -269,9 +269,7 @@ export function WizardPreparedSpells({
                         Rested Slots ({totalPrepared}/{maxSlots})
                       </span>
                     </div>
-                    <div className="text-[10px] font-normal">
-                      − remove / + add
-                    </div>
+                    <div className="text-xxs font-normal">− remove / + add</div>
                   </th>
                 </tr>
               </thead>
