@@ -70,20 +70,18 @@ export function SpellViewer(props: SpellViewerProps) {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
-        {/* Optional header area; can be suppressed when the caller provides a title. */}
-        {showTitle && (
-          <>
-            <div className="text-lg font-semibold leading-tight">
-              {description.metadata.name}
-            </div>
-            {/* Small subtitle line requested for both dialog + inline viewer. */}
-            <div className="text-xs text-muted-foreground capitalize">
-              {spell.spellClass} Spell Level: {spell.level}
-            </div>
-          </>
-        )}
-      </div>
+      {/* Optional header area; can be suppressed when the caller provides a title. */}
+      {showTitle && (
+        <div className="space-y-1">
+          <div className="text-lg font-semibold leading-tight">
+            {description.metadata.name}
+          </div>
+          {/* Small subtitle line requested for both dialog + inline viewer. */}
+          <div className="text-xs text-muted-foreground capitalize">
+            {spell.spellClass} Spell Level: {spell.level}
+          </div>
+        </div>
+      )}
 
       {metadataEntries.length > 0 && (
         <div className="space-y-2">
