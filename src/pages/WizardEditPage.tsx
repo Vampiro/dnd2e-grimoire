@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useCharacterById } from "@/hooks/useCharacterById";
 import { useParams } from "react-router-dom";
 import {
@@ -75,6 +75,14 @@ function WizardEditor({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const levelInputId = useId();
+  const isFirstRenderRef = useRef(true);
+  const lastSavedRef = useRef<string>(
+    JSON.stringify({
+      level: wizard.level,
+      modifiers: wizard.spellSlotModifiers ?? [],
+    }),
+  );
+  const saveRequestIdRef = useRef(0);
 
   const baseSlots = useMemo(() => getWizardSpellSlots(level, []), [level]);
 
@@ -82,6 +90,44 @@ function WizardEditor({
     () => getWizardSpellSlots(level, modifiers),
     [level, modifiers],
   );
+
+  useEffect(() => {
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
+
+    const nextSerialized = JSON.stringify({ level, modifiers });
+    if (nextSerialized === lastSavedRef.current) return;
+
+    const timeout = setTimeout(() => {
+      const requestId = ++saveRequestIdRef.current;
+      setSaving(true);
+      setError(null);
+
+      updateWizardProgression(characterId, {
+        level,
+        spellSlotModifiers: modifiers,
+      })
+        .then(() => {
+          lastSavedRef.current = nextSerialized;
+        })
+        .catch((err) => {
+          if (requestId !== saveRequestIdRef.current) return;
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Failed to save wizard settings",
+          );
+        })
+        .finally(() => {
+          if (requestId !== saveRequestIdRef.current) return;
+          setSaving(false);
+        });
+    }, 400);
+
+    return () => clearTimeout(timeout);
+  }, [characterId, level, modifiers]);
 
   const handleAddModifier = () => {
     // Prefer first unused level, otherwise fall back to "all" if free.
@@ -110,23 +156,6 @@ function WizardEditor({
     setModifiers((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    setError(null);
-    try {
-      await updateWizardProgression(characterId, {
-        level,
-        spellSlotModifiers: modifiers,
-      });
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to save wizard settings",
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
-
   return (
     <div className="space-y-6 p-4">
       <div className="flex items-center justify-between">
@@ -134,13 +163,9 @@ function WizardEditor({
           <h1 className="text-3xl font-bold">Edit Wizard</h1>
           <p className="text-muted-foreground">{characterName}</p>
         </div>
-        <Button
-          className="cursor-pointer"
-          onClick={handleSave}
-          disabled={saving}
-        >
-          {saving ? "Saving..." : "Save"}
-        </Button>
+        {saving && (
+          <div className="text-sm text-muted-foreground">Saving...</div>
+        )}
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
