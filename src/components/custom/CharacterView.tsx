@@ -13,7 +13,7 @@ export function CharacterView({ character }: CharacterViewProps) {
   const navigate = useNavigate();
 
   return (
-    <div className="p-4">
+    <div>
       {/* Header */}
       <div className="mb-6 flex items-start justify-between">
         <div>

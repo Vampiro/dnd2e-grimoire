@@ -123,7 +123,7 @@ function App() {
       <SpellViewerDialog />
 
       {user && (
-        <main className="mx-auto w-full max-w-6xl">
+        <main className="mx-auto w-full max-w-6xl mt-4">
           {spellStatus.loading && !spellStatus.error && (
             <div className="py-6 text-sm text-muted-foreground">
               Loading spell data...
