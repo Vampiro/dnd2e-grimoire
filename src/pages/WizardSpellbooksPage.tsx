@@ -16,13 +16,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -41,10 +34,12 @@ import {
   WizardClassProgression,
   WizardSpellbook,
 } from "@/types/WizardClassProgression";
-import { findWizardSpellById, getWizardSpellsByLevel } from "@/lib/spellLookup";
+import {
+  findWizardSpellById,
+  getWizardSpellsByLevel,
+  openSpellViewer,
+} from "@/lib/spellLookup";
 import type { Spell } from "@/types/Spell";
-import { Info } from "lucide-react";
-import { SpellViewer } from "@/components/custom/SpellViewer";
 import {
   addSpellToWizardSpellbook,
   addWizardSpellbook,
@@ -55,7 +50,6 @@ const SPELL_LEVELS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 export function WizardSpellbooksPage() {
   const { characterId } = useParams();
   const { character, isLoading } = useCharacterById(characterId);
-  const [selectedSpell, setSelectedSpell] = useState<Spell | null>(null);
 
   if (isLoading) return <div>Loading spellbooks...</div>;
   if (!character) return <div>No character with id {characterId}</div>;
@@ -91,7 +85,6 @@ export function WizardSpellbooksPage() {
             key={spellbook.id}
             characterId={character.id}
             spellbook={spellbook}
-            onViewSpell={setSelectedSpell}
           />
         ))}
 
@@ -108,21 +101,6 @@ export function WizardSpellbooksPage() {
       </div>
 
       <AddSpellbookForm characterId={character.id} />
-
-      <Dialog
-        open={!!selectedSpell}
-        onOpenChange={(open) => !open && setSelectedSpell(null)}
-      >
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{selectedSpell?.name}</DialogTitle>
-            <DialogDescription>
-              Level {selectedSpell?.level} Spell
-            </DialogDescription>
-          </DialogHeader>
-          {selectedSpell && <SpellViewer spell={selectedSpell} />}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
@@ -130,11 +108,9 @@ export function WizardSpellbooksPage() {
 function SpellbookCard({
   characterId,
   spellbook,
-  onViewSpell,
 }: {
   characterId: string;
   spellbook: WizardSpellbook;
-  onViewSpell: (spell: Spell) => void;
 }) {
   const spellsByLevel = useMemo(() => {
     const grouped: Record<number, Spell[]> = {};
@@ -259,16 +235,13 @@ function SpellbookCard({
                       key={spell.id}
                       className="flex items-center gap-2 text-sm"
                     >
-                      <span>{spell.name}</span>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 w-6 p-0 cursor-pointer"
-                        onClick={() => onViewSpell(spell)}
-                        title="View spell details"
+                      <button
+                        type="button"
+                        className="cursor-pointer text-left text-primary hover:underline"
+                        onClick={() => openSpellViewer(spell)}
                       >
-                        <Info className="h-4 w-4" />
-                      </Button>
+                        {spell.name}
+                      </button>
                     </div>
                   ))}
                 </div>
