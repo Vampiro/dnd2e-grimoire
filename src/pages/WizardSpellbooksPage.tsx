@@ -225,13 +225,13 @@ function SpellbookCard({
                       key={spell.id}
                       className="flex items-center gap-2 text-sm"
                     >
-                      <button
-                        type="button"
-                        className="text-left text-primary hover:underline"
+                      <Button
+                        variant="link"
+                        className="h-auto p-0 text-left text-primary hover:underline"
                         onClick={() => openSpellViewer(spell)}
                       >
                         {spell.name}
-                      </button>
+                      </Button>
                     </div>
                   ))}
                 </div>

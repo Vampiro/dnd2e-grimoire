@@ -326,9 +326,9 @@ export function WizardPreparedSpells({
                         </td>
 
                         <td className="py-2 pl-0 pr-2 align-middle">
-                          <button
-                            type="button"
-                            className="text-left text-sm text-primary hover:underline disabled:cursor-default disabled:text-muted-foreground"
+                          <Button
+                            variant="link"
+                            className="h-auto p-0 text-left text-sm text-primary hover:underline disabled:cursor-default disabled:text-muted-foreground"
                             onClick={() => {
                               if (!spell) return;
                               openSpellViewer(spell);
@@ -336,7 +336,7 @@ export function WizardPreparedSpells({
                             disabled={!spell}
                           >
                             {spell?.name ?? spellId}
-                          </button>
+                          </Button>
                         </td>
 
                         <td className="w-px py-2 align-middle whitespace-nowrap">
