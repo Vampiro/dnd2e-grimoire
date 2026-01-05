@@ -1,4 +1,4 @@
-import { useId, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useCharacterById } from "@/hooks/useCharacterById";
 import { useParams } from "react-router-dom";
 import {
@@ -22,10 +22,10 @@ import { getWizardSpellSlots } from "@/lib/spellSlots";
 import { updateWizardProgression } from "@/firebase/characters";
 
 /**
- * Page wrapper for editing a wizard's progression and spell slots.
- * @returns Rendered wizard edit page content.
+ * Page wrapper for editing a wizard's spell slots and modifiers.
+ * @returns Rendered wizard spell slots page content.
  */
-export function WizardEditPage() {
+export function WizardSpellSlotsPage() {
   const { characterId } = useParams();
   const { character, isLoading } = useCharacterById(characterId);
 
@@ -53,7 +53,7 @@ export function WizardEditPage() {
 }
 
 /**
- * Form controller for editing wizard level and spell slot modifiers.
+ * Form controller for editing wizard spell slots and modifiers.
  * @param characterId Character document id.
  * @param wizard Wizard progression record to edit.
  * @param characterName Display name of the character.
@@ -68,25 +68,25 @@ function WizardEditor({
   wizard: WizardClassProgression;
   characterName: string;
 }) {
-  const levelInputId = useId();
   const saveRequestIdRef = useRef(0);
 
-  const [level, setLevel] = useState(wizard.level);
   const [modifiers, setModifiers] = useState<SpellSlotModifier[]>(
     wizard.spellSlotModifiers ?? [],
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const baseSlots = useMemo(() => getWizardSpellSlots(level, []), [level]);
+  const baseSlots = useMemo(
+    () => getWizardSpellSlots(wizard.level, []),
+    [wizard.level],
+  );
 
   const totalSlots = useMemo(
-    () => getWizardSpellSlots(level, modifiers),
-    [level, modifiers],
+    () => getWizardSpellSlots(wizard.level, modifiers),
+    [wizard.level, modifiers],
   );
 
   const saveWizard = (changes: {
-    level?: number;
     spellSlotModifiers?: SpellSlotModifier[];
   }) => {
     const requestId = ++saveRequestIdRef.current;
@@ -144,7 +144,7 @@ function WizardEditor({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Edit Wizard</h1>
+          <h1 className="text-3xl font-bold">Wizard Spell Slots</h1>
           <p className="text-muted-foreground">{characterName}</p>
         </div>
         {saving && (
@@ -153,43 +153,6 @@ function WizardEditor({
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Level</CardTitle>
-          <CardDescription>
-            Set the wizard level to update spell slots.
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="space-y-3">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium" htmlFor={levelInputId}>
-              Wizard Level
-            </label>
-
-            <Select
-              value={String(level)}
-              onValueChange={(val) => {
-                const nextLevel = Number(val);
-                setLevel(nextLevel);
-                saveWizard({ level: nextLevel });
-              }}
-            >
-              <SelectTrigger id={levelInputId} className="w-16">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="w-max min-w-max">
-                {Array.from({ length: 20 }, (_, idx) => idx + 1).map((lvl) => (
-                  <SelectItem key={lvl} value={String(lvl)}>
-                    {lvl}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader>

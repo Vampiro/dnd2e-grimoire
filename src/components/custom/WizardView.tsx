@@ -42,9 +42,11 @@ export function WizardView({ character, wizardProgression }: WizardViewProps) {
             </Button>
             <Button
               variant="outline"
-              onClick={() => navigate(PageRoute.WIZARD_EDIT(character.id))}
+              onClick={() =>
+                navigate(PageRoute.WIZARD_SPELL_SLOTS(character.id))
+              }
             >
-              Edit Wizard
+              Spell Slots
             </Button>
           </div>
         </CardHeader>
