@@ -30,8 +30,9 @@ export function WizardView({ character, wizardProgression }: WizardViewProps) {
       <Card>
         <CardHeader className="flex flex-row items-start justify-between">
           <div>
-            <CardTitle>Wizard Level {wizardProgression.level}</CardTitle>
-            <CardDescription>Prepared Spells</CardDescription>
+            <CardTitle className="text-lg font-semibold">
+              Prepared Spells
+            </CardTitle>
           </div>
           <div className="flex items-center gap-2">
             <Button asChild variant="outline">
