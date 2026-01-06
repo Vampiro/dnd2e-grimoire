@@ -1,12 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Plus, Trash2, Minus } from "lucide-react";
 import { findWizardSpellById, openSpellViewer } from "@/lib/spellLookup";
 import { PreparedSpellCounts } from "@/types/ClassProgression";
@@ -52,6 +59,27 @@ export function WizardPreparedSpells({
     0,
   );
   const preparedIds = new Set(Object.keys(spells));
+
+  const availableSpells = useMemo(() => {
+    const availableMap = new Map<string, Spell>();
+    Object.values(progression.spellbooksById).forEach((book) => {
+      const spellsById = book.spellsById ?? {};
+      Object.keys(spellsById).forEach((spellIdKey) => {
+        const spellId = Number(spellIdKey);
+        const spell = Number.isNaN(spellId) ? null : findWizardSpellById(spellId);
+        if (!spell || spell.level !== spellLevel) return;
+        const idKey = String(spell.id);
+        if (preparedIds.has(idKey)) return;
+        if (!availableMap.has(idKey)) availableMap.set(idKey, spell);
+      });
+    });
+
+    return Array.from(availableMap.entries()).sort((a, b) =>
+      a[1].name.localeCompare(b[1].name),
+    );
+  }, [preparedIds, progression.spellbooksById, spellLevel]);
+
+  const [addOpen, setAddOpen] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [flashSpellId, setFlashSpellId] = useState<string | null>(null);
@@ -161,70 +189,56 @@ export function WizardPreparedSpells({
           <h3 className="font-semibold">Level {spellLevel}</h3>
         </div>
         <div className="flex items-center gap-2">
-          <Select
-            onValueChange={(spellId) => {
-              if (!spellId || spellId === "__none__") return;
-              handleAddSpell(spellId);
-            }}
-          >
-            <SelectTrigger
-              className="h-7 w-7 justify-center p-0 data-[size=sm]:h-7 data-[size=sm]:min-h-7 [&_svg:last-child]:hidden"
-              aria-label="Add prepared spell"
-              size="sm"
-            >
-              <Plus className="h-3 w-3" />
-            </SelectTrigger>
-
-            <SelectContent className="max-h-72">
-              {(() => {
-                const availableMap = new Map<string, Spell>();
-                Object.values(progression.spellbooksById).forEach((book) => {
-                  const spellsById = book.spellsById ?? {};
-                  Object.keys(spellsById).forEach((spellIdKey) => {
-                    const spellId = Number(spellIdKey);
-                    const spell = Number.isNaN(spellId)
-                      ? null
-                      : findWizardSpellById(spellId);
-                    if (!spell || spell.level !== spellLevel) return;
-                    const idKey = String(spell.id);
-                    if (preparedIds.has(idKey)) return;
-                    if (!availableMap.has(idKey))
-                      availableMap.set(idKey, spell);
-                  });
-                });
-
-                if (availableMap.size === 0) {
-                  return (
-                    <>
-                      <div className="space-y-1 px-3 pb-3 pt-3 text-sm ">
-                        <p className="text-muted-foreground">
-                          No remaining spells of this level.
-                        </p>
-                        <p>
-                          Update your{" "}
-                          <Link
-                            className="underline"
-                            to={PageRoute.WIZARD_SPELLBOOKS(characterId)}
-                          >
-                            Spellbooks
-                          </Link>{" "}
-                          to add level {spellLevel} spells.
-                        </p>
-                      </div>
-                    </>
-                  );
-                }
-
-                return Array.from(availableMap.entries())
-                  .sort((a, b) => a[1].name.localeCompare(b[1].name))
-                  .map(([id, spell]) => (
-                    <SelectItem key={id} value={id}>
-                      {spell.name}
-                    </SelectItem>
-                  ));
-              })()}
-            </SelectContent>
-          </Select>
+          <Popover open={addOpen} onOpenChange={setAddOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 w-7 justify-center p-0"
+                aria-label="Add prepared spell"
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-0" align="start">
+              <Command shouldFilter={availableSpells.length >= 10}>
+                {availableSpells.length >= 10 && (
+                  <CommandInput placeholder="Search spells..." />
+                )}
+                <CommandList>
+                  <CommandEmpty>
+                    <div className="space-y-1 px-3 py-2 text-sm text-muted-foreground">
+                      <p>No remaining spells of this level.</p>
+                      <p>
+                        Update your
+                        <Link
+                          className="underline"
+                          to={PageRoute.WIZARD_SPELLBOOKS(characterId)}
+                        >
+                          {" "}Spellbooks
+                        </Link>{" "}
+                        to add level {spellLevel} spells.
+                      </p>
+                    </div>
+                  </CommandEmpty>
+                  <CommandGroup>
+                    {availableSpells.map(([id, spell]) => (
+                      <CommandItem
+                        key={id}
+                        value={id}
+                        onSelect={(value) => {
+                          handleAddSpell(value);
+                          setAddOpen(false);
+                        }}
+                      >
+                        {spell.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
