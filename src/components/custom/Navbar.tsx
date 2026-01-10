@@ -16,7 +16,7 @@ import { charactersAtom, userAtom } from "@/globalState";
 import { PageRoute } from "@/pages/PageRoute";
 import { useAtomValue } from "jotai";
 import { Menu, User, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { DndWikiSearch } from "./NavbarSearch";
 import {
@@ -36,6 +36,9 @@ export function Navbar() {
   const location = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [persistedCharacterId, setPersistedCharacterId] = useState<
+    string | null
+  >(null);
 
   // Resolve current character from any character-scoped route.
   const matchCharacterIdDeep = useMatch("/characters/:characterId/*");
@@ -49,9 +52,22 @@ export function Navbar() {
     matchIdDeep?.params.id ??
     matchId?.params.id;
 
-  const selectedCharacter = characters.find(
-    (c) => c.id === selectedCharacterId,
-  );
+  useEffect(() => {
+    if (selectedCharacterId) {
+      setPersistedCharacterId(selectedCharacterId);
+    }
+  }, [selectedCharacterId]);
+
+  const activeCharacterId = useMemo(() => {
+    const hasPersisted =
+      persistedCharacterId &&
+      characters.some((c) => c.id === persistedCharacterId);
+    if (selectedCharacterId) return selectedCharacterId;
+    if (hasPersisted) return persistedCharacterId;
+    return undefined;
+  }, [characters, persistedCharacterId, selectedCharacterId]);
+
+  const selectedCharacter = characters.find((c) => c.id === activeCharacterId);
 
   const sortedCharacters = useMemo(
     () => [...characters].sort((a, b) => a.name.localeCompare(b.name)),
@@ -105,9 +121,10 @@ export function Navbar() {
                   {sortedCharacters.length > 0 ? (
                     <div className="space-y-2">
                       <Select
-                        value={selectedCharacterId ?? ""}
+                        value={activeCharacterId ?? ""}
                         onValueChange={(value) => {
                           if (!value) return;
+                          setPersistedCharacterId(value);
                           navigate(PageRoute.CHARACTER_VIEW(value));
                           setDrawerOpen(true);
                         }}
@@ -131,7 +148,7 @@ export function Navbar() {
                               to={PageRoute.CHARACTER_VIEW(
                                 selectedCharacter.id,
                               )}
-                              className={`relative rounded-md pl-2 pr-2 py-1 text-sm hover:bg-accent ${
+                              className={`relative rounded-md pl-3 pr-2 py-1 text-sm hover:bg-accent ${
                                 isActivePath(
                                   PageRoute.CHARACTER_VIEW(
                                     selectedCharacter.id,
@@ -159,7 +176,7 @@ export function Navbar() {
                               to={PageRoute.CHARACTER_EDIT(
                                 selectedCharacter.id,
                               )}
-                              className={`relative rounded-md pl-2 pr-2 py-1 text-sm hover:bg-accent ${
+                              className={`relative rounded-md pl-3 pr-2 py-1 text-sm hover:bg-accent ${
                                 isActivePath(
                                   PageRoute.CHARACTER_EDIT(
                                     selectedCharacter.id,
@@ -205,7 +222,7 @@ export function Navbar() {
                       <DrawerClose asChild>
                         <Link
                           to={PageRoute.WIZARD_CAST(selectedCharacter.id)}
-                          className={`relative rounded-md pl-3 pr-2 py-2 text-sm hover:bg-accent ${
+                          className={`relative rounded-md pl-3 pr-2 py-1 text-sm hover:bg-accent ${
                             isActivePath(
                               PageRoute.WIZARD_CAST(selectedCharacter.id),
                             )
@@ -227,7 +244,7 @@ export function Navbar() {
                       <DrawerClose asChild>
                         <Link
                           to={PageRoute.WIZARD_SPELLBOOKS(selectedCharacter.id)}
-                          className={`relative rounded-md pl-3 pr-2 py-2 text-sm hover:bg-accent ${
+                          className={`relative rounded-md pl-3 pr-2 py-1 text-sm hover:bg-accent ${
                             isActivePath(
                               PageRoute.WIZARD_SPELLBOOKS(selectedCharacter.id),
                             )
@@ -251,7 +268,7 @@ export function Navbar() {
                           to={PageRoute.WIZARD_SPELL_SLOTS(
                             selectedCharacter.id,
                           )}
-                          className={`relative rounded-md pl-3 pr-2 py-2 text-sm hover:bg-accent ${
+                          className={`relative rounded-md pl-3 pr-2 py-1 text-sm hover:bg-accent ${
                             isActivePath(
                               PageRoute.WIZARD_SPELL_SLOTS(
                                 selectedCharacter.id,
@@ -281,7 +298,7 @@ export function Navbar() {
                   <DrawerClose asChild>
                     <Link
                       to={PageRoute.CHARACTERS}
-                      className={`relative rounded-md pl-3 pr-2 py-2 text-sm font-medium hover:bg-accent ${
+                      className={`relative rounded-md pl-3 pr-2 py-1 text-sm hover:bg-accent ${
                         isActivePath(PageRoute.CHARACTERS, true)
                           ? "font-semibold bg-accent text-foreground"
                           : ""
@@ -320,13 +337,6 @@ export function Navbar() {
             <div className="flex flex-col gap-1">
               {user && (
                 <>
-                  <Link
-                    to={PageRoute.CHARACTERS}
-                    className="px-2 py-2 rounded hover:bg-accent cursor-pointer"
-                    onClick={closeMenu}
-                  >
-                    Characters
-                  </Link>
                   <Link
                     to={PageRoute.SETTINGS}
                     className="px-2 py-2 rounded hover:bg-accent cursor-pointer"
