@@ -20,8 +20,11 @@ import {
 } from "@/components/ui/select";
 import { createCharacter } from "@/firebase/characters";
 import { CharacterClass } from "@/types/ClassProgression";
+import { useNavigate } from "react-router-dom";
+import { PageRoute } from "./PageRoute";
 
 export function CharactersPage() {
+  const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
   const [name, setName] = useState("");
   const [classLevels, setClassLevels] = useState<
@@ -89,7 +92,7 @@ export function CharactersPage() {
     setCreating(true);
     setCreateError(null);
     try {
-      await createCharacter({
+      const newCharacterId = await createCharacter({
         name: trimmed,
         class: {
           ...(classLevels.wizard
@@ -121,6 +124,8 @@ export function CharactersPage() {
       setClassLevels({});
       setClassHintError(false);
       setNameError(null);
+
+      navigate(PageRoute.CHARACTER_VIEW(newCharacterId));
     } catch (err) {
       setCreateError(
         err instanceof Error ? err.message : "Failed to create character",

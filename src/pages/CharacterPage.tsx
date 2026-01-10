@@ -44,14 +44,6 @@ export function CharacterPage() {
               .join(" / ")}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => navigate(PageRoute.CHARACTER_EDIT(character.id))}
-          >
-            Edit Character
-          </Button>
-        </div>
       </div>
 
       <Card>
@@ -122,14 +114,17 @@ function PageLink({
       <Button
         asChild
         variant="ghost"
-        className="justify-start px-0 text-base font-semibold"
+        className="justify-start px-0 text-base font-semibold p-0"
       >
-        <Link to={href} className="inline-flex items-center gap-2">
+        <Link
+          to={href}
+          className="inline-flex items-center gap-2 [&:has(>svg)]:px-2"
+        >
           {title}
           <ArrowUpRight className="h-4 w-4" />
         </Link>
       </Button>
-      <p className="text-sm text-muted-foreground">{description}</p>
+      <p className="text-sm text-muted-foreground px-2">{description}</p>
     </div>
   );
 }

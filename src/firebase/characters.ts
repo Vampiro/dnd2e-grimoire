@@ -116,7 +116,7 @@ function characterDoc(uid: string, characterId: string) {
  */
 export async function createCharacter(
   data: Omit<Character, "id" | "createdAt" | "updatedAt">,
-) {
+): Promise<string> {
   const uid = getCurrentUserId();
   if (!uid) {
     throw new Error("Not logged in");
@@ -133,6 +133,8 @@ export async function createCharacter(
   };
 
   await setDoc(doc(col, id), char);
+
+  return id;
 }
 
 /**
