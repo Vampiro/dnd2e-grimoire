@@ -94,11 +94,30 @@ export function Navbar() {
               <Menu className="h-5 w-5" />
             </button>
           </DrawerTrigger>
+          <img
+            src="/scroll-quill-no-bg.png"
+            alt="Grimoire scroll"
+            className="h-8 w-8 object-contain -mr-1"
+          />
+          {selectedCharacter && (
+            <div
+              className="text-lg font-semibold"
+              title={selectedCharacter.name}
+            >
+              {selectedCharacter.name}
+            </div>
+          )}
           <DrawerContent className="max-w-sm">
             <div className="flex h-full flex-col">
               <div className="flex items-center justify-between border-b px-4 py-3">
-                <DrawerTitle className="text-base font-semibold">
-                  Navigate
+                <DrawerTitle className="text-base font-semibold flex items-center gap-2">
+                  {/* Icon from: https://www.svgrepo.com/svg/307026/quill */}
+                  <img
+                    src="/scroll-quill-no-bg.png"
+                    alt="Grimoire scroll"
+                    className="h-8 w-8 object-contain"
+                  />
+                  AD&D 2e Grimoire
                 </DrawerTitle>
                 <DrawerDescription className="sr-only">
                   Navigation links for characters.
@@ -168,7 +187,7 @@ export function Navbar() {
                                   aria-hidden
                                 />
                               )}
-                              Character View
+                              View Character
                             </Link>
                           </DrawerClose>
                           <DrawerClose asChild>
@@ -318,12 +337,10 @@ export function Navbar() {
             </div>
           </DrawerContent>
         </Drawer>
-
-        <div className="text-xl font-semibold">Grimoire</div>
       </div>
 
       {/* Right side icons */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center">
         {/* Account menu */}
         <Popover open={open} onOpenChange={setOpen}>
           <DndWikiSearch
