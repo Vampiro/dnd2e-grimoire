@@ -41,33 +41,13 @@ export function WizardCastSpellsPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold">Cast Spells</h1>
           <p className="text-muted-foreground">
             Prepared spells for {character.name}
           </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            onClick={() => navigate(PageRoute.CHARACTER_VIEW(character.id))}
-          >
-            Character View
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate(PageRoute.WIZARD_SPELLBOOKS(character.id))}
-          >
-            Spellbooks
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate(PageRoute.WIZARD_SPELL_SLOTS(character.id))}
-          >
-            Manage Spell Slots
-          </Button>
         </div>
       </div>
 

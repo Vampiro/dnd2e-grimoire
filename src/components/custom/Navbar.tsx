@@ -84,11 +84,11 @@ export function Navbar() {
   return (
     <nav className="w-full h-14 bg-background border-b flex items-center justify-between">
       {/* Left side (nav trigger + title) */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen} direction="left">
           <DrawerTrigger asChild>
             <button
-              className="inline-flex h-10 w-10 items-center justify-center rounded-md border bg-background hover:bg-accent cursor-pointer"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-background hover:bg-accent cursor-pointer"
               aria-label="Open navigation"
             >
               <Menu className="h-5 w-5" />
@@ -97,7 +97,7 @@ export function Navbar() {
           <img
             src="/scroll-quill-no-bg.png"
             alt="Grimoire scroll"
-            className="h-8 w-8 object-contain -mr-1"
+            className="h-7 w-7 object-contain"
           />
           {selectedCharacter && (
             <div
