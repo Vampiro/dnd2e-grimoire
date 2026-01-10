@@ -3,26 +3,307 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { logout, signInWithGoogle } from "@/firebase/auth";
-import { userAtom } from "@/globalState";
+import { charactersAtom, userAtom } from "@/globalState";
 import { PageRoute } from "@/pages/PageRoute";
 import { useAtomValue } from "jotai";
-import { User } from "lucide-react";
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Menu, User, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Link, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { DndWikiSearch } from "./NavbarSearch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function Navbar() {
   const user = useAtomValue(userAtom);
+  const characters = useAtomValue(charactersAtom);
   const [open, setOpen] = useState(false);
   const closeMenu = () => setOpen(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Resolve current character from any character-scoped route.
+  const matchCharacterIdDeep = useMatch("/characters/:characterId/*");
+  const matchCharacterId = useMatch("/characters/:characterId");
+  const matchIdDeep = useMatch("/characters/:id/*");
+  const matchId = useMatch("/characters/:id");
+
+  const selectedCharacterId =
+    matchCharacterIdDeep?.params.characterId ??
+    matchCharacterId?.params.characterId ??
+    matchIdDeep?.params.id ??
+    matchId?.params.id;
+
+  const selectedCharacter = characters.find(
+    (c) => c.id === selectedCharacterId,
+  );
+
+  const sortedCharacters = useMemo(
+    () => [...characters].sort((a, b) => a.name.localeCompare(b.name)),
+    [characters],
+  );
+
+  const isActivePath = (path: string | undefined, exact = false) => {
+    if (!path) return false;
+    return exact
+      ? location.pathname === path
+      : location.pathname.startsWith(path);
+  };
 
   return (
     <nav className="w-full h-14 bg-background border-b flex items-center justify-between">
-      {/* Left side (logo or title) */}
-      <div className="text-xl font-semibold">Grimoire</div>
+      {/* Left side (nav trigger + title) */}
+      <div className="flex items-center gap-3">
+        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen} direction="left">
+          <DrawerTrigger asChild>
+            <button
+              className="inline-flex h-10 w-10 items-center justify-center rounded-md border bg-background hover:bg-accent cursor-pointer"
+              aria-label="Open navigation"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </DrawerTrigger>
+          <DrawerContent className="max-w-sm">
+            <div className="flex h-full flex-col">
+              <div className="flex items-center justify-between border-b px-4 py-3">
+                <DrawerTitle className="text-base font-semibold">
+                  Navigate
+                </DrawerTitle>
+                <DrawerDescription className="sr-only">
+                  Navigation links for characters.
+                </DrawerDescription>
+                <DrawerClose asChild>
+                  <button
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent cursor-pointer"
+                    aria-label="Close navigation"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </DrawerClose>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+                <div className="space-y-2">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Selected character
+                  </div>
+                  {sortedCharacters.length > 0 ? (
+                    <div className="space-y-2">
+                      <Select
+                        value={selectedCharacterId ?? ""}
+                        onValueChange={(value) => {
+                          if (!value) return;
+                          navigate(PageRoute.CHARACTER_VIEW(value));
+                          setDrawerOpen(true);
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Choose a character" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {sortedCharacters.map((character) => (
+                            <SelectItem key={character.id} value={character.id}>
+                              {character.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      {selectedCharacter ? (
+                        <div className="flex flex-col gap-1">
+                          <DrawerClose asChild>
+                            <Link
+                              to={PageRoute.CHARACTER_VIEW(
+                                selectedCharacter.id,
+                              )}
+                              className={`relative rounded-md pl-2 pr-2 py-1 text-sm hover:bg-accent ${
+                                isActivePath(
+                                  PageRoute.CHARACTER_VIEW(
+                                    selectedCharacter.id,
+                                  ),
+                                  true,
+                                )
+                                  ? "font-semibold bg-accent text-foreground"
+                                  : ""
+                              }`}
+                            >
+                              {isActivePath(
+                                PageRoute.CHARACTER_VIEW(selectedCharacter.id),
+                                true,
+                              ) && (
+                                <span
+                                  className="absolute -left-1.5 top-1 bottom-1 w-0.5 rounded-full bg-white"
+                                  aria-hidden
+                                />
+                              )}
+                              Character View
+                            </Link>
+                          </DrawerClose>
+                          <DrawerClose asChild>
+                            <Link
+                              to={PageRoute.CHARACTER_EDIT(
+                                selectedCharacter.id,
+                              )}
+                              className={`relative rounded-md pl-2 pr-2 py-1 text-sm hover:bg-accent ${
+                                isActivePath(
+                                  PageRoute.CHARACTER_EDIT(
+                                    selectedCharacter.id,
+                                  ),
+                                  true,
+                                )
+                                  ? "font-semibold bg-accent text-foreground"
+                                  : ""
+                              }`}
+                            >
+                              {isActivePath(
+                                PageRoute.CHARACTER_EDIT(selectedCharacter.id),
+                                true,
+                              ) && (
+                                <span
+                                  className="absolute -left-1.5 top-1 bottom-1 w-0.5 rounded-full bg-white"
+                                  aria-hidden
+                                />
+                              )}
+                              Edit Character
+                            </Link>
+                          </DrawerClose>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Select a character to see quick links.
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No characters yet.
+                    </p>
+                  )}
+                </div>
+
+                {selectedCharacter?.class.wizard && (
+                  <div className="space-y-2">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Wizard
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <DrawerClose asChild>
+                        <Link
+                          to={PageRoute.WIZARD_CAST(selectedCharacter.id)}
+                          className={`relative rounded-md pl-3 pr-2 py-2 text-sm hover:bg-accent ${
+                            isActivePath(
+                              PageRoute.WIZARD_CAST(selectedCharacter.id),
+                            )
+                              ? "font-semibold bg-accent text-foreground"
+                              : ""
+                          }`}
+                        >
+                          {isActivePath(
+                            PageRoute.WIZARD_CAST(selectedCharacter.id),
+                          ) && (
+                            <span
+                              className="absolute -left-1.5 top-1 bottom-1 w-0.5 rounded-full bg-white"
+                              aria-hidden
+                            />
+                          )}
+                          Cast Spells
+                        </Link>
+                      </DrawerClose>
+                      <DrawerClose asChild>
+                        <Link
+                          to={PageRoute.WIZARD_SPELLBOOKS(selectedCharacter.id)}
+                          className={`relative rounded-md pl-3 pr-2 py-2 text-sm hover:bg-accent ${
+                            isActivePath(
+                              PageRoute.WIZARD_SPELLBOOKS(selectedCharacter.id),
+                            )
+                              ? "font-semibold bg-accent text-foreground"
+                              : ""
+                          }`}
+                        >
+                          {isActivePath(
+                            PageRoute.WIZARD_SPELLBOOKS(selectedCharacter.id),
+                          ) && (
+                            <span
+                              className="absolute -left-1.5 top-1 bottom-1 w-0.5 rounded-full bg-white"
+                              aria-hidden
+                            />
+                          )}
+                          Spellbooks
+                        </Link>
+                      </DrawerClose>
+                      <DrawerClose asChild>
+                        <Link
+                          to={PageRoute.WIZARD_SPELL_SLOTS(
+                            selectedCharacter.id,
+                          )}
+                          className={`relative rounded-md pl-3 pr-2 py-2 text-sm hover:bg-accent ${
+                            isActivePath(
+                              PageRoute.WIZARD_SPELL_SLOTS(
+                                selectedCharacter.id,
+                              ),
+                            )
+                              ? "font-semibold bg-accent text-foreground"
+                              : ""
+                          }`}
+                        >
+                          {isActivePath(
+                            PageRoute.WIZARD_SPELL_SLOTS(selectedCharacter.id),
+                          ) && (
+                            <span
+                              className="absolute -left-1.5 top-1 bottom-1 w-0.5 rounded-full bg-white"
+                              aria-hidden
+                            />
+                          )}
+                          Manage Spell Slots
+                        </Link>
+                      </DrawerClose>
+                    </div>
+                  </div>
+                )}
+
+                <div className="h-px bg-border" />
+                <div className="flex flex-col gap-1">
+                  <DrawerClose asChild>
+                    <Link
+                      to={PageRoute.CHARACTERS}
+                      className={`relative rounded-md pl-3 pr-2 py-2 text-sm font-medium hover:bg-accent ${
+                        isActivePath(PageRoute.CHARACTERS, true)
+                          ? "font-semibold bg-accent text-foreground"
+                          : ""
+                      }`}
+                    >
+                      {isActivePath(PageRoute.CHARACTERS, true) && (
+                        <span
+                          className="absolute -left-1.5 top-1 bottom-1 w-0.5 rounded-full bg-white"
+                          aria-hidden
+                        />
+                      )}
+                      Characters
+                    </Link>
+                  </DrawerClose>
+                </div>
+              </div>
+            </div>
+          </DrawerContent>
+        </Drawer>
+
+        <div className="text-xl font-semibold">Grimoire</div>
+      </div>
 
       {/* Right side icons */}
       <div className="flex items-center gap-4">
