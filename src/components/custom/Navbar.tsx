@@ -97,7 +97,7 @@ export function Navbar() {
           <img
             src="/scroll-quill-no-bg.png"
             alt="Grimoire scroll"
-            className="h-7 w-7 object-contain"
+            className="h-6 w-6 object-contain"
           />
           {selectedCharacter && (
             <div
