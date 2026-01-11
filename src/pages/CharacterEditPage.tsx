@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Popover,
   PopoverContent,
@@ -247,7 +248,8 @@ export function CharacterEditPage() {
 
       {saveError && <div className="text-sm text-destructive">{saveError}</div>}
 
-      <div className="space-y-4">
+      <Card>
+        <CardContent className="space-y-4">
         <div className="space-y-1">
           <div className="flex w-full items-center gap-2 text-sm font-medium">
             <span>Name</span>
@@ -464,7 +466,8 @@ export function CharacterEditPage() {
             </div>
           )}
         </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

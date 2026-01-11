@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -43,11 +43,13 @@ export function SettingsPage() {
   if (!user) return null;
 
   return (
-    <div>
+    <div className="space-y-3">
+      <div>
+        <h1 className="text-3xl font-bold">Settings</h1>
+        <p className="text-muted-foreground text-sm">Adjust app preferences.</p>
+      </div>
+
       <Card>
-        <CardHeader>
-          <CardTitle>Settings</CardTitle>
-        </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <div className="text-sm font-medium">UI scale</div>
