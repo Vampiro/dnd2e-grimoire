@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/command";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { XIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type MobileSelectProps<T> = {
