@@ -7,11 +7,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Popover,
   PopoverContent,
@@ -20,6 +16,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
+import { XIcon } from "lucide-react";
 
 type BaseProps<T> = {
   items: T[];
@@ -41,7 +38,8 @@ function useIsMobile(): boolean {
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 768px)");
-    const update = () => setIsMobile(mq.matches || navigator.maxTouchPoints > 0);
+    const update = () =>
+      setIsMobile(mq.matches || navigator.maxTouchPoints > 0);
     update();
     mq.addEventListener("change", update);
     return () => mq.removeEventListener("change", update);
@@ -71,10 +69,12 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
   const normalized = query.trim().toLowerCase();
   const filtered = useMemo(() => {
     const base = normalized
-      ? items.filter((item) => getLabel(item).toLowerCase().includes(normalized))
+      ? items.filter((item) =>
+          getLabel(item).toLowerCase().includes(normalized)
+        )
       : items;
     return [...base].sort((a, b) =>
-      getLabel(a).localeCompare(getLabel(b), undefined, { sensitivity: "base" }),
+      getLabel(a).localeCompare(getLabel(b), undefined, { sensitivity: "base" })
     );
   }, [getLabel, items, normalized]);
 
@@ -90,7 +90,10 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
   const triggerLabel = value ? getLabel(value) : placeholder;
 
   const content = (
-    <Command className="flex h-full flex-col bg-background" shouldFilter={false}>
+    <Command
+      className="flex h-full flex-col bg-background"
+      shouldFilter={false}
+    >
       <CommandInput
         autoFocus
         value={query}
@@ -99,7 +102,7 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
         className="h-12"
       />
       <ScrollArea className="flex-1 min-h-0 h-full">
-        <CommandList className={`p-2 ${ isMobile ? "max-h-none" : ""} h-full`}>
+        <CommandList className={`p-2 ${isMobile ? "max-h-none" : ""} h-full`}>
           {limited.length === 0 ? (
             <CommandEmpty>{emptyText}</CommandEmpty>
           ) : (
@@ -128,20 +131,25 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
       className={cn(
         "inline-flex items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-left text-sm",
         "hover:bg-accent/50 cursor-pointer",
-        className,
+        className
       )}
       onClick={() => setOpen((v) => !v)}
       aria-haspopup="dialog"
       aria-expanded={open}
     >
       <span className="truncate">{triggerLabel}</span>
-      <span className="text-muted-foreground text-xs">{isMobile ? "Open" : "▾"}</span>
+      <span className="text-muted-foreground text-xs">
+        {isMobile ? "Open" : "▾"}
+      </span>
     </button>
   );
 
   if (isMobile) {
     const mobileContent = (
-      <Command className="flex h-full flex-col bg-background" shouldFilter={false}>
+      <Command
+        className="flex h-full flex-col bg-background"
+        shouldFilter={false}
+      >
         {title && (
           <div className="border-b px-4 py-3 text-sm font-semibold text-foreground">
             {title}
@@ -169,24 +177,26 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
           </div>
         )}
         <div className="border-t px-3 py-2">
-          <div className="flex items-center gap-2">
-            <CommandInput
-              autoFocus
-              value={query}
-              onValueChange={setQuery}
-              placeholder="Search..."
-              className="h-11 flex-1"
-            />
+          <div className="flex items-center w-full justify-between">
+            <div className="flex-1 pr-3">
+              <CommandInput
+                autoFocus
+                value={query}
+                onValueChange={setQuery}
+                placeholder="Search..."
+                className="h-11"
+              />
+            </div>
             <button
               type="button"
               onClick={() => {
                 setQuery("");
                 setOpen(false);
               }}
-              className="flex h-11 w-11 items-center justify-center rounded-md border border-input bg-background text-lg text-muted-foreground hover:bg-accent/50"
+              className="flex h-11 w-11 items-center justify-center rounded-md border border-input bg-background hover:bg-accent/50"
               aria-label="Close"
             >
-              ×
+              <XIcon />
             </button>
           </div>
         </div>
