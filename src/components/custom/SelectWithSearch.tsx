@@ -155,22 +155,22 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
             {title}
           </div>
         )}
-        <ScrollArea className="flex-1 min-h-0 h-full">
-          <CommandList className="p-2 max-h-none h-full">
-            {limited.length === 0 ? (
-              <CommandEmpty>{emptyText}</CommandEmpty>
-            ) : (
-              limited.map((item) => {
-                const key = getKey(item);
-                return (
-                  <CommandItem key={key} value={key} onSelect={handleSelect}>
-                    {getLabel(item)}
-                  </CommandItem>
-                );
-              })
-            )}
-          </CommandList>
-        </ScrollArea>
+
+        <CommandList className="flex-1 overflow-y-auto p-2 max-h-full">
+          {limited.length === 0 ? (
+            <CommandEmpty>{emptyText}</CommandEmpty>
+          ) : (
+            limited.map((item) => {
+              const key = getKey(item);
+              return (
+                <CommandItem key={key} value={key} onSelect={handleSelect}>
+                  {getLabel(item)}
+                </CommandItem>
+              );
+            })
+          )}
+        </CommandList>
+
         {isCapped && (
           <div className="border-t px-3 py-2 text-xs text-muted-foreground">
             Showing first {limit} results. Type to narrow further.
