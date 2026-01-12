@@ -50,6 +50,15 @@ export function WizardSpellbooksPage() {
   const { character, isLoading } = useCharacterById(characterId);
   const [createOpen, setCreateOpen] = useState(false);
 
+  const spellbooks = useMemo(() => {
+    const list = character?.class.wizard?.spellbooksById
+      ? Object.values(character.class.wizard.spellbooksById)
+      : [];
+    return [...list].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+    );
+  }, [character?.class.wizard?.spellbooksById]);
+
   if (isLoading) return <div>Loading spellbooks...</div>;
   if (!character) return <div>No character with id {characterId}</div>;
 
@@ -96,7 +105,7 @@ export function WizardSpellbooksPage() {
       </div>
 
       <div className="space-y-4">
-        {Object.values(wizardProgression.spellbooksById).map((spellbook) => (
+        {spellbooks.map((spellbook) => (
           <SpellbookCard
             key={spellbook.id}
             characterId={character.id}
@@ -104,7 +113,7 @@ export function WizardSpellbooksPage() {
           />
         ))}
 
-        {Object.keys(wizardProgression.spellbooksById).length === 0 && (
+        {spellbooks.length === 0 && (
           <Card>
             <CardHeader>
               <CardTitle>No spellbooks</CardTitle>
@@ -140,7 +149,6 @@ function SpellbookCard({
   }, [spellbook.spellsById]);
 
   const [selectedLevel, setSelectedLevel] = useState<number | undefined>(1);
-  const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const availableSpells =
     selectedLevel !== undefined ? getWizardSpellsByLevel(selectedLevel) : [];
@@ -150,14 +158,11 @@ function SpellbookCard({
 
   const handleSelectSpell = async (spell: Spell | undefined) => {
     if (!spell) return;
-    setAdding(true);
     setAddError(null);
     try {
       await addSpellToWizardSpellbook(characterId, spellbook.id, spell.id);
     } catch (err) {
       setAddError(err instanceof Error ? err.message : "Failed to add spell");
-    } finally {
-      setAdding(false);
     }
   };
 
@@ -193,7 +198,7 @@ function SpellbookCard({
               getLabel={(spell) => spell.name}
               value={undefined}
               onChange={handleSelectSpell}
-              placeholder={adding ? "Adding..." : "Add Spell"}
+              placeholder="Add Spell"
               emptyText="No spells found."
               className="h-8 px-3 text-sm"
             />
