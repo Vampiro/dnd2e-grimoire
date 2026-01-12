@@ -7,7 +7,6 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useMemo, useState } from "react";
 import { MobileDialog } from "./MobileDialog";
