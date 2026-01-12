@@ -62,7 +62,6 @@ export function MobileDialog({
       <DialogContent
         className={cn(
           "p-0",
-          "h-[100dvh] max-h-[100dvh] w-full",
           "rounded-none",
           "animate-none", // 🚫 critical
           "left-0 top-0 translate-x-0 translate-y-0 max-w-none",
