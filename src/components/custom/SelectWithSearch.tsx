@@ -15,6 +15,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
+import { ChevronDownIcon } from "lucide-react";
 import { MobileSelect } from "./MobileSelect";
 
 type BaseProps<T> = {
@@ -64,6 +65,7 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const isMobile = useIsMobile();
+  const hasValue = value !== undefined && value !== null;
 
   const normalized = query.trim().toLowerCase();
   const filtered = useMemo(() => {
@@ -128,8 +130,12 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
     <button
       type="button"
       className={cn(
-        "inline-flex items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-left text-sm",
-        "hover:bg-accent/50 cursor-pointer",
+        "flex w-fit items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-2 text-left text-sm h-9 text-foreground",
+        "dark:bg-input/30 dark:hover:bg-input/50",
+        "transition-[color,box-shadow,background-color] outline-none cursor-pointer",
+        "hover:bg-accent/50",
+        "focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring",
+        "disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       onClick={() => setOpen((v) => !v)}
@@ -137,9 +143,7 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
       aria-expanded={open}
     >
       <span className="truncate">{triggerLabel}</span>
-      <span className="text-muted-foreground text-xs">
-        {isMobile ? "Open" : "▾"}
-      </span>
+      <ChevronDownIcon className="h-4 w-4" />
     </button>
   );
 

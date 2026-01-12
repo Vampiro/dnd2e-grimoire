@@ -55,7 +55,7 @@ export function WizardSpellbooksPage() {
       ? Object.values(character.class.wizard.spellbooksById)
       : [];
     return [...list].sort((a, b) =>
-      a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+      a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
     );
   }, [character?.class.wizard?.spellbooksById]);
 
@@ -153,7 +153,7 @@ function SpellbookCard({
   const availableSpells =
     selectedLevel !== undefined ? getWizardSpellsByLevel(selectedLevel) : [];
   const availableSpellsSorted = [...availableSpells].sort((a, b) =>
-    a.name.localeCompare(b.name),
+    a.name.localeCompare(b.name)
   );
 
   const handleSelectSpell = async (spell: Spell | undefined) => {
