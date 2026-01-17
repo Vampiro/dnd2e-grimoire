@@ -1,6 +1,15 @@
 import { CastWizardSpells } from "@/components/custom/CastWizardSpells";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useCharacterById } from "@/hooks/useCharacterById";
 import { getWizardProgressionSpellSlots } from "@/lib/spellSlots";
 import { PageRoute } from "@/pages/PageRoute";
@@ -24,6 +33,7 @@ export function WizardCastSpellsPage() {
   const { characterId } = useParams();
   const { character, isLoading } = useCharacterById(characterId);
   const [resting, setResting] = useState(false);
+  const [confirmRestOpen, setConfirmRestOpen] = useState(false);
 
   if (isLoading) {
     return <div>Loading prepared spells...</div>;
@@ -44,12 +54,7 @@ export function WizardCastSpellsPage() {
     (lvl) => (slotMap[lvl] ?? 0) > 0,
   );
 
-  const handleRestAll = async () => {
-    const ok = window.confirm(
-      "Rest? This will restore remaining casts to their rested slot counts.",
-    );
-    if (!ok) return;
-
+  const handleRestConfirm = async () => {
     if (resting) return;
     setResting(true);
     try {
@@ -66,6 +71,7 @@ export function WizardCastSpellsPage() {
       }
     } finally {
       setResting(false);
+      setConfirmRestOpen(false);
     }
   };
 
@@ -96,16 +102,36 @@ export function WizardCastSpellsPage() {
                 characterId={character.id}
                 headerRight={
                   <div className="flex items-center gap-0">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleRestAll}
-                      disabled={resting}
-                      className="rounded-r-none"
+                    <AlertDialog
+                      open={confirmRestOpen}
+                      onOpenChange={setConfirmRestOpen}
                     >
-                      <RotateCcw className="h-4 w-4 mr-1" />
-                      {resting ? "Resting..." : "Rest"}
-                    </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setConfirmRestOpen(true)}
+                        disabled={resting}
+                        className="rounded-r-none"
+                      >
+                        <RotateCcw className="h-4 w-4 mr-1" />
+                        {resting ? "Resting..." : "Rest"}
+                      </Button>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Rest?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will restore remaining casts to their rested
+                            slot counts.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <div className="flex gap-3 justify-end">
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleRestConfirm}>
+                            Rest
+                          </AlertDialogAction>
+                        </div>
+                      </AlertDialogContent>
+                    </AlertDialog>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
