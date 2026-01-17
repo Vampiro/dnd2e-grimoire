@@ -87,9 +87,8 @@ export function PrepareWizardSpells(props: WizardPreparedSpellsProps) {
                           className="underline"
                           to={PageRoute.WIZARD_SPELLBOOKS(props.characterId)}
                         >
-                          {" "}
                           Spellbooks
-                        </Link>{" "}
+                        </Link>
                         to add level {props.spellLevel} spells.
                       </p>
                     </div>
