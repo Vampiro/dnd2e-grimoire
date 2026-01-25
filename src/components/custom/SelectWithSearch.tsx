@@ -250,32 +250,41 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
     </button>
   );
 
-  // If contentOnly, just return the content without Popover/trigger
-  if (contentOnly) {
-    return content;
-  }
-
   if (isMobile) {
+    const mobileSelect = (
+      <MobileSelect
+        open={open}
+        onOpenChange={setOpen}
+        items={items}
+        value={value}
+        onChange={(item) => onChange?.(item)}
+        getLabel={getLabel}
+        getKey={getKey}
+        isItemDisabled={isItemDisabled}
+        title={title}
+        placeholder={placeholder}
+        emptyText={emptyText}
+        limit={limit}
+        getCategory={getCategory}
+        categoryLabel={categoryLabel}
+      />
+    );
+
+    if (contentOnly) {
+      return mobileSelect;
+    }
+
     return (
       <>
         {trigger}
-        <MobileSelect
-          open={open}
-          onOpenChange={setOpen}
-          items={items}
-          value={value}
-          onChange={(item) => onChange?.(item)}
-          getLabel={getLabel}
-          getKey={getKey}
-          isItemDisabled={isItemDisabled}
-          title={title}
-          emptyText={emptyText}
-          limit={limit}
-          getCategory={getCategory}
-          categoryLabel={categoryLabel}
-        />
+        {mobileSelect}
       </>
     );
+  }
+
+  // If contentOnly, just return the content without Popover/trigger
+  if (contentOnly) {
+    return content;
   }
 
   return (
