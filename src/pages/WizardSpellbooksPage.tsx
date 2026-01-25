@@ -16,20 +16,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { SelectWithSearch } from "@/components/custom/SelectWithSearch";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Plus } from "lucide-react";
 import { useCharacterById } from "@/hooks/useCharacterById";
 import { WizardSpellbook } from "@/types/WizardClassProgression";
 import {
   findWizardSpellById,
-  getWizardSpellsByLevel,
   openSpellViewer,
 } from "@/lib/spellLookup";
 import type { Spell } from "@/types/Spell";
@@ -37,6 +34,8 @@ import {
   addSpellToWizardSpellbook,
   addWizardSpellbook,
 } from "@/firebase/characters";
+import { useAtomValue } from "jotai";
+import { wizardSpellsAtom } from "@/globalState";
 
 const SPELL_LEVELS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
@@ -174,19 +173,36 @@ function SpellbookCard({
     };
   }, [spellbook.spellsById, spellbook.numberOfPages]);
 
-  const [selectedLevel, setSelectedLevel] = useState<number | undefined>(1);
   const [addError, setAddError] = useState<string | null>(null);
-  const availableSpells =
-    selectedLevel !== undefined ? getWizardSpellsByLevel(selectedLevel) : [];
-  const availableSpellsSorted = [...availableSpells].sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
+  const [addSpellOpen, setAddSpellOpen] = useState(false);
+  const allWizardSpells = useAtomValue(wizardSpellsAtom);
+
+  const handleOpenChange = (open: boolean) => {
+    setAddSpellOpen(open);
+    if (!open) {
+      setAddError(null);
+    }
+  };
+  
+  // Filter out spells already in the spellbook and sort
+  const availableSpells = useMemo(() => {
+    return allWizardSpells
+      .filter((spell) => !spellIdsInBook.has(spell.id))
+      .sort((a, b) => {
+        // Sort by level first, then by name
+        if (a.level !== b.level) {
+          return a.level - b.level;
+        }
+        return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+      });
+  }, [allWizardSpells, spellIdsInBook]);
 
   const handleSelectSpell = async (spell: Spell | undefined) => {
     if (!spell) return;
     setAddError(null);
     try {
       await addSpellToWizardSpellbook(characterId, spellbook.id, spell.id);
+      setAddSpellOpen(false);
     } catch (err) {
       setAddError(err instanceof Error ? err.message : "Failed to add spell");
     }
@@ -207,40 +223,40 @@ function SpellbookCard({
       <CardContent className="space-y-4">
         {/* Add spell */}
         <div>
-          <div className="flex gap-2 items-center">
-            <Select
-              onValueChange={(val) => setSelectedLevel(Number(val))}
-              defaultValue={String(selectedLevel)}
-            >
-              <SelectTrigger size="sm" className="w-24">
-                <SelectValue placeholder="Level" />
-              </SelectTrigger>
-              <SelectContent className="w-max min-w-max">
-                {SPELL_LEVELS.map((lvl) => (
-                  <SelectItem key={lvl} value={String(lvl)}>
-                    Level {lvl}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <SelectWithSearch<Spell>
-              title={`Add spell to Spellbook`}
-              items={availableSpellsSorted}
-              getKey={(spell) => String(spell.id)}
-              getLabel={(spell) =>
-                spellIdsInBook.has(spell.id)
-                  ? `${spell.name} (in spellbook)`
-                  : spell.name
-              }
-              isItemDisabled={(spell) => spellIdsInBook.has(spell.id)}
-              value={undefined}
-              onChange={handleSelectSpell}
-              placeholder="Add Spell"
-              emptyText="No spells found."
-              className="h-8 px-3 text-sm"
-            />
-          </div>
-          {addError && <p className="text-sm text-destructive">{addError}</p>}
+          <Popover open={addSpellOpen} onOpenChange={handleOpenChange}>
+            <PopoverTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-2"
+                aria-label="Add spell to spellbook"
+              >
+                <Plus className="h-4 w-4" />
+                Add Spell
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0 w-80" align="start" sideOffset={8}>
+              <SelectWithSearch<Spell>
+                title="Add spell to Spellbook"
+                items={availableSpells}
+                getKey={(spell) => String(spell.id)}
+                getLabel={(spell) => spell.name}
+                isItemDisabled={(spell) => spellIdsInBook.has(spell.id)}
+                value={undefined}
+                onChange={handleSelectSpell}
+                placeholder="Search spells..."
+                emptyText="No spells found."
+                getCategory={(spell) => `Level ${spell.level}`}
+                categoryLabel={(cat) => cat}
+                open={addSpellOpen}
+                onOpenChange={setAddSpellOpen}
+                contentOnly={true}
+              />
+            </PopoverContent>
+          </Popover>
+          {addError && (
+            <p className="text-sm text-destructive mt-2">{addError}</p>
+          )}
         </div>
 
         {/* Spells grouped by level */}

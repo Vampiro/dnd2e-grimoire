@@ -29,6 +29,8 @@ import { loadSpellData } from "./lib/spellLookup";
 import { SettingsPage } from "./pages/SettingsPage";
 import { subscribeToUserSettings } from "./firebase/userSettings";
 import { SpellViewerDialog } from "./components/custom/SpellViewerDialog";
+import { TestPage } from "./pages/TestPage";
+import { PageRoute } from "./pages/PageRoute";
 
 /** Root application component. */
 function App() {
@@ -122,6 +124,9 @@ function App() {
       <Toaster />
       <Navbar />
       <SpellViewerDialog />
+      <Routes>
+        <Route path={PageRoute.TEST} element={<TestPage />} />
+      </Routes>
 
       {user && (
         <main className="mx-auto w-full max-w-6xl mt-4">

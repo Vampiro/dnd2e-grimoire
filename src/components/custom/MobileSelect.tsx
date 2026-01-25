@@ -3,6 +3,7 @@
 import {
   Command,
   CommandEmpty,
+  CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
@@ -27,6 +28,8 @@ type MobileSelectProps<T> = {
   placeholder?: string;
   emptyText?: string;
   limit?: number;
+  getCategory?(item: T): string | undefined;
+  categoryLabel?(category: string): string;
 };
 
 const DEFAULT_LIMIT = 200;
@@ -44,6 +47,8 @@ export function MobileSelect<T>({
   placeholder = "Search…",
   emptyText = "No results found.",
   limit = DEFAULT_LIMIT,
+  getCategory,
+  categoryLabel = (cat) => cat,
 }: MobileSelectProps<T>) {
   const [query, setQuery] = useState("");
 
@@ -63,8 +68,63 @@ export function MobileSelect<T>({
     );
   }, [items, getLabel, normalized]);
 
-  const limited = filtered.slice(0, limit);
-  const isCapped = filtered.length > limited.length;
+  // Group items by category if getCategory is provided
+  const groupedItems = useMemo(() => {
+    if (!getCategory) {
+      return { uncategorized: filtered };
+    }
+
+    const groups: Record<string, T[]> = {};
+    for (const item of filtered) {
+      const category = getCategory(item) ?? "uncategorized";
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(item);
+    }
+
+    // Sort categories
+    const sortedCategories = Object.keys(groups).sort((a, b) => {
+      if (a === "uncategorized") return 1;
+      if (b === "uncategorized") return -1;
+      return a.localeCompare(b, undefined, { sensitivity: "base" });
+    });
+
+    const result: Record<string, T[]> = {};
+    for (const cat of sortedCategories) {
+      result[cat] = groups[cat];
+    }
+    return result;
+  }, [filtered, getCategory]);
+
+  // Flatten for limit calculation
+  const limitedFlat = filtered.slice(0, limit);
+  const isCapped = filtered.length > limitedFlat.length;
+
+  // Apply limit per category if categorizing
+  const limitedGrouped = useMemo(() => {
+    if (!getCategory) {
+      return { uncategorized: limitedFlat };
+    }
+
+    const groups: Record<string, T[]> = {};
+    let remaining = limit;
+    const sortedCategories = Object.keys(groupedItems).sort((a, b) => {
+      if (a === "uncategorized") return 1;
+      if (b === "uncategorized") return -1;
+      return a.localeCompare(b, undefined, { sensitivity: "base" });
+    });
+
+    for (const cat of sortedCategories) {
+      if (remaining <= 0) break;
+      const items = groupedItems[cat];
+      const take = Math.min(items.length, remaining);
+      groups[cat] = items.slice(0, take);
+      remaining -= take;
+    }
+
+    return groups;
+  }, [getCategory, groupedItems, limitedFlat, limit]);
 
   const handleSelect = (key: string) => {
     const item = items.find((it) => getKey(it) === key);
@@ -86,7 +146,7 @@ export function MobileSelect<T>({
         </div>
 
         {/* Search */}
-        <div className="border-b px-4 py-2">
+        <div className="border-b px-1 md:px-4 py-2">
           <CommandInput
             autoFocus
             value={query}
@@ -99,10 +159,40 @@ export function MobileSelect<T>({
         {/* List */}
         <div className="flex-1 overflow-y-auto overscroll-contain">
           <CommandList className="p-2 max-h-full">
-            {limited.length === 0 ? (
+            {filtered.length === 0 ? (
               <CommandEmpty>{emptyText}</CommandEmpty>
+            ) : getCategory ? (
+              Object.entries(limitedGrouped).map(([category, categoryItems]) => {
+                if (categoryItems.length === 0) return null;
+                return (
+                  <CommandGroup key={category} heading={categoryLabel(category)}>
+                    {categoryItems.map((item) => {
+                      const key = getKey(item);
+                      const label = getLabel(item);
+                      const selected = value && getKey(value) === key;
+                      const disabled = isItemDisabled?.(item);
+
+                      return (
+                        <CommandItem
+                          key={key}
+                          value={key}
+                          onSelect={handleSelect}
+                          disabled={disabled}
+                          className={cn(
+                            "min-h-[44px]",
+                            selected && "bg-accent",
+                            disabled && "opacity-60"
+                          )}
+                        >
+                          {label}
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                );
+              })
             ) : (
-              limited.map((item) => {
+              limitedFlat.map((item) => {
                 const key = getKey(item);
                 const label = getLabel(item);
                 const selected = value && getKey(value) === key;

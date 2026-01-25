@@ -8,6 +8,7 @@ export const PageRoute = {
   HOME: "/",
   CHARACTERS: "/characters",
   SETTINGS: "/settings",
+  TEST: "/test",
   /** Character overview page. */
   CHARACTER_VIEW: (characterId: string) => `/characters/${characterId}`,
   /** Character edit page. */

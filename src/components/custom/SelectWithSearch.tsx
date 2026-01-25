@@ -3,6 +3,7 @@
 import {
   Command,
   CommandEmpty,
+  CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
@@ -30,6 +31,11 @@ type BaseProps<T> = {
   limit?: number;
   className?: string;
   title?: string;
+  getCategory?(item: T): string | undefined;
+  categoryLabel?(category: string): string;
+  open?: boolean;
+  onOpenChange?(open: boolean): void;
+  contentOnly?: boolean;
 };
 
 const DEFAULT_LIMIT = 200;
@@ -62,9 +68,16 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
     limit = DEFAULT_LIMIT,
     className,
     title,
+    getCategory,
+    categoryLabel = (cat) => cat,
+    open: controlledOpen,
+    onOpenChange: controlledOnOpenChange,
+    contentOnly = false,
   } = props;
 
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = controlledOnOpenChange ?? setInternalOpen;
   const [query, setQuery] = useState("");
   const isMobile = useIsMobile();
 
@@ -80,14 +93,71 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
     );
   }, [getLabel, items, normalized]);
 
-  const limited = filtered.slice(0, limit);
-  const isCapped = filtered.length > limited.length;
+  // Group items by category if getCategory is provided
+  const groupedItems = useMemo(() => {
+    if (!getCategory) {
+      return { uncategorized: filtered };
+    }
+
+    const groups: Record<string, T[]> = {};
+    for (const item of filtered) {
+      const category = getCategory(item) ?? "uncategorized";
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(item);
+    }
+
+    // Sort categories
+    const sortedCategories = Object.keys(groups).sort((a, b) => {
+      if (a === "uncategorized") return 1;
+      if (b === "uncategorized") return -1;
+      return a.localeCompare(b, undefined, { sensitivity: "base" });
+    });
+
+    const result: Record<string, T[]> = {};
+    for (const cat of sortedCategories) {
+      result[cat] = groups[cat];
+    }
+    return result;
+  }, [filtered, getCategory]);
+
+  // Flatten for limit calculation
+  const limitedFlat = filtered.slice(0, limit);
+  const isCapped = filtered.length > limitedFlat.length;
+
+  // Apply limit per category if categorizing
+  const limitedGrouped = useMemo(() => {
+    if (!getCategory) {
+      return { uncategorized: limitedFlat };
+    }
+
+    const groups: Record<string, T[]> = {};
+    let remaining = limit;
+    const sortedCategories = Object.keys(groupedItems).sort((a, b) => {
+      if (a === "uncategorized") return 1;
+      if (b === "uncategorized") return -1;
+      return a.localeCompare(b, undefined, { sensitivity: "base" });
+    });
+
+    for (const cat of sortedCategories) {
+      if (remaining <= 0) break;
+      const items = groupedItems[cat];
+      const take = Math.min(items.length, remaining);
+      groups[cat] = items.slice(0, take);
+      remaining -= take;
+    }
+
+    return groups;
+  }, [getCategory, groupedItems, limitedFlat, limit]);
 
   const handleSelect = (key: string) => {
     const item = items.find((it) => getKey(it) === key);
     if (item && isItemDisabled?.(item)) return;
     onChange?.(item);
-    setOpen(false);
+    if (!contentOnly) {
+      setOpen(false);
+    }
   };
 
   const triggerLabel = value ? getLabel(value) : placeholder;
@@ -106,10 +176,32 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
       />
       <ScrollArea className="flex-1 min-h-0 h-full">
         <CommandList className={`p-2 ${isMobile ? "max-h-none" : ""} h-full`}>
-          {limited.length === 0 ? (
+          {filtered.length === 0 ? (
             <CommandEmpty>{emptyText}</CommandEmpty>
+          ) : getCategory ? (
+            Object.entries(limitedGrouped).map(([category, categoryItems]) => {
+              if (categoryItems.length === 0) return null;
+              return (
+                <CommandGroup key={category} heading={categoryLabel(category)}>
+                  {categoryItems.map((item) => {
+                    const key = getKey(item);
+                    const disabled = isItemDisabled?.(item);
+                    return (
+                      <CommandItem
+                        key={key}
+                        value={key}
+                        onSelect={handleSelect}
+                        disabled={disabled}
+                      >
+                        {getLabel(item)}
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              );
+            })
           ) : (
-            limited.map((item) => {
+            limitedFlat.map((item) => {
               const key = getKey(item);
               const disabled = isItemDisabled?.(item);
               return (
@@ -155,6 +247,11 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
     </button>
   );
 
+  // If contentOnly, just return the content without Popover/trigger
+  if (contentOnly) {
+    return content;
+  }
+
   if (isMobile) {
     return (
       <>
@@ -171,6 +268,8 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
           title={title}
           emptyText={emptyText}
           limit={limit}
+          getCategory={getCategory}
+          categoryLabel={categoryLabel}
         />
       </>
     );
