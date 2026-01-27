@@ -1,7 +1,7 @@
 # TODO
 
 - fix all apple pencil issues
-- add spellbook dialog needs to be mobile friendly
+- add and edit spellbook dialog needs to be mobile friendly
 - create character dialog needs to be mobile friendly
 - temporarily disable/enable a spellbook
 - add in ability for the user to save a note to a spell (user-account-wide).
