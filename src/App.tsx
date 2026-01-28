@@ -16,6 +16,7 @@ import {
 } from "./firebase/characters";
 import { Route, Routes } from "react-router-dom";
 import { CharactersPage } from "./pages/CharactersPage";
+import { CreateCharacterPage } from "./pages/CreateCharacterPage";
 import { CharacterPage } from "./pages/CharacterPage";
 import { CharacterEditPage } from "./pages/CharacterEditPage";
 import { WizardCastSpellsPage } from "./pages/WizardCastSpellsPage";
@@ -141,6 +142,10 @@ function App() {
             </div>
           )}
           <Routes>
+            <Route
+              path={PageRoute.CHARACTERS_NEW}
+              element={<CreateCharacterPage />}
+            />
             <Route path="/characters/:id" element={<CharacterPage />} />
             <Route
               path="/characters/:characterId/edit"
