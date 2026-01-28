@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { useMemo, useState } from "react";
-import { MobileDialog } from "./MobileDialog";
+import { Dialog } from "@/components/ui/dialog";
+import { MobileDialogContent } from "./MobileDialogContent";
 
 type MobileSelectProps<T> = {
   open: boolean;
@@ -57,7 +58,7 @@ export function MobileSelect<T>({
   const filtered = useMemo(() => {
     const base = normalized
       ? items.filter((item) =>
-          getLabel(item).toLowerCase().includes(normalized)
+          getLabel(item).toLowerCase().includes(normalized),
         )
       : items;
 
@@ -65,7 +66,7 @@ export function MobileSelect<T>({
       getLabel(a).localeCompare(getLabel(b), undefined, {
         sensitivity: "base",
         numeric: true,
-      })
+      }),
     );
   }, [items, getLabel, normalized]);
 
@@ -136,96 +137,103 @@ export function MobileSelect<T>({
   };
 
   return (
-    <MobileDialog open={open} onOpenChange={onOpenChange}>
-      <Command
-        shouldFilter={false}
-        className="flex h-full flex-col bg-background"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b px-4 py-3">
-          <div className="text-sm font-semibold">{title ?? "Select"}</div>
-        </div>
-
-        {/* Search */}
-        <div className="border-b px-1 md:px-4 py-2">
-          <CommandInput
-            autoFocus
-            value={query}
-            onValueChange={setQuery}
-            placeholder={placeholder}
-            className="h-11"
-          />
-        </div>
-
-        {/* List */}
-        <div className="flex-1 overflow-y-auto overscroll-contain">
-          <CommandList className="p-2 max-h-full">
-            {filtered.length === 0 ? (
-              <CommandEmpty>{emptyText}</CommandEmpty>
-            ) : getCategory ? (
-              Object.entries(limitedGrouped).map(([category, categoryItems]) => {
-                if (categoryItems.length === 0) return null;
-                return (
-                  <CommandGroup key={category} heading={categoryLabel(category)}>
-                    {categoryItems.map((item) => {
-                      const key = getKey(item);
-                      const label = getLabel(item);
-                      const selected = value && getKey(value) === key;
-                      const disabled = isItemDisabled?.(item);
-
-                      return (
-                        <CommandItem
-                          key={key}
-                          value={key}
-                          onSelect={handleSelect}
-                          disabled={disabled}
-                          className={cn(
-                            "min-h-[44px]",
-                            selected && "bg-accent",
-                            disabled && "opacity-60"
-                          )}
-                        >
-                          {label}
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                );
-              })
-            ) : (
-              limitedFlat.map((item) => {
-                const key = getKey(item);
-                const label = getLabel(item);
-                const selected = value && getKey(value) === key;
-                const disabled = isItemDisabled?.(item);
-
-                return (
-                  <CommandItem
-                    key={key}
-                    value={key}
-                    onSelect={handleSelect}
-                    disabled={disabled}
-                    className={cn(
-                      "min-h-[44px]",
-                      selected && "bg-accent",
-                      disabled && "opacity-60"
-                    )}
-                  >
-                    {label}
-                  </CommandItem>
-                );
-              })
-            )}
-          </CommandList>
-        </div>
-
-        {/* Footer */}
-        {isCapped && (
-          <div className="border-t px-4 py-2 text-xs text-muted-foreground">
-            Showing first {limit} results. Type to narrow.
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <MobileDialogContent>
+        <Command
+          shouldFilter={false}
+          className="flex h-full flex-col bg-background"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between border-b px-4 py-3">
+            <div className="text-sm font-semibold">{title ?? "Select"}</div>
           </div>
-        )}
-      </Command>
-    </MobileDialog>
+
+          {/* Search */}
+          <div className="border-b px-1 md:px-4 py-2">
+            <CommandInput
+              autoFocus
+              value={query}
+              onValueChange={setQuery}
+              placeholder={placeholder}
+              className="h-11"
+            />
+          </div>
+
+          {/* List */}
+          <div className="flex-1 overflow-y-auto overscroll-contain">
+            <CommandList className="p-2 max-h-full">
+              {filtered.length === 0 ? (
+                <CommandEmpty>{emptyText}</CommandEmpty>
+              ) : getCategory ? (
+                Object.entries(limitedGrouped).map(
+                  ([category, categoryItems]) => {
+                    if (categoryItems.length === 0) return null;
+                    return (
+                      <CommandGroup
+                        key={category}
+                        heading={categoryLabel(category)}
+                      >
+                        {categoryItems.map((item) => {
+                          const key = getKey(item);
+                          const label = getLabel(item);
+                          const selected = value && getKey(value) === key;
+                          const disabled = isItemDisabled?.(item);
+
+                          return (
+                            <CommandItem
+                              key={key}
+                              value={key}
+                              onSelect={handleSelect}
+                              disabled={disabled}
+                              className={cn(
+                                "min-h-[44px]",
+                                selected && "bg-accent",
+                                disabled && "opacity-60",
+                              )}
+                            >
+                              {label}
+                            </CommandItem>
+                          );
+                        })}
+                      </CommandGroup>
+                    );
+                  },
+                )
+              ) : (
+                limitedFlat.map((item) => {
+                  const key = getKey(item);
+                  const label = getLabel(item);
+                  const selected = value && getKey(value) === key;
+                  const disabled = isItemDisabled?.(item);
+
+                  return (
+                    <CommandItem
+                      key={key}
+                      value={key}
+                      onSelect={handleSelect}
+                      disabled={disabled}
+                      className={cn(
+                        "min-h-[44px]",
+                        selected && "bg-accent",
+                        disabled && "opacity-60",
+                      )}
+                    >
+                      {label}
+                    </CommandItem>
+                  );
+                })
+              )}
+            </CommandList>
+          </div>
+
+          {/* Footer */}
+          {isCapped && (
+            <div className="border-t px-4 py-2 text-xs text-muted-foreground">
+              Showing first {limit} results. Type to narrow.
+            </div>
+          )}
+        </Command>
+      </MobileDialogContent>
+    </Dialog>
   );
 }

@@ -1,20 +1,15 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import type { ComponentPropsWithoutRef } from "react";
 import { useEffect, useState } from "react";
 
-type MobileDialogProps = {
-  open: boolean;
-  onOpenChange(open: boolean): void;
-  children: React.ReactNode;
-  className?: string;
-};
+type MobileDialogContentProps = ComponentPropsWithoutRef<typeof DialogContent>;
 
-export function MobileDialog({
-  open,
-  onOpenChange,
-  children,
+export function MobileDialogContent({
   className,
-}: MobileDialogProps) {
+  style,
+  ...props
+}: MobileDialogContentProps) {
   const [viewportSize, setViewportSize] = useState<{
     height: number;
     width: number;
@@ -58,19 +53,16 @@ export function MobileDialog({
     : undefined;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className={cn(
-          "p-0",
-          "rounded-none",
-          "animate-none", // 🚫 critical
-          "left-0 top-0 translate-x-0 translate-y-0 max-w-none",
-          className
-        )}
-        style={sizeStyle}
-      >
-        {children}
-      </DialogContent>
-    </Dialog>
+    <DialogContent
+      className={cn(
+        "p-0",
+        "rounded-none",
+        "animate-none",
+        "left-0 top-0 translate-x-0 translate-y-0 max-w-none",
+        className,
+      )}
+      style={{ ...sizeStyle, ...style }}
+      {...props}
+    />
   );
 }
