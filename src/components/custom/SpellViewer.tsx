@@ -1,7 +1,15 @@
 import { Spell } from "@/types/Spell";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAtomValue } from "jotai";
+import { Button } from "@/components/ui/button";
 import { useSpellDescription } from "@/hooks/useSpellDescription";
+import { spellNotesAtom } from "@/globalState";
+import { closeSpellViewer } from "@/lib/spellLookup";
+import { PageRoute } from "@/pages/PageRoute";
+import { isSpellNoteEmpty } from "@/lib/spellNotes";
+import { SpellNotePreview } from "@/components/custom/SpellNotePreview";
 import "./SpellViewer.css";
 
 interface SpellViewerProps {
@@ -27,6 +35,10 @@ interface SpellViewerProps {
  */
 export function SpellViewer(props: SpellViewerProps) {
   const { spell, showTitle = true } = props;
+  const navigate = useNavigate();
+  const spellNotes = useAtomValue(spellNotesAtom);
+  const note = spellNotes[String(spell.id)];
+  const hasNote = !!note && !isSpellNoteEmpty(note);
 
   // Centralized description lookup + "ready" status (avoids duplicating
   // wizard/priest map fallback logic in multiple components).
@@ -136,6 +148,34 @@ export function SpellViewer(props: SpellViewerProps) {
           </div>
         </div>
       )}
+
+      <div className="space-y-2">
+        <div
+          className={
+            hasNote
+              ? "flex items-center justify-between gap-2"
+              : "flex items-center justify-end"
+          }
+        >
+          {hasNote && <div className="text-sm font-semibold">User Note</div>}
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              closeSpellViewer();
+              navigate(PageRoute.SPELL_NOTE_EDIT(spell.id));
+            }}
+          >
+            {hasNote ? "Edit Note" : "Add Note"}
+          </Button>
+        </div>
+        {hasNote && note && (
+          <div className="rounded-md border bg-muted/20 p-3">
+            <SpellNotePreview note={note} />
+          </div>
+        )}
+      </div>
 
       {metadataEntries.length > 0 && (
         <div className="space-y-2">

@@ -1,4 +1,12 @@
-import { doc, onSnapshot, setDoc, type Unsubscribe } from "firebase/firestore";
+import {
+  deleteField,
+  doc,
+  onSnapshot,
+  setDoc,
+  type FieldValue,
+  type Unsubscribe,
+} from "firebase/firestore";
+import type { SerializedEditorState } from "lexical";
 import { db } from "./index";
 
 /**
@@ -12,10 +20,21 @@ export type UserSettings = {
    * This is clamped by the app to avoid breaking layouts.
    */
   uiScale?: number;
+  /** Optional per-spell markdown notes keyed by spell id. */
+  spellNotes?: Record<string, SerializedEditorState>;
 };
 
 type UserDoc = {
   settings?: UserSettings;
+};
+
+type UserSettingsUpdate = {
+  uiScale?: number;
+  spellNotes?: Record<string, SerializedEditorState | FieldValue>;
+};
+
+type UserDocUpdate = {
+  settings?: UserSettingsUpdate;
 };
 
 /**
@@ -61,7 +80,50 @@ export async function setUserUiScale(
       settings: {
         uiScale: clampUiScale(uiScale),
       },
-    } satisfies UserDoc,
+    } satisfies UserDocUpdate,
+    { merge: true },
+  );
+}
+
+/**
+ * Persist a single spell note for the user.
+ */
+export async function setUserSpellNote(
+  userId: string,
+  spellId: string,
+  note: SerializedEditorState,
+): Promise<void> {
+  const ref = userSettingsDoc(userId);
+  await setDoc(
+    ref,
+    {
+      settings: {
+        spellNotes: {
+          [spellId]: note,
+        },
+      },
+    } satisfies UserDocUpdate,
+    { merge: true },
+  );
+}
+
+/**
+ * Remove a spell note for the user.
+ */
+export async function deleteUserSpellNote(
+  userId: string,
+  spellId: string,
+): Promise<void> {
+  const ref = userSettingsDoc(userId);
+  await setDoc(
+    ref,
+    {
+      settings: {
+        spellNotes: {
+          [spellId]: deleteField(),
+        },
+      },
+    } satisfies UserDocUpdate,
     { merge: true },
   );
 }

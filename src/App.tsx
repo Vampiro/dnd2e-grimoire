@@ -3,6 +3,7 @@ import "./App.css";
 import {
   spellDataStatusAtom,
   store,
+  spellNotesAtom,
   uiScaleAtom,
   userAtom,
 } from "./globalState";
@@ -21,6 +22,7 @@ import { CharacterPage } from "./pages/CharacterPage";
 import { CharacterEditPage } from "./pages/CharacterEditPage";
 import { CreateSpellbookPage } from "./pages/CreateSpellbookPage";
 import { EditSpellbookPage } from "./pages/EditSpellbookPage";
+import { SpellNoteEditPage } from "./pages/SpellNoteEditPage";
 import { WizardCastSpellsPage } from "./pages/WizardCastSpellsPage";
 import { WizardPrepareSpellsPage } from "./pages/WizardPrepareSpellsPage";
 import { WizardSpellSlotsPage } from "./pages/WizardSpellSlotsPage";
@@ -95,6 +97,7 @@ function App() {
         stopCharactersRealtimeSync();
         store.set(charactersAtom, []);
         store.set(uiScaleAtom, 1);
+        store.set(spellNotesAtom, {});
         return;
       }
 
@@ -105,6 +108,7 @@ function App() {
         } else {
           store.set(uiScaleAtom, 1);
         }
+        store.set(spellNotesAtom, settings.spellNotes ?? {});
       });
 
       try {
@@ -158,6 +162,10 @@ function App() {
                 ":spellbookId",
               )}
               element={<EditSpellbookPage />}
+            />
+            <Route
+              path={PageRoute.SPELL_NOTE_EDIT(":spellId")}
+              element={<SpellNoteEditPage />}
             />
             <Route path="/characters/:id" element={<CharacterPage />} />
             <Route

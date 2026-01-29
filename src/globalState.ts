@@ -3,6 +3,7 @@ import { atom, getDefaultStore } from "jotai";
 import { Character } from "./types/Character";
 import type { Spell } from "./types/Spell";
 import type { SpellDescriptionJson } from "./types/Resources";
+import type { SerializedEditorState } from "lexical";
 
 /**
  * Global Jotai store instance.
@@ -65,6 +66,9 @@ export const priestSpellDescriptionsAtom = atom<
 
 /** Globally selected spell for viewer dialogs. */
 export const activeSpellForViewerAtom = atom<Spell | null>(null);
+
+/** User-authored spell notes keyed by spell id. */
+export const spellNotesAtom = atom<Record<string, SerializedEditorState>>({});
 
 /**
  * Global UI scale multiplier.
