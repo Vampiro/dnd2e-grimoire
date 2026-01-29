@@ -1,12 +1,5 @@
-import {
-  ChangeEvent,
-  FormEvent,
-  useMemo,
-  useState,
-  useId,
-  useEffect,
-} from "react";
-import { useParams } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,14 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -46,13 +31,12 @@ import { findWizardSpellById, openSpellViewer } from "@/lib/spellLookup";
 import type { Spell } from "@/types/Spell";
 import {
   addSpellToWizardSpellbook,
-  addWizardSpellbook,
   deleteWizardSpellbook,
   removeSpellFromWizardSpellbook,
-  updateWizardSpellbook,
 } from "@/firebase/characters";
 import { useAtomValue } from "jotai";
 import { wizardSpellsAtom } from "@/globalState";
+import { PageRoute } from "./PageRoute";
 
 const SPELL_LEVELS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
@@ -64,7 +48,6 @@ const SPELL_LEVELS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 export function WizardSpellbooksPage() {
   const { characterId } = useParams();
   const { character, isLoading } = useCharacterById(characterId);
-  const [createOpen, setCreateOpen] = useState(false);
 
   const spellbooks = useMemo(() => {
     const list = character?.class.wizard?.spellbooksById
@@ -90,29 +73,14 @@ export function WizardSpellbooksPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold">Spellbooks</h1>
-            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  aria-label="Add spellbook"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Add Spellbook</DialogTitle>
-                  <DialogDescription>
-                    Create a new spellbook for {character.name}.
-                  </DialogDescription>
-                </DialogHeader>
-                <AddSpellbookForm
-                  characterId={character.id}
-                  onSuccess={() => setCreateOpen(false)}
-                />
-              </DialogContent>
-            </Dialog>
+            <Button asChild size="icon" variant="outline">
+              <Link
+                to={PageRoute.WIZARD_SPELLBOOKS_NEW(character.id)}
+                aria-label="Add spellbook"
+              >
+                <Plus className="h-4 w-4" />
+              </Link>
+            </Button>
           </div>
           <p className="text-muted-foreground text-xs">
             Manage wizard spellbooks.
@@ -195,7 +163,6 @@ function SpellbookCard({
   const [addSpellOpen, setAddSpellOpen] = useState(false);
   const [deleteMode, setDeleteMode] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
   const [deleteSpellbookOpen, setDeleteSpellbookOpen] = useState(false);
   const [deleteSpellbookError, setDeleteSpellbookError] = useState<
     string | null
@@ -332,14 +299,19 @@ function SpellbookCard({
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-56 p-2">
                   <Button
+                    asChild
                     variant="ghost"
                     className="w-full justify-between px-2 text-sm"
-                    onClick={() => {
-                      setOptionsOpen(false);
-                      setEditOpen(true);
-                    }}
                   >
-                    Edit Name &amp; Pages
+                    <Link
+                      to={PageRoute.WIZARD_SPELLBOOKS_EDIT(
+                        characterId,
+                        spellbook.id,
+                      )}
+                      onClick={() => setOptionsOpen(false)}
+                    >
+                      Edit Name &amp; Pages
+                    </Link>
                   </Button>
                   <div className="flex w-full items-center justify-between rounded-md px-2 py-2 text-sm hover:bg-accent dark:hover:bg-accent/50 font-medium">
                     <span>Delete Mode</span>
@@ -362,23 +334,6 @@ function SpellbookCard({
                 </PopoverContent>
               </Popover>
             </div>
-            <Dialog open={editOpen} onOpenChange={setEditOpen}>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Edit Spellbook</DialogTitle>
-                  <DialogDescription>
-                    Update the name and page count for this spellbook.
-                  </DialogDescription>
-                </DialogHeader>
-                <EditSpellbookForm
-                  characterId={characterId}
-                  spellbook={spellbook}
-                  open={editOpen}
-                  onCancel={() => setEditOpen(false)}
-                  onSuccess={() => setEditOpen(false)}
-                />
-              </DialogContent>
-            </Dialog>
             <AlertDialog
               open={deleteSpellbookOpen}
               onOpenChange={handleDeleteSpellbookOpenChange}
@@ -463,205 +418,5 @@ function SpellbookCard({
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function AddSpellbookForm({
-  characterId,
-  onSuccess,
-}: {
-  characterId: string;
-  onSuccess?: () => void;
-}) {
-  const nameId = useId();
-  const pagesId = useId();
-  const [name, setName] = useState("");
-  const [pages, setPages] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setError(null);
-
-    try {
-      const trimmedName = name.trim();
-      const numberOfPages = Number(pages);
-
-      if (!trimmedName) {
-        throw new Error("Name is required");
-      }
-
-      if (!Number.isFinite(numberOfPages) || numberOfPages <= 0) {
-        throw new Error("Number of pages must be greater than 0");
-      }
-
-      await addWizardSpellbook(characterId, {
-        name: trimmedName,
-        numberOfPages,
-      });
-
-      setName("");
-      setPages("");
-      onSuccess?.();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add spellbook");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <form className="space-y-3" onSubmit={handleSubmit}>
-      <div className="grid gap-2">
-        <label className="text-sm font-medium" htmlFor={nameId}>
-          Name
-        </label>
-        <input
-          id={nameId}
-          value={name}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            setName(e.target.value)
-          }
-          placeholder="E.g., Grimorium Arcana"
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          required
-        />
-      </div>
-
-      <div className="grid gap-2">
-        <label className="text-sm font-medium" htmlFor={pagesId}>
-          Pages
-        </label>
-        <input
-          id={pagesId}
-          type="number"
-          min={1}
-          value={pages}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            setPages(e.target.value)
-          }
-          placeholder="50"
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          required
-        />
-      </div>
-
-      {error && <p className="text-sm text-destructive">{error}</p>}
-
-      <Button type="submit" disabled={saving} className="w-full">
-        {saving ? "Saving..." : "Create Spellbook"}
-      </Button>
-    </form>
-  );
-}
-
-function EditSpellbookForm({
-  characterId,
-  spellbook,
-  open,
-  onCancel,
-  onSuccess,
-}: {
-  characterId: string;
-  spellbook: WizardSpellbook;
-  open: boolean;
-  onCancel: () => void;
-  onSuccess: () => void;
-}) {
-  const nameId = useId();
-  const pagesId = useId();
-  const [name, setName] = useState(spellbook.name);
-  const [pages, setPages] = useState(String(spellbook.numberOfPages));
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    setName(spellbook.name);
-    setPages(String(spellbook.numberOfPages));
-    setError(null);
-  }, [open, spellbook.name, spellbook.numberOfPages]);
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setError(null);
-
-    try {
-      const trimmedName = name.trim();
-      const numberOfPages = Number(pages);
-
-      if (!trimmedName) {
-        throw new Error("Name is required");
-      }
-
-      if (!Number.isFinite(numberOfPages) || numberOfPages <= 0) {
-        throw new Error("Number of pages must be greater than 0");
-      }
-
-      await updateWizardSpellbook(characterId, spellbook.id, {
-        name: trimmedName,
-        numberOfPages,
-      });
-
-      onSuccess();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to update spellbook",
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <form className="space-y-3" onSubmit={handleSubmit}>
-      <div className="grid gap-2">
-        <label className="text-sm font-medium" htmlFor={nameId}>
-          Name
-        </label>
-        <input
-          id={nameId}
-          value={name}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            setName(e.target.value)
-          }
-          placeholder="E.g., Grimorium Arcana"
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          required
-        />
-      </div>
-
-      <div className="grid gap-2">
-        <label className="text-sm font-medium" htmlFor={pagesId}>
-          Pages
-        </label>
-        <input
-          id={pagesId}
-          type="number"
-          min={1}
-          value={pages}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            setPages(e.target.value)
-          }
-          placeholder="50"
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          required
-        />
-      </div>
-
-      {error && <p className="text-sm text-destructive">{error}</p>}
-
-      <div className="flex gap-2 justify-between">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Save"}
-        </Button>
-      </div>
-    </form>
   );
 }

@@ -19,6 +19,8 @@ import { CharactersPage } from "./pages/CharactersPage";
 import { CreateCharacterPage } from "./pages/CreateCharacterPage";
 import { CharacterPage } from "./pages/CharacterPage";
 import { CharacterEditPage } from "./pages/CharacterEditPage";
+import { CreateSpellbookPage } from "./pages/CreateSpellbookPage";
+import { EditSpellbookPage } from "./pages/EditSpellbookPage";
 import { WizardCastSpellsPage } from "./pages/WizardCastSpellsPage";
 import { WizardPrepareSpellsPage } from "./pages/WizardPrepareSpellsPage";
 import { WizardSpellSlotsPage } from "./pages/WizardSpellSlotsPage";
@@ -145,6 +147,17 @@ function App() {
             <Route
               path={PageRoute.CHARACTERS_NEW}
               element={<CreateCharacterPage />}
+            />
+            <Route
+              path={PageRoute.WIZARD_SPELLBOOKS_NEW(":characterId")}
+              element={<CreateSpellbookPage />}
+            />
+            <Route
+              path={PageRoute.WIZARD_SPELLBOOKS_EDIT(
+                ":characterId",
+                ":spellbookId",
+              )}
+              element={<EditSpellbookPage />}
             />
             <Route path="/characters/:id" element={<CharacterPage />} />
             <Route
