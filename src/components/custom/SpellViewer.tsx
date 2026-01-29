@@ -1,15 +1,15 @@
 import { Spell } from "@/types/Spell";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { useAtomValue } from "jotai";
+import type { SerializedEditorState } from "lexical";
 import { Button } from "@/components/ui/button";
 import { useSpellDescription } from "@/hooks/useSpellDescription";
-import { spellNotesAtom } from "@/globalState";
-import { closeSpellViewer } from "@/lib/spellLookup";
-import { PageRoute } from "@/pages/PageRoute";
-import { isSpellNoteEmpty } from "@/lib/spellNotes";
+import { spellNotesAtom, userAtom } from "@/globalState";
+import { isSpellNoteEmpty, getSpellNotePlainText } from "@/lib/spellNotes";
 import { SpellNotePreview } from "@/components/custom/SpellNotePreview";
+import { SpellNoteEditor } from "@/components/custom/SpellNoteEditor";
+import { deleteUserSpellNote, setUserSpellNote } from "@/firebase/userSettings";
 import "./SpellViewer.css";
 
 interface SpellViewerProps {
@@ -35,10 +35,22 @@ interface SpellViewerProps {
  */
 export function SpellViewer(props: SpellViewerProps) {
   const { spell, showTitle = true } = props;
-  const navigate = useNavigate();
+  const user = useAtomValue(userAtom);
   const spellNotes = useAtomValue(spellNotesAtom);
   const note = spellNotes[String(spell.id)];
   const hasNote = !!note && !isSpellNoteEmpty(note);
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [noteState, setNoteState] = useState<SerializedEditorState | undefined>(
+    note,
+  );
+  const [noteText, setNoteText] = useState(getSpellNotePlainText(note));
+  const [noteError, setNoteError] = useState<string | null>(null);
+  const [noteSaving, setNoteSaving] = useState(false);
+
+  useEffect(() => {
+    setNoteState(note);
+    setNoteText(getSpellNotePlainText(note));
+  }, [note]);
 
   // Centralized description lookup + "ready" status (avoids duplicating
   // wizard/priest map fallback logic in multiple components).
@@ -152,25 +164,99 @@ export function SpellViewer(props: SpellViewerProps) {
       <div className="space-y-2">
         <div
           className={
-            hasNote
+            hasNote || isEditingNote
               ? "flex items-center justify-between gap-2"
               : "flex items-center justify-end"
           }
         >
-          {hasNote && <div className="text-sm font-semibold">User Note</div>}
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              closeSpellViewer();
-              navigate(PageRoute.SPELL_NOTE_EDIT(spell.id));
-            }}
-          >
-            {hasNote ? "Edit Note" : "Add Note"}
-          </Button>
+          {(hasNote || isEditingNote) && (
+            <div className="text-sm font-semibold">User Note</div>
+          )}
+          {!isEditingNote && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setNoteError(null);
+                setIsEditingNote(true);
+              }}
+            >
+              {hasNote ? "Edit Note" : "Add Note"}
+            </Button>
+          )}
         </div>
-        {hasNote && note && (
+
+        {isEditingNote && (
+          <div className="space-y-3">
+            <div className="rounded-md border bg-muted/20">
+              <SpellNoteEditor
+                key={note ? JSON.stringify(note) : "empty-note"}
+                initialState={note}
+                onSerializedChange={(next) => setNoteState(next)}
+                onTextChange={setNoteText}
+              />
+            </div>
+
+            {noteError && (
+              <p className="text-sm text-destructive">{noteError}</p>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsEditingNote(false);
+                  setNoteError(null);
+                  setNoteState(note);
+                  setNoteText(getSpellNotePlainText(note));
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={async () => {
+                  if (noteSaving) return;
+                  if (!user) {
+                    setNoteError("You must be logged in to edit spell notes.");
+                    return;
+                  }
+
+                  setNoteSaving(true);
+                  setNoteError(null);
+
+                  try {
+                    const trimmed = noteText.trim();
+                    const spellKey = String(spell.id);
+
+                    if (trimmed.length === 0) {
+                      await deleteUserSpellNote(user.uid, spellKey);
+                    } else if (noteState) {
+                      await setUserSpellNote(user.uid, spellKey, noteState);
+                    }
+
+                    setIsEditingNote(false);
+                  } catch (err) {
+                    setNoteError(
+                      err instanceof Error
+                        ? err.message
+                        : "Failed to save spell note",
+                    );
+                  } finally {
+                    setNoteSaving(false);
+                  }
+                }}
+                disabled={noteSaving}
+              >
+                {noteSaving ? "Saving..." : "Save Note"}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {!isEditingNote && hasNote && note && (
           <div className="rounded-md border bg-muted/20 p-3">
             <SpellNotePreview note={note} />
           </div>

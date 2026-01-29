@@ -1,10 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 
 import { PageRoute } from "@/pages/PageRoute";
-import { findWizardSpellById, openSpellViewer } from "@/lib/spellLookup";
+import { findWizardSpellById } from "@/lib/spellLookup";
 
 import {
   useWizardPreparedSpellsState,
@@ -23,6 +23,7 @@ export interface CastWizardSpellsProps extends WizardPreparedSpellsProps {
  * and provides `-1/+1` controls to cast/restore.
  */
 export function CastWizardSpells(props: CastWizardSpellsProps) {
+  const navigate = useNavigate();
   const {
     sortedSpells,
     maxSlots,
@@ -149,7 +150,7 @@ export function CastWizardSpells(props: CastWizardSpellsProps) {
                             className="h-auto p-0 text-left text-sm disabled:text-muted-foreground"
                             onClick={() => {
                               if (!spell) return;
-                              openSpellViewer(spell);
+                              navigate(PageRoute.SPELL_VIEW(spell.id));
                             }}
                             disabled={!spell}
                           >
