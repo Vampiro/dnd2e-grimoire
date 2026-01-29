@@ -212,6 +212,7 @@ export function CharacterEditPage() {
     className: CharacterClass.WIZARD,
     level,
     preparedSpells: {},
+    knownSpellsById: {},
     spellbooksById: {},
     spellSlotModifiers: [],
   });

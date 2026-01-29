@@ -27,6 +27,7 @@ import { WizardCastSpellsPage } from "./pages/WizardCastSpellsPage";
 import { WizardPrepareSpellsPage } from "./pages/WizardPrepareSpellsPage";
 import { WizardSpellSlotsPage } from "./pages/WizardSpellSlotsPage";
 import { WizardSpellbooksPage } from "./pages/WizardSpellbooksPage";
+import { WizardKnownSpellsPage } from "./pages/WizardKnownSpellsPage";
 import { Navbar } from "./components/custom/Navbar";
 import { Toaster } from "sonner";
 import { charactersAtom } from "./globalState";
@@ -160,6 +161,10 @@ function App() {
                 ":spellbookId",
               )}
               element={<EditSpellbookPage />}
+            />
+            <Route
+              path={PageRoute.WIZARD_KNOWN_SPELLS(":characterId")}
+              element={<WizardKnownSpellsPage />}
             />
             <Route
               path={PageRoute.SPELL_VIEW(":spellId")}

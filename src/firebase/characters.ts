@@ -33,6 +33,18 @@ import { charactersAtom, store } from "../globalState";
 
 let charactersRealtimeUnsub: Unsubscribe | null = null;
 
+function buildKnownSpellsFromSpellbooks(
+  wizard: WizardClassProgression,
+): Record<string, true> {
+  const known: Record<string, true> = {};
+  Object.values(wizard.spellbooksById ?? {}).forEach((book) => {
+    Object.keys(book.spellsById ?? {}).forEach((spellId) => {
+      known[String(spellId)] = true;
+    });
+  });
+  return known;
+}
+
 /**
  * Starts a Firestore real-time subscription for the current user's characters.
  * Keeps `charactersAtom` in sync across devices (and replays cached data offline).
@@ -268,23 +280,78 @@ export async function addSpellToWizardSpellbook(
   const spellbook = wizard.spellbooksById[spellbookId];
   if (!spellbook) throw new Error("Spellbook not found");
 
-  const ref = characterDoc(uid, characterId);
-  await updateDoc(
-    ref,
-    new FieldPath(
-      "class",
-      "wizard",
-      "spellbooksById",
-      spellbookId,
-      "spellsById",
-      String(spellId),
-    ),
-    true,
-    "updatedAt",
-    Date.now(),
-  );
+  const updates: Record<string, unknown> = {
+    [`class.wizard.spellbooksById.${spellbookId}.spellsById.${String(spellId)}`]:
+      true,
+  };
+
+  if (wizard.knownSpellsById) {
+    updates[`class.wizard.knownSpellsById.${String(spellId)}`] = true;
+  } else {
+    updates["class.wizard.knownSpellsById"] = {
+      ...buildKnownSpellsFromSpellbooks(wizard),
+      [String(spellId)]: true,
+    };
+  }
+
+  await updateCharacterFields(characterId, updates);
 
   return spellbook;
+}
+
+/**
+ * Mark a wizard spell as known (learned) for a character.
+ */
+export async function addWizardKnownSpell(
+  characterId: string,
+  spellId: number | string,
+): Promise<void> {
+  const chars = store.get(charactersAtom);
+  const existing = chars.find((c) => c.id === characterId);
+  if (!existing) throw new Error("Character not found");
+
+  const wizard = existing.class.wizard;
+  if (!wizard) throw new Error("Character has no wizard progression");
+
+  if (wizard.knownSpellsById) {
+    await updateCharacterFields(characterId, {
+      [`class.wizard.knownSpellsById.${String(spellId)}`]: true,
+    });
+  } else {
+    await updateCharacterFields(characterId, {
+      "class.wizard.knownSpellsById": {
+        ...buildKnownSpellsFromSpellbooks(wizard),
+        [String(spellId)]: true,
+      },
+    });
+  }
+}
+
+/**
+ * Remove a wizard spell from the known (learned) list for a character.
+ */
+export async function removeWizardKnownSpell(
+  characterId: string,
+  spellId: number | string,
+): Promise<void> {
+  const chars = store.get(charactersAtom);
+  const existing = chars.find((c) => c.id === characterId);
+  if (!existing) throw new Error("Character not found");
+
+  const wizard = existing.class.wizard;
+  if (!wizard) throw new Error("Character has no wizard progression");
+
+  if (wizard.knownSpellsById) {
+    await updateCharacterFields(characterId, {
+      [`class.wizard.knownSpellsById.${String(spellId)}`]: deleteField(),
+    });
+  } else {
+    const nextKnown = buildKnownSpellsFromSpellbooks(wizard);
+    delete nextKnown[String(spellId)];
+    await updateCharacterFields(characterId, {
+      "class.wizard.knownSpellsById": nextKnown,
+    });
+  }
 }
 
 /**
@@ -295,8 +362,7 @@ export async function removeSpellFromWizardSpellbook(
   spellbookId: string,
   spellId: number | string,
 ) {
-  const uid = getCurrentUserId();
-  if (!uid) throw new Error("Not logged in");
+  if (!getCurrentUserId()) throw new Error("Not logged in");
 
   const chars = store.get(charactersAtom);
   const existing = chars.find((c) => c.id === characterId);
@@ -308,21 +374,10 @@ export async function removeSpellFromWizardSpellbook(
   const spellbook = wizard.spellbooksById[spellbookId];
   if (!spellbook) throw new Error("Spellbook not found");
 
-  const ref = characterDoc(uid, characterId);
-  await updateDoc(
-    ref,
-    new FieldPath(
-      "class",
-      "wizard",
-      "spellbooksById",
-      spellbookId,
-      "spellsById",
-      String(spellId),
-    ),
-    deleteField(),
-    "updatedAt",
-    Date.now(),
-  );
+  await updateCharacterFields(characterId, {
+    [`class.wizard.spellbooksById.${spellbookId}.spellsById.${String(spellId)}`]:
+      deleteField(),
+  });
 }
 
 /**

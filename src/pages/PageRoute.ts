@@ -26,6 +26,9 @@ export const PageRoute = {
   /** Wizard spellbooks page. */
   WIZARD_SPELLBOOKS: (characterId: string) =>
     `/characters/${characterId}/wizard/spellbooks`,
+  /** Wizard known spells page. */
+  WIZARD_KNOWN_SPELLS: (characterId: string) =>
+    `/characters/${characterId}/wizard/known_spells`,
   /** Spell viewer page. */
   SPELL_VIEW: (spellId: string | number) => `/spells/${spellId}`,
   /** Wizard spellbook creation page. */

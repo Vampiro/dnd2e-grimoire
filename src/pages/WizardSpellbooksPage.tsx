@@ -37,6 +37,7 @@ import {
 } from "@/firebase/characters";
 import { useAtomValue } from "jotai";
 import { wizardSpellsAtom } from "@/globalState";
+import { cn } from "@/lib/utils";
 import { PageRoute } from "./PageRoute";
 
 const SPELL_LEVELS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -59,17 +60,31 @@ export function WizardSpellbooksPage() {
     );
   }, [character?.class.wizard?.spellbooksById]);
 
+  const wizardProgression = character?.class.wizard;
+
+  const knownSpellIds = useMemo(() => {
+    if (!wizardProgression) return new Set<string>();
+    if (wizardProgression.knownSpellsById) {
+      return new Set(Object.keys(wizardProgression.knownSpellsById));
+    }
+    const fallback = new Set<string>();
+    Object.values(wizardProgression.spellbooksById ?? {}).forEach((book) => {
+      Object.keys(book.spellsById ?? {}).forEach((spellId) => {
+        fallback.add(String(spellId));
+      });
+    });
+    return fallback;
+  }, [wizardProgression?.knownSpellsById, wizardProgression?.spellbooksById]);
+
   if (isLoading) return <div>Loading spellbooks...</div>;
   if (!character) return <div>No character with id {characterId}</div>;
-
-  const wizardProgression = character.class.wizard;
 
   if (!wizardProgression) {
     return <div>This character has no wizard progression.</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
@@ -95,6 +110,7 @@ export function WizardSpellbooksPage() {
             key={spellbook.id}
             characterId={character.id}
             spellbook={spellbook}
+            knownSpellIds={knownSpellIds}
           />
         ))}
 
@@ -116,9 +132,11 @@ export function WizardSpellbooksPage() {
 function SpellbookCard({
   characterId,
   spellbook,
+  knownSpellIds,
 }: {
   characterId: string;
   spellbook: WizardSpellbook;
+  knownSpellIds: Set<string>;
 }) {
   const navigate = useNavigate();
   const spellsByLevel = useMemo(() => {
@@ -187,18 +205,14 @@ function SpellbookCard({
     }
   };
 
-  // Filter out spells already in the spellbook and sort
-  const availableSpells = useMemo(() => {
-    return allWizardSpells
-      .filter((spell) => !spellIdsInBook.has(spell.id))
-      .sort((a, b) => {
-        // Sort by level first, then by name
-        if (a.level !== b.level) {
-          return a.level - b.level;
-        }
-        return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
-      });
-  }, [allWizardSpells, spellIdsInBook]);
+  const selectableSpells = useMemo(() => {
+    return [...allWizardSpells].sort((a, b) => {
+      if (a.level !== b.level) {
+        return a.level - b.level;
+      }
+      return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+    });
+  }, [allWizardSpells]);
 
   const handleSelectSpell = async (spell: Spell | undefined) => {
     if (!spell) return;
@@ -295,9 +309,13 @@ function SpellbookCard({
                 >
                   <SelectWithSearch<Spell>
                     title="Add spell to Spellbook"
-                    items={availableSpells}
+                    items={selectableSpells}
                     getKey={(spell) => String(spell.id)}
-                    getLabel={(spell) => spell.name}
+                    getLabel={(spell) =>
+                      spellIdsInBook.has(spell.id)
+                        ? `${spell.name} (in book)`
+                        : spell.name
+                    }
                     isItemDisabled={(spell) => spellIdsInBook.has(spell.id)}
                     value={undefined}
                     onChange={handleSelectSpell}
@@ -419,33 +437,45 @@ function SpellbookCard({
               <div key={lvl} className="space-y-2">
                 <div className="font-semibold text-2xl">Level {lvl}</div>
                 <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
-                  {spells.map((spell) => (
-                    <div
-                      key={spell.id}
-                      className="mb-2 break-inside-avoid text-sm"
-                    >
-                      <div className="flex items-center gap-1">
-                        {deleteMode && (
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            className="text-destructive hover:text-destructive"
-                            aria-label={`Delete ${spell.name} from spellbook`}
-                            onClick={() => handleDeleteSpell(spell)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                  {spells.map((spell) => {
+                    const isKnown = knownSpellIds.has(String(spell.id));
+                    return (
+                      <div
+                        key={spell.id}
+                        className={cn(
+                          "mb-2 break-inside-avoid text-sm",
+                          !isKnown && "text-muted-foreground",
                         )}
-                        <Button
-                          variant="link"
-                          className="h-auto p-0 text-left"
-                          onClick={() => navigate(PageRoute.SPELL_VIEW(spell.id))}
-                        >
-                          {spell.name}
-                        </Button>
+                      >
+                        <div className="flex items-center gap-1">
+                          {deleteMode && (
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              className="text-destructive hover:text-destructive"
+                              aria-label={`Delete ${spell.name} from spellbook`}
+                              onClick={() => handleDeleteSpell(spell)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="link"
+                            className={cn(
+                              "h-auto p-0 text-left",
+                              !isKnown &&
+                                "!text-muted-foreground hover:!text-muted-foreground dark:!text-muted-foreground dark:hover:!text-muted-foreground",
+                            )}
+                            onClick={() =>
+                              navigate(PageRoute.SPELL_VIEW(spell.id))
+                            }
+                          >
+                            {spell.name}
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             );

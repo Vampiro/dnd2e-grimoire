@@ -349,6 +349,34 @@ export function Navbar() {
                       </DrawerClose>
                       <DrawerClose asChild>
                         <Link
+                          to={PageRoute.WIZARD_KNOWN_SPELLS(
+                            selectedCharacter.id,
+                          )}
+                          className={`relative rounded-md pl-3 pr-2 py-1 text-sm hover:bg-accent ${
+                            isActivePath(
+                              PageRoute.WIZARD_KNOWN_SPELLS(
+                                selectedCharacter.id,
+                              ),
+                            )
+                              ? "font-semibold bg-accent text-foreground"
+                              : ""
+                          }`}
+                        >
+                          {isActivePath(
+                            PageRoute.WIZARD_KNOWN_SPELLS(
+                              selectedCharacter.id,
+                            ),
+                          ) && (
+                            <span
+                              className="absolute -left-1.5 top-1 bottom-1 w-0.5 rounded-full bg-white"
+                              aria-hidden
+                            />
+                          )}
+                          Known Spells
+                        </Link>
+                      </DrawerClose>
+                      <DrawerClose asChild>
+                        <Link
                           to={PageRoute.WIZARD_SPELL_SLOTS(
                             selectedCharacter.id,
                           )}

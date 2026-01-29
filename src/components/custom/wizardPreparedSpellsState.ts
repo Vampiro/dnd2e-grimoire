@@ -125,6 +125,19 @@ export function useWizardPreparedSpellsState({
     return enabled;
   }, [progression.spellbooksById]);
 
+  const knownSpellIds = useMemo(() => {
+    if (progression.knownSpellsById) {
+      return new Set(Object.keys(progression.knownSpellsById));
+    }
+    const fallback = new Set<string>();
+    Object.values(progression.spellbooksById ?? {}).forEach((book) => {
+      Object.keys(book.spellsById ?? {}).forEach((spellId) => {
+        fallback.add(String(spellId));
+      });
+    });
+    return fallback;
+  }, [progression.knownSpellsById, progression.spellbooksById]);
+
   const missingPreparedSpellIds = useMemo(
     () => Array.from(preparedIds).filter((id) => !enabledSpellIds.has(id)),
     [preparedIds, enabledSpellIds],
@@ -142,6 +155,7 @@ export function useWizardPreparedSpellsState({
           : findWizardSpellById(spellId);
         if (!spell || spell.level !== spellLevel) return;
         const idKey = String(spell.id);
+        if (!knownSpellIds.has(idKey)) return;
         if (preparedIds.has(idKey)) return;
         if (!availableMap.has(idKey)) availableMap.set(idKey, spell);
       });
@@ -150,7 +164,7 @@ export function useWizardPreparedSpellsState({
     return Array.from(availableMap.entries()).sort((a, b) =>
       a[1].name.localeCompare(b[1].name),
     );
-  }, [preparedIds, progression.spellbooksById, spellLevel]);
+  }, [knownSpellIds, preparedIds, progression.spellbooksById, spellLevel]);
 
   const sortedSpells = useMemo<PreparedSpellEntries>(
     () =>

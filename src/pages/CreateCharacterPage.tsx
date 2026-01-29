@@ -80,6 +80,7 @@ export function CreateCharacterPage() {
                   className: CharacterClass.WIZARD,
                   level: classLevels.wizard,
                   preparedSpells: {},
+                  knownSpellsById: {},
                   spellbooksById: {},
                   spellSlotModifiers: [],
                 },
