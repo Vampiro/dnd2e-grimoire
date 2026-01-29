@@ -4,6 +4,10 @@ import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
+function isPencil(e: React.PointerEvent) {
+  return e.pointerType === "pen";
+}
+
 function AlertDialog({
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Root>) {
@@ -122,6 +126,13 @@ function AlertDialogAction({
 }: React.ComponentProps<typeof AlertDialogPrimitive.Action>) {
   return (
     <AlertDialogPrimitive.Action
+      style={{ touchAction: "manipulation" }}
+      onPointerUp={(e) => {
+        if (isPencil(e)) {
+          e.currentTarget.click(); // force the action to fire
+        }
+        props.onPointerUp?.(e);
+      }}
       className={cn(buttonVariants(), className)}
       {...props}
     />
@@ -134,6 +145,13 @@ function AlertDialogCancel({
 }: React.ComponentProps<typeof AlertDialogPrimitive.Cancel>) {
   return (
     <AlertDialogPrimitive.Cancel
+      style={{ touchAction: "manipulation" }}
+      onPointerUp={(e) => {
+        if (isPencil(e)) {
+          e.currentTarget.click(); // force the cancel to fire
+        }
+        props.onPointerUp?.(e);
+      }}
       className={cn(buttonVariants({ variant: "outline" }), className)}
       {...props}
     />

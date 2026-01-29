@@ -5,6 +5,10 @@ import { XIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
+function isPencil(e: React.PointerEvent) {
+  return e.pointerType === "pen";
+}
+
 function Dialog({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
@@ -26,7 +30,19 @@ function DialogPortal({
 function DialogClose({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Close>) {
-  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
+  return (
+    <DialogPrimitive.Close
+      data-slot="dialog-close"
+      style={{ touchAction: "manipulation" }}
+      onPointerUp={(e) => {
+        if (isPencil(e)) {
+          e.currentTarget.click(); // force the close to fire
+        }
+        props.onPointerUp?.(e);
+      }}
+      {...props}
+    />
+  )
 }
 
 function DialogOverlay({
@@ -68,6 +84,12 @@ function DialogContent({
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
+            style={{ touchAction: "manipulation" }}
+            onPointerUp={(e) => {
+              if (isPencil(e)) {
+                e.currentTarget.click(); // force the close to fire
+              }
+            }}
             className="ring-offset-white focus:ring-neutral-950 data-[state=open]:bg-neutral-100 data-[state=open]:text-neutral-500 absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 dark:ring-offset-neutral-950 dark:focus:ring-neutral-300 dark:data-[state=open]:bg-neutral-800 dark:data-[state=open]:text-neutral-400"
           >
             <XIcon />
@@ -108,9 +130,9 @@ function DialogFooter({
     >
       {children}
       {showCloseButton && (
-        <DialogPrimitive.Close asChild>
+        <DialogClose asChild>
           <Button variant="outline">Close</Button>
-        </DialogPrimitive.Close>
+        </DialogClose>
       )}
     </div>
   )
