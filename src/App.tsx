@@ -130,72 +130,72 @@ function App() {
     <div>
       <Toaster />
       <Navbar />
-      <Routes>
-        <Route path={PageRoute.TEST} element={<TestPage />} />
-      </Routes>
 
-      {user && (
-        <main className="mx-auto w-full max-w-6xl mt-4">
-          {spellStatus.loading && !spellStatus.error && (
-            <div className="py-6 text-sm text-muted-foreground">
-              Loading spell data...
-            </div>
+      <main className="mx-auto w-full max-w-6xl mt-4">
+        {spellStatus.loading && !spellStatus.error && (
+          <div className="py-6 text-sm text-muted-foreground">
+            Loading spell data...
+          </div>
+        )}
+        {spellStatus.error && (
+          <div className="py-6 text-sm text-destructive">
+            {spellStatus.error}
+          </div>
+        )}
+        <Routes>
+          <Route path={PageRoute.TEST} element={<TestPage />} />
+          <Route
+            path={PageRoute.SPELL_VIEW(":spellId")}
+            element={<SpellViewPage />}
+          />
+          {user && (
+            <>
+              <Route
+                path={PageRoute.CHARACTERS_NEW}
+                element={<CreateCharacterPage />}
+              />
+              <Route
+                path={PageRoute.WIZARD_SPELLBOOKS_NEW(":characterId")}
+                element={<CreateSpellbookPage />}
+              />
+              <Route
+                path={PageRoute.WIZARD_SPELLBOOKS_EDIT(
+                  ":characterId",
+                  ":spellbookId",
+                )}
+                element={<EditSpellbookPage />}
+              />
+              <Route
+                path={PageRoute.WIZARD_KNOWN_SPELLS(":characterId")}
+                element={<WizardKnownSpellsPage />}
+              />
+              <Route path="/characters/:id" element={<CharacterPage />} />
+              <Route
+                path="/characters/:characterId/edit"
+                element={<CharacterEditPage />}
+              />
+              <Route
+                path="/characters/:characterId/wizard/cast"
+                element={<WizardCastSpellsPage />}
+              />
+              <Route
+                path="/characters/:characterId/wizard/prepare"
+                element={<WizardPrepareSpellsPage />}
+              />
+              <Route
+                path="/characters/:characterId/wizard/edit"
+                element={<WizardSpellSlotsPage />}
+              />
+              <Route
+                path="/characters/:characterId/wizard/spellbooks"
+                element={<WizardSpellbooksPage />}
+              />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/characters" element={<CharactersPage />} />
+            </>
           )}
-          {spellStatus.error && (
-            <div className="py-6 text-sm text-destructive">
-              {spellStatus.error}
-            </div>
-          )}
-          <Routes>
-            <Route
-              path={PageRoute.CHARACTERS_NEW}
-              element={<CreateCharacterPage />}
-            />
-            <Route
-              path={PageRoute.WIZARD_SPELLBOOKS_NEW(":characterId")}
-              element={<CreateSpellbookPage />}
-            />
-            <Route
-              path={PageRoute.WIZARD_SPELLBOOKS_EDIT(
-                ":characterId",
-                ":spellbookId",
-              )}
-              element={<EditSpellbookPage />}
-            />
-            <Route
-              path={PageRoute.WIZARD_KNOWN_SPELLS(":characterId")}
-              element={<WizardKnownSpellsPage />}
-            />
-            <Route
-              path={PageRoute.SPELL_VIEW(":spellId")}
-              element={<SpellViewPage />}
-            />
-            <Route path="/characters/:id" element={<CharacterPage />} />
-            <Route
-              path="/characters/:characterId/edit"
-              element={<CharacterEditPage />}
-            />
-            <Route
-              path="/characters/:characterId/wizard/cast"
-              element={<WizardCastSpellsPage />}
-            />
-            <Route
-              path="/characters/:characterId/wizard/prepare"
-              element={<WizardPrepareSpellsPage />}
-            />
-            <Route
-              path="/characters/:characterId/wizard/edit"
-              element={<WizardSpellSlotsPage />}
-            />
-            <Route
-              path="/characters/:characterId/wizard/spellbooks"
-              element={<WizardSpellbooksPage />}
-            />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/characters" element={<CharactersPage />} />
-          </Routes>
-        </main>
-      )}
+        </Routes>
+      </main>
     </div>
   );
 }

@@ -1,16 +1,17 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAtomValue } from "jotai";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SpellViewer } from "@/components/custom/SpellViewer";
-import { spellNotesAtom } from "@/globalState";
+import { spellNotesAtom, userAtom } from "@/globalState";
 import { findPriestSpellById, findWizardSpellById } from "@/lib/spellLookup";
 import { isSpellNoteEmpty } from "@/lib/spellNotes";
 
 export function SpellViewPage() {
   const { spellId } = useParams();
   const [isEditingNote, setIsEditingNote] = useState(false);
+  const user = useAtomValue(userAtom);
   const spellNotes = useAtomValue(spellNotesAtom);
 
   const spell = useMemo(() => {
@@ -21,6 +22,13 @@ export function SpellViewPage() {
 
   const note = spell ? spellNotes[String(spell.id)] : undefined;
   const hasNote = !!note && !isSpellNoteEmpty(note);
+  const canEditNotes = !!user;
+
+  useEffect(() => {
+    if (!canEditNotes && isEditingNote) {
+      setIsEditingNote(false);
+    }
+  }, [canEditNotes, isEditingNote]);
 
   if (!spellId) {
     return <div>Missing spell id.</div>;
@@ -39,7 +47,7 @@ export function SpellViewPage() {
             {spell.spellClass} Spell Level: {spell.level}
           </p>
         </div>
-        {!isEditingNote && (
+        {canEditNotes && !isEditingNote && (
           <Button
             type="button"
             size="sm"
@@ -56,8 +64,8 @@ export function SpellViewPage() {
           <SpellViewer
             spell={spell}
             showTitle={false}
-            noteEditing={isEditingNote}
-            onNoteEditingChange={setIsEditingNote}
+            noteEditing={canEditNotes ? isEditingNote : false}
+            onNoteEditingChange={canEditNotes ? setIsEditingNote : undefined}
             hideNoteActionButton={true}
           />
         </CardContent>
