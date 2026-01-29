@@ -23,6 +23,7 @@ import { CharacterEditPage } from "./pages/CharacterEditPage";
 import { CreateSpellbookPage } from "./pages/CreateSpellbookPage";
 import { EditSpellbookPage } from "./pages/EditSpellbookPage";
 import { SpellNoteEditPage } from "./pages/SpellNoteEditPage";
+import { SpellViewPage } from "./pages/SpellViewPage";
 import { WizardCastSpellsPage } from "./pages/WizardCastSpellsPage";
 import { WizardPrepareSpellsPage } from "./pages/WizardPrepareSpellsPage";
 import { WizardSpellSlotsPage } from "./pages/WizardSpellSlotsPage";
@@ -166,6 +167,10 @@ function App() {
             <Route
               path={PageRoute.SPELL_NOTE_EDIT(":spellId")}
               element={<SpellNoteEditPage />}
+            />
+            <Route
+              path={PageRoute.SPELL_VIEW(":spellId")}
+              element={<SpellViewPage />}
             />
             <Route path="/characters/:id" element={<CharacterPage />} />
             <Route
