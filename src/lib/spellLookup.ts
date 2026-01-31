@@ -8,11 +8,7 @@ import {
   wizardSpellDescriptionsAtom,
   wizardSpellsAtom,
 } from "@/globalState";
-import type {
-  SpellDescriptionJson,
-  SpellDescriptionsFile,
-  SpellListEntry,
-} from "@/types/Resources";
+import type { SpellDescriptionsFile, SpellListEntry } from "@/types/Resources";
 
 let spellDataLoadPromise: Promise<void> | null = null;
 
@@ -80,51 +76,6 @@ export function loadSpellData(): Promise<void> {
   })();
 
   return spellDataLoadPromise;
-}
-
-/**
- * Finds a wizard spell by name.
- *
- * @remarks
- * Names are assumed unique within the wizard spell list.
- */
-export function findWizardSpellByName(name: string): Spell | null {
-  return store.get(wizardSpellsAtom).find((s) => s.name === name) ?? null;
-}
-
-/**
- * Finds a priest spell by name.
- *
- * @remarks
- * Names are assumed unique within the priest spell list.
- */
-export function findPriestSpellByName(name: string): Spell | null {
-  return store.get(priestSpellsAtom).find((s) => s.name === name) ?? null;
-}
-
-/**
- * Returns all wizard spells of a given level.
- */
-export function getWizardSpellsByLevel(level: number): Spell[] {
-  return store.get(wizardSpellsAtom).filter((s) => s.level === level);
-}
-
-/**
- * Returns all priest spells of a given level.
- */
-export function getPriestSpellsByLevel(level: number): Spell[] {
-  return store.get(priestSpellsAtom).filter((s) => s.level === level);
-}
-
-/** Returns a spell description by spell id (checks both classes). */
-export function getSpellDescriptionById(
-  id: number,
-): SpellDescriptionJson | undefined {
-  const key = String(id);
-  return (
-    store.get(wizardSpellDescriptionsAtom)[key] ||
-    store.get(priestSpellDescriptionsAtom)[key]
-  );
 }
 
 export function findWizardSpellById(id: number): Spell | null {

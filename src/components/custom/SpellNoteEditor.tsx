@@ -15,7 +15,7 @@ import { $getRoot } from "lexical";
 
 import { editorTheme } from "@/components/editor/themes/editor-theme";
 import { ContentEditable } from "@/components/editor/editor-ui/content-editable";
-import { nodes } from "@/components/blocks/editor-00/nodes";
+import { nodes } from "@/components/editor/nodes";
 import { ToolbarPlugin } from "@/components/editor/plugins/toolbar/toolbar-plugin";
 import { FontFormatToolbarPlugin } from "@/components/editor/plugins/toolbar/font-format-toolbar-plugin";
 import { LinkToolbarPlugin } from "@/components/editor/plugins/toolbar/link-toolbar-plugin";

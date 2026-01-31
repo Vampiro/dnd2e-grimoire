@@ -6,13 +6,9 @@ import type { SerializedEditorState } from "lexical";
 
 import { editorTheme } from "@/components/editor/themes/editor-theme";
 import { ContentEditable } from "@/components/editor/editor-ui/content-editable";
-import { nodes } from "@/components/blocks/editor-00/nodes";
+import { nodes } from "@/components/editor/nodes";
 
-export function SpellNotePreview({
-  note,
-}: {
-  note: SerializedEditorState;
-}) {
+export function SpellNotePreview({ note }: { note: SerializedEditorState }) {
   const initialConfig = useMemo(
     () => ({
       namespace: "SpellNotePreview",
