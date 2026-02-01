@@ -10,8 +10,9 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog, DialogClose } from "@/components/ui/dialog";
 import { MobileFullScreenDialogContent } from "./MobileFullScreenDialogContent";
+import { X } from "lucide-react";
 
 type MobileSelectProps<T> = {
   open: boolean;
@@ -162,7 +163,7 @@ export function MobileSelect<T>({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <MobileFullScreenDialogContent>
+      <MobileFullScreenDialogContent showCloseButton={false}>
         <Command
           shouldFilter={false}
           className="flex h-full flex-col bg-background"
@@ -171,23 +172,42 @@ export function MobileSelect<T>({
           {!isLandscape && (
             <div className="flex items-center justify-between border-b px-4 py-3">
               <div className="text-sm font-semibold">{title ?? "Select"}</div>
+              <DialogClose asChild>
+                <button
+                  type="button"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-accent"
+                  aria-label="Close"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </DialogClose>
             </div>
           )}
 
           {/* Search */}
-          <div
-            className={cn(
-              "border-b px-1 md:px-4 py-2",
-              isLandscape && "pr-12",
-            )}
-          >
-            <CommandInput
-              autoFocus
-              value={query}
-              onValueChange={setQuery}
-              placeholder={placeholder}
-              className="h-11"
-            />
+          <div className="border-b px-1 md:px-4 py-2">
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <CommandInput
+                  autoFocus
+                  value={query}
+                  onValueChange={setQuery}
+                  placeholder={placeholder}
+                  className="h-11 w-full"
+                />
+              </div>
+              {isLandscape && (
+                <DialogClose asChild>
+                  <button
+                    type="button"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-accent"
+                    aria-label="Close"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </DialogClose>
+              )}
+            </div>
           </div>
 
           {/* List */}
