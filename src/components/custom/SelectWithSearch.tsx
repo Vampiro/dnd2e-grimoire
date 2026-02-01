@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ChevronDownIcon } from "lucide-react";
 import { MobileSelect } from "./MobileSelect";
 
@@ -33,6 +33,7 @@ type BaseProps<T> = {
   title?: string;
   getCategory?(item: T): string | undefined;
   categoryLabel?(category: string): string;
+  renderItem?(item: T): ReactNode;
   open?: boolean;
   onOpenChange?(open: boolean): void;
   contentOnly?: boolean;
@@ -70,6 +71,7 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
     title,
     getCategory,
     categoryLabel = (cat) => cat,
+    renderItem,
     open: controlledOpen,
     onOpenChange: controlledOnOpenChange,
     contentOnly = false,
@@ -196,7 +198,7 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
                         onSelect={handleSelect}
                         disabled={disabled}
                       >
-                        {getLabel(item)}
+                        {renderItem ? renderItem(item) : getLabel(item)}
                       </CommandItem>
                     );
                   })}
@@ -214,7 +216,7 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
                   onSelect={handleSelect}
                   disabled={disabled}
                 >
-                  {getLabel(item)}
+                  {renderItem ? renderItem(item) : getLabel(item)}
                 </CommandItem>
               );
             })
@@ -267,6 +269,7 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
         limit={limit}
         getCategory={getCategory}
         categoryLabel={categoryLabel}
+        renderItem={renderItem}
       />
     );
 

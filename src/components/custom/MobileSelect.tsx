@@ -9,7 +9,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { MobileFullScreenDialogContent } from "./MobileFullScreenDialogContent";
 
@@ -31,6 +31,7 @@ type MobileSelectProps<T> = {
   limit?: number;
   getCategory?(item: T): string | undefined;
   categoryLabel?(category: string): string;
+  renderItem?(item: T): ReactNode;
 };
 
 const DEFAULT_LIMIT = 200;
@@ -50,6 +51,7 @@ export function MobileSelect<T>({
   limit = DEFAULT_LIMIT,
   getCategory,
   categoryLabel = (cat) => cat,
+  renderItem,
 }: MobileSelectProps<T>) {
   const [query, setQuery] = useState("");
   const [isLandscape, setIsLandscape] = useState(false);
@@ -220,7 +222,7 @@ export function MobileSelect<T>({
                                 disabled && "opacity-60",
                               )}
                             >
-                              {label}
+                              {renderItem ? renderItem(item) : label}
                             </CommandItem>
                           );
                         })}
@@ -236,22 +238,22 @@ export function MobileSelect<T>({
                   const disabled = isItemDisabled?.(item);
 
                   return (
-                    <CommandItem
-                      key={key}
-                      value={key}
-                      onSelect={handleSelect}
-                      disabled={disabled}
+                  <CommandItem
+                    key={key}
+                    value={key}
+                    onSelect={handleSelect}
+                    disabled={disabled}
                       className={cn(
                         "min-h-[44px]",
                         selected && "bg-accent",
                         disabled && "opacity-60",
                       )}
-                    >
-                      {label}
-                    </CommandItem>
-                  );
-                })
-              )}
+                  >
+                    {renderItem ? renderItem(item) : label}
+                  </CommandItem>
+                );
+              })
+            )}
             </CommandList>
           </div>
 
