@@ -71,6 +71,29 @@ export function Navbar() {
   const matchCharacterId = useMatch("/characters/:characterId");
   const matchIdDeep = useMatch("/characters/:id/*");
   const matchId = useMatch("/characters/:id");
+  const lastCharacterStorageKey = "dnd2e-grimoire:last-character-id";
+
+  const readStoredCharacterId = () => {
+    if (typeof window === "undefined") return null;
+    try {
+      return window.localStorage.getItem(lastCharacterStorageKey);
+    } catch {
+      return null;
+    }
+  };
+
+  const writeStoredCharacterId = (characterId: string | null) => {
+    if (typeof window === "undefined") return;
+    try {
+      if (!characterId) {
+        window.localStorage.removeItem(lastCharacterStorageKey);
+      } else {
+        window.localStorage.setItem(lastCharacterStorageKey, characterId);
+      }
+    } catch {
+      // Ignore storage failures (private mode, blocked storage).
+    }
+  };
 
   const selectedCharacterId =
     matchCharacterIdDeep?.params.characterId ??
@@ -83,8 +106,28 @@ export function Navbar() {
   useEffect(() => {
     if (sanitizedCharacterId) {
       setPersistedCharacterId(sanitizedCharacterId);
+      writeStoredCharacterId(sanitizedCharacterId);
     }
   }, [sanitizedCharacterId]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (sanitizedCharacterId) return;
+    if (persistedCharacterId) return;
+    if (characters.length === 0) return;
+
+    const storedId = readStoredCharacterId();
+    if (storedId && characters.some((c) => c.id === storedId)) {
+      setPersistedCharacterId(storedId);
+      return;
+    }
+
+    const fallbackId = characters[0]?.id;
+    if (fallbackId) {
+      setPersistedCharacterId(fallbackId);
+      writeStoredCharacterId(fallbackId);
+    }
+  }, [characters, persistedCharacterId, sanitizedCharacterId, user]);
 
   const avatarUrl = user?.photoURL ?? user?.providerData?.[0]?.photoURL ?? null;
 
@@ -191,6 +234,7 @@ export function Navbar() {
                             onValueChange={(value) => {
                               if (!value) return;
                               setPersistedCharacterId(value);
+                              writeStoredCharacterId(value);
                               navigate(PageRoute.CHARACTER_VIEW(value));
                               setDrawerOpen(true);
                             }}
