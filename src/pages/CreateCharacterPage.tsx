@@ -7,7 +7,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { createCharacter } from "@/firebase/characters";
@@ -25,11 +24,6 @@ export function CreateCharacterPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [classHintError, setClassHintError] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
-
-  const levelOptions = useMemo(
-    () => Array.from({ length: 20 }, (_, idx) => String(idx + 1)),
-    [],
-  );
 
   const remainingClasses = useMemo(() => {
     const remaining: Array<{ key: "wizard" | "priest"; label: string }> = [];
@@ -51,6 +45,14 @@ export function CreateCharacterPage() {
       const next = { ...prev };
       delete next[klass];
       return next;
+    });
+  };
+
+  const adjustClassLevel = (klass: "wizard" | "priest", delta: number) => {
+    setClassLevels((prev) => {
+      const current = prev[klass] ?? 1;
+      const nextLevel = Math.min(20, Math.max(1, current + delta));
+      return { ...prev, [klass]: nextLevel };
     });
   };
 
@@ -195,26 +197,33 @@ export function CreateCharacterPage() {
                 {classLevels.wizard && (
                   <div className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-muted/50">
                     <div className="text-sm font-medium">Wizard</div>
-                    <Select
-                      value={String(classLevels.wizard)}
-                      onValueChange={(v) =>
-                        setClassLevels((prev) => ({
-                          ...prev,
-                          wizard: Number(v),
-                        }))
-                      }
-                    >
-                      <SelectTrigger className="w-28">
-                        <SelectValue placeholder="Level" />
-                      </SelectTrigger>
-                      <SelectContent className="w-max min-w-max">
-                        {levelOptions.map((lvl) => (
-                          <SelectItem key={lvl} value={lvl}>
-                            Level {lvl}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="inline-flex items-center">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-8 w-8 rounded-r-none"
+                        onClick={() => adjustClassLevel("wizard", -1)}
+                        disabled={(classLevels.wizard ?? 1) <= 1}
+                        title="Decrease level"
+                      >
+                        -
+                      </Button>
+                      <input
+                        readOnly
+                        value={`Level ${classLevels.wizard ?? 1}`}
+                        className="h-8 w-24 border-y border-input bg-background px-2 text-center text-sm font-semibold"
+                      />
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-8 w-8 rounded-l-none"
+                        onClick={() => adjustClassLevel("wizard", 1)}
+                        disabled={(classLevels.wizard ?? 1) >= 20}
+                        title="Increase level"
+                      >
+                        +
+                      </Button>
+                    </div>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -229,26 +238,33 @@ export function CreateCharacterPage() {
                 {classLevels.priest && (
                   <div className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-muted/50">
                     <div className="text-sm font-medium">Priest</div>
-                    <Select
-                      value={String(classLevels.priest)}
-                      onValueChange={(v) =>
-                        setClassLevels((prev) => ({
-                          ...prev,
-                          priest: Number(v),
-                        }))
-                      }
-                    >
-                      <SelectTrigger className="w-28">
-                        <SelectValue placeholder="Level" />
-                      </SelectTrigger>
-                      <SelectContent className="w-max min-w-max">
-                        {levelOptions.map((lvl) => (
-                          <SelectItem key={lvl} value={lvl}>
-                            Level {lvl}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="inline-flex items-center">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-8 w-8 rounded-r-none"
+                        onClick={() => adjustClassLevel("priest", -1)}
+                        disabled={(classLevels.priest ?? 1) <= 1}
+                        title="Decrease level"
+                      >
+                        -
+                      </Button>
+                      <input
+                        readOnly
+                        value={`Level ${classLevels.priest ?? 1}`}
+                        className="h-8 w-24 border-y border-input bg-background px-2 text-center text-sm font-semibold"
+                      />
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-8 w-8 rounded-l-none"
+                        onClick={() => adjustClassLevel("priest", 1)}
+                        disabled={(classLevels.priest ?? 1) >= 20}
+                        title="Increase level"
+                      >
+                        +
+                      </Button>
+                    </div>
                     <Button
                       variant="ghost"
                       size="icon"

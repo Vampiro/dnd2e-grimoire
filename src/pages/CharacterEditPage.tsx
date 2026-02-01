@@ -12,7 +12,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import {
   firestoreDeleteField,
@@ -71,11 +70,6 @@ export function CharacterEditPage() {
     setName(initialName);
     setClassLevels(initialClassLevels);
   }, [character]);
-
-  const levelOptions = useMemo(
-    () => Array.from({ length: 20 }, (_, idx) => String(idx + 1)),
-    [],
-  );
 
   const remainingClasses = useMemo(() => {
     const remaining: Array<{ key: "wizard" | "priest"; label: string }> = [];
@@ -186,6 +180,12 @@ export function CharacterEditPage() {
       },
       { name: baseline.name, classLevels: nextClassLevels },
     );
+  };
+
+  const adjustClassLevel = (klass: "wizard" | "priest", delta: number) => {
+    const current = classLevels[klass] ?? 1;
+    const nextLevel = Math.min(20, Math.max(1, current + delta));
+    handleSetClassLevel(klass, nextLevel);
   };
 
   const handleConfirmRemoveClass = (klass: "wizard" | "priest") => {
@@ -321,23 +321,33 @@ export function CharacterEditPage() {
                 {classLevels.wizard && (
                   <div className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-muted/50">
                     <div className="text-sm font-medium">Wizard</div>
-                    <Select
-                      value={String(classLevels.wizard)}
-                      onValueChange={(v) =>
-                        handleSetClassLevel("wizard", Number(v))
-                      }
-                    >
-                      <SelectTrigger className="w-26">
-                        <SelectValue placeholder="Level" />
-                      </SelectTrigger>
-                      <SelectContent className="w-max min-w-max">
-                        {levelOptions.map((lvl) => (
-                          <SelectItem key={lvl} value={lvl}>
-                            Level {lvl}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="inline-flex items-center">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-8 w-8 rounded-r-none"
+                        onClick={() => adjustClassLevel("wizard", -1)}
+                        disabled={(classLevels.wizard ?? 1) <= 1}
+                        title="Decrease level"
+                      >
+                        -
+                      </Button>
+                      <input
+                        readOnly
+                        value={`Level ${classLevels.wizard ?? 1}`}
+                        className="h-8 w-24 border-y border-input bg-background px-2 text-center text-sm font-semibold"
+                      />
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-8 w-8 rounded-l-none"
+                        onClick={() => adjustClassLevel("wizard", 1)}
+                        disabled={(classLevels.wizard ?? 1) >= 20}
+                        title="Increase level"
+                      >
+                        +
+                      </Button>
+                    </div>
 
                     <Popover
                       open={confirmRemove === "wizard"}
@@ -392,23 +402,33 @@ export function CharacterEditPage() {
                 {classLevels.priest && (
                   <div className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-muted/50">
                     <div className="text-sm font-medium">Priest</div>
-                    <Select
-                      value={String(classLevels.priest)}
-                      onValueChange={(v) =>
-                        handleSetClassLevel("priest", Number(v))
-                      }
-                    >
-                      <SelectTrigger className="w-26">
-                        <SelectValue placeholder="Level" />
-                      </SelectTrigger>
-                      <SelectContent className="w-max min-w-max">
-                        {levelOptions.map((lvl) => (
-                          <SelectItem key={lvl} value={lvl}>
-                            Level {lvl}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="inline-flex items-center">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-8 w-8 rounded-r-none"
+                        onClick={() => adjustClassLevel("priest", -1)}
+                        disabled={(classLevels.priest ?? 1) <= 1}
+                        title="Decrease level"
+                      >
+                        -
+                      </Button>
+                      <input
+                        readOnly
+                        value={`Level ${classLevels.priest ?? 1}`}
+                        className="h-8 w-24 border-y border-input bg-background px-2 text-center text-sm font-semibold"
+                      />
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-8 w-8 rounded-l-none"
+                        onClick={() => adjustClassLevel("priest", 1)}
+                        disabled={(classLevels.priest ?? 1) >= 20}
+                        title="Increase level"
+                      >
+                        +
+                      </Button>
+                    </div>
 
                     <Popover
                       open={confirmRemove === "priest"}
