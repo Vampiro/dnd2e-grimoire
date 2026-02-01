@@ -84,6 +84,34 @@ function CommandList({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.List>) {
+  const handlePointerDown: React.PointerEventHandler<HTMLDivElement> = (
+    event,
+  ) => {
+    props.onPointerDown?.(event);
+    if (event.defaultPrevented) return;
+    const target = event.target as HTMLElement | null;
+    if (target?.closest?.("[data-slot=\"command-input\"]")) return;
+    const active = event.currentTarget.ownerDocument?.activeElement as
+      | HTMLElement
+      | null;
+    if (active?.matches?.("[data-slot=\"command-input\"]")) {
+      active.blur();
+    }
+  };
+
+  const handleTouchStart: React.TouchEventHandler<HTMLDivElement> = (event) => {
+    props.onTouchStart?.(event);
+    if (event.defaultPrevented) return;
+    const target = event.target as HTMLElement | null;
+    if (target?.closest?.("[data-slot=\"command-input\"]")) return;
+    const active = event.currentTarget.ownerDocument?.activeElement as
+      | HTMLElement
+      | null;
+    if (active?.matches?.("[data-slot=\"command-input\"]")) {
+      active.blur();
+    }
+  };
+
   return (
     <CommandPrimitive.List
       data-slot="command-list"
@@ -91,6 +119,8 @@ function CommandList({
         "max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto",
         className,
       )}
+      onPointerDown={handlePointerDown}
+      onTouchStart={handleTouchStart}
       {...props}
     />
   );
