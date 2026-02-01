@@ -77,12 +77,14 @@ export function Navbar() {
     matchCharacterId?.params.characterId ??
     matchIdDeep?.params.id ??
     matchId?.params.id;
+  const sanitizedCharacterId =
+    selectedCharacterId === "new" ? undefined : selectedCharacterId;
 
   useEffect(() => {
-    if (selectedCharacterId) {
-      setPersistedCharacterId(selectedCharacterId);
+    if (sanitizedCharacterId) {
+      setPersistedCharacterId(sanitizedCharacterId);
     }
-  }, [selectedCharacterId]);
+  }, [sanitizedCharacterId]);
 
   const avatarUrl = user?.photoURL ?? user?.providerData?.[0]?.photoURL ?? null;
 
@@ -94,10 +96,10 @@ export function Navbar() {
     const hasPersisted =
       persistedCharacterId &&
       characters.some((c) => c.id === persistedCharacterId);
-    if (selectedCharacterId) return selectedCharacterId;
+    if (sanitizedCharacterId) return sanitizedCharacterId;
     if (hasPersisted) return persistedCharacterId;
     return undefined;
-  }, [characters, persistedCharacterId, selectedCharacterId]);
+  }, [characters, persistedCharacterId, sanitizedCharacterId]);
 
   const selectedCharacter = characters.find((c) => c.id === activeCharacterId);
 

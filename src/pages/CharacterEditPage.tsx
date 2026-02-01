@@ -293,7 +293,12 @@ export function CharacterEditPage() {
                 >
                   <Plus className="h-3 w-3" />
                 </SelectTrigger>
-                <SelectContent className="w-max min-w-max">
+                <SelectContent
+                  className="w-max min-w-max"
+                  position="popper"
+                  align="start"
+                  sideOffset={4}
+                >
                   {remainingClasses.length === 0 ? (
                     <div className="space-y-1 px-3 py-3 text-sm">
                       <div className="text-muted-foreground">
