@@ -5,9 +5,9 @@
  * Increment a value to invalidate IndexedDB caches and force a refetch.
  */
 export const LATEST_RESOURCE_VERSIONS = {
-  priestSpellDescriptions: 10,
+  priestSpellDescriptions: 16,
   priestSpells: 4,
-  wizardSpellDescriptions: 12,
+  wizardSpellDescriptions: 13,
   wizardSpells: 5,
 } as const;
 

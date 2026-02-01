@@ -91,7 +91,7 @@ export function SpellViewer(props: SpellViewerProps) {
     // Note: name/class/level are shown elsewhere (title/subtitle), so we omit them here.
 
     add("School", m.school);
-    add("Sphere", m.sphere);
+    add("Sphere", m.sphereRaw);
     add("Range", m.range);
     add("Duration", m.duration);
     add("AOE", m.aoe);

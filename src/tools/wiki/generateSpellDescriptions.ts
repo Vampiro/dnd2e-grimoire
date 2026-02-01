@@ -55,7 +55,8 @@ const allowedMetadataKeys: Array<keyof SpellDescriptionMetadata> = [
   "class",
   "level",
   "school",
-  "sphere",
+  "sphereRaw",
+  "spheres",
   "verbal",
   "somatic",
   "material",
@@ -76,6 +77,7 @@ const allowedMetadataKeys: Array<keyof SpellDescriptionMetadata> = [
 const allowedKeysByLower = new Map<string, keyof SpellDescriptionMetadata>(
   allowedMetadataKeys.map((k) => [k.toLowerCase(), k]),
 );
+allowedKeysByLower.set("sphere", "sphereRaw");
 
 const WIKI_BASE_URL = "https://adnd2e.fandom.com/wiki";
 const RESOURCE_VERSIONS_PATH = path.resolve(
@@ -154,6 +156,23 @@ function normalizeComponentFlags(
   return out as SpellDescriptionMetadata;
 }
 
+function normalizeSphereRaw(
+  metadata: SpellDescriptionMetadata,
+): SpellDescriptionMetadata {
+  const out: SpellDescriptionMetadata = { ...metadata };
+  const outRecord = out as unknown as Record<string, unknown>;
+  if (out.sphereRaw === undefined) {
+    const key = Object.keys(outRecord).find((k) => k.toLowerCase() === "sphere");
+    if (key) {
+      out.sphereRaw = outRecord[key] as string | undefined;
+      if (key !== "sphereRaw") {
+        delete outRecord[key];
+      }
+    }
+  }
+  return out;
+}
+
 const stripTemplateArtifacts = (html: string): string =>
   html
     .replace(/\{\{\s*Highlight:\s*/gi, "")
@@ -166,6 +185,176 @@ const parseLevelNumber = (raw: string | undefined): number => {
   const match = String(raw).match(/\d+/);
   return match ? Number(match[0]) : 0;
 };
+
+const PRIEST_SPHERE_ORDER = [
+  "All",
+  "Animal",
+  "Astral",
+  "Charm",
+  "Chaos",
+  "Combat",
+  "Cosmos",
+  "Creation",
+  "Divination",
+  "Elemental",
+  "Elemental Air",
+  "Elemental Earth",
+  "Elemental Fire",
+  "Elemental Silt",
+  "Elemental Water",
+  "Guardian",
+  "Healing",
+  "Law",
+  "Necromantic",
+  "Numbers",
+  "Plant",
+  "Protection",
+  "Summoning",
+  "Sun",
+  "Thought",
+  "Time",
+  "Travelers",
+  "War",
+  "Wards",
+  "Weather",
+  "Unknown",
+];
+
+const PRIEST_SPHERE_SORT = new Map(
+  PRIEST_SPHERE_ORDER.map((name, index) => [name, index]),
+);
+
+function extractPriestSpheresFromToken(token: string): string[] {
+  const lower = token.toLowerCase();
+  const found = new Set<string>();
+  const add = (sphere: string) => found.add(sphere);
+  const hasElementalAll =
+    /\belemental\s*\(\s*all\s*\)\b/.test(lower) ||
+    /\belemental\s+all\b/.test(lower);
+
+  if (/\belemental\s+air\b/.test(lower)) add("Elemental Air");
+  if (/\belemental\s+earth\b/.test(lower)) add("Elemental Earth");
+  if (/\belemental\s+fire\b/.test(lower)) add("Elemental Fire");
+  if (/\belemental\s+silt\b/.test(lower)) add("Elemental Silt");
+  if (/\belemental\s+water\b/.test(lower)) add("Elemental Water");
+
+  if (/\bair\b/.test(lower)) add("Elemental Air");
+  if (/\bearth\b/.test(lower)) add("Elemental Earth");
+  if (/\bfire\b/.test(lower)) add("Elemental Fire");
+  if (/\bsilt\b/.test(lower)) add("Elemental Silt");
+  if (/\bwater\b/.test(lower)) add("Elemental Water");
+
+  if (/\belemental\b/.test(lower)) add("Elemental");
+
+  if (!hasElementalAll && /\ball\b/.test(lower)) add("All");
+  if (/\banimal\b/.test(lower)) add("Animal");
+  if (/\bastral\b/.test(lower)) add("Astral");
+  if (/\bcharm\b/.test(lower)) add("Charm");
+  if (/\bchaos\b/.test(lower)) add("Chaos");
+  if (/\bcombat\b/.test(lower)) add("Combat");
+  if (/\bcosmos\b/.test(lower)) add("Cosmos");
+  if (/\bcreation\b/.test(lower)) add("Creation");
+  if (/\bdivination\b/.test(lower)) add("Divination");
+  if (/\bguardian\b/.test(lower)) add("Guardian");
+  if (/\bhealing\b/.test(lower)) add("Healing");
+  if (/\blaw\b/.test(lower)) add("Law");
+  if (/\bnecromantic\b/.test(lower)) add("Necromantic");
+  if (/\bnecromancy\b/.test(lower)) add("Necromantic");
+  if (/\bnumbers\b/.test(lower)) add("Numbers");
+  if (/\bplant\b/.test(lower)) add("Plant");
+  if (/\bprotection\b/.test(lower)) add("Protection");
+  if (/\bsummoning\b/.test(lower)) add("Summoning");
+  if (/\bsun\b/.test(lower)) add("Sun");
+  if (/\bthought\b/.test(lower)) add("Thought");
+  if (/\btime\b/.test(lower)) add("Time");
+  if (/\btravelers\b/.test(lower)) add("Travelers");
+  if (/\bwar\b/.test(lower)) add("War");
+  if (/\bwards?\b/.test(lower)) add("Wards");
+  if (/\bweather\b/.test(lower)) add("Weather");
+
+  return Array.from(found);
+}
+
+function derivePriestSpheres(raw: string | undefined): string[] {
+  if (!raw || !raw.trim()) return ["Unknown"];
+
+  const spheres = new Set<string>();
+  let hasUnknown = false;
+  const isIgnorableSphereNote = (value: string) => {
+    const key = value.toLowerCase().replace(/[^a-z]/g, "");
+    return key === "posm" || key === "psc" || key === "posmpsc";
+  };
+
+  const normalized = raw
+    .replace(/[\u2013\u2014]/g, "-")
+    .replace(/elemental\s*-\s*/gi, "elemental ")
+    .replace(/[()]/g, ",")
+    .replace(/[;/|]/g, ",")
+    .replace(/&/g, ",");
+
+  const parts = normalized
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  for (const part of parts) {
+    const cleaned = part
+      .replace(/\b(?:only|just)\b/gi, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!cleaned) continue;
+
+    const subparts = cleaned.split(/\s+(?:or|and)\s+/i);
+    for (const subpart of subparts) {
+      const trimmed = subpart.trim();
+      if (!trimmed) continue;
+
+      const base = trimmed.split("-")[0].trim();
+      if (!base) continue;
+      if (isIgnorableSphereNote(base)) {
+        continue;
+      }
+
+      const matched = extractPriestSpheresFromToken(base);
+      if (matched.length === 0) {
+        if (/[a-z]/i.test(base)) {
+          hasUnknown = true;
+        }
+        continue;
+      }
+
+      for (const sphere of matched) {
+        spheres.add(sphere);
+      }
+    }
+  }
+
+  if (
+    spheres.has("Elemental Air") ||
+    spheres.has("Elemental Earth") ||
+    spheres.has("Elemental Fire") ||
+    spheres.has("Elemental Silt") ||
+    spheres.has("Elemental Water")
+  ) {
+    spheres.add("Elemental");
+  }
+
+  if (spheres.size === 0 || hasUnknown) {
+    spheres.add("Unknown");
+  }
+
+  return Array.from(spheres).sort((a, b) => {
+    const aIndex = PRIEST_SPHERE_SORT.get(a) ?? Number.MAX_SAFE_INTEGER;
+    const bIndex = PRIEST_SPHERE_SORT.get(b) ?? Number.MAX_SAFE_INTEGER;
+    return aIndex === bIndex ? a.localeCompare(b) : aIndex - bIndex;
+  });
+}
+
+function addPriestSpheres(spellsById: Record<string, SpellDescriptionJson>) {
+  for (const spell of Object.values(spellsById)) {
+    spell.metadata.spheres = derivePriestSpheres(spell.metadata.sphereRaw);
+  }
+}
 
 type WriteJsonOpts = { ignoreKeys?: string[] };
 
@@ -293,6 +482,8 @@ function parseBatchFileToDescriptions(opts: {
 
     const mergedMetadataWithComponents =
       normalizeComponentFlags(mergedMetadata);
+    const mergedMetadataNormalized =
+      normalizeSphereRaw(mergedMetadataWithComponents);
 
     const mergedSectionsRaw = override?.sections
       ? {
@@ -313,7 +504,7 @@ function parseBatchFileToDescriptions(opts: {
       ]),
     );
 
-    const filteredMetadata = filterKnownMetadata(mergedMetadataWithComponents);
+    const filteredMetadata = filterKnownMetadata(mergedMetadataNormalized);
     const resolvedName = getNameFromMetadata(
       filteredMetadata,
       page.title ?? `pageid:${page.pageid}`,
@@ -468,6 +659,8 @@ async function main() {
     excludeTitles,
     wikiBaseUrl: WIKI_BASE_URL,
   });
+
+  addPriestSpheres(priestParsed.spellsById);
 
   const wizardOut: SpellDescriptionsFile = {
     generatedAt: new Date().toISOString(),

@@ -15,7 +15,8 @@ export interface SpellDescriptionMetadata {
   class?: string;
   level?: string;
   school?: string;
-  sphere?: string;
+  sphereRaw?: string;
+  spheres?: string[];
   verbal?: boolean;
   somatic?: boolean;
   material?: boolean;
