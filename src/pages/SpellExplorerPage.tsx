@@ -72,7 +72,7 @@ const SPHERE_SORT = new Map(
 
 const DEFAULT_PAGE_SIZE = 15;
 
-type SortKey = "level" | "name" | "class" | "sphere";
+type SortKey = "level" | "name" | "class";
 type SortDirection = "asc" | "desc";
 
 type ExplorerSpell = Spell & {
@@ -119,7 +119,9 @@ export function SpellExplorerPage() {
     const wizardParam = searchParams.get("wizard");
     const minParam = searchParams.get("min");
     const maxParam = searchParams.get("max");
-    const spheresParam = searchParams.get("spheres");
+    const majorParam = searchParams.get("majorSpheres");
+    const minorParam = searchParams.get("minorSpheres");
+    const legacySpheresParam = searchParams.get("spheres");
     const pageParam = searchParams.get("page");
     const pageSizeParam = searchParams.get("perPage");
 
@@ -130,9 +132,18 @@ export function SpellExplorerPage() {
     const levelMin = Math.min(min, max);
     const levelMax = Math.max(min, max);
 
-    const spheres = spheresParam
+    const majorSpheresParam = majorParam ?? legacySpheresParam;
+    const majorSpheres = majorSpheresParam
       ? normalizeSpheres(
-          spheresParam
+          majorSpheresParam
+            .split(",")
+            .map((value) => value.trim())
+            .filter(Boolean),
+        )
+      : [];
+    const minorSpheres = minorParam
+      ? normalizeSpheres(
+          minorParam
             .split(",")
             .map((value) => value.trim())
             .filter(Boolean),
@@ -144,7 +155,8 @@ export function SpellExplorerPage() {
       wizard,
       levelMin,
       levelMax,
-      spheres,
+      majorSpheres,
+      minorSpheres,
       page: parsePositiveInt(pageParam, 1),
       pageSize: parsePositiveInt(pageSizeParam, DEFAULT_PAGE_SIZE),
     };
@@ -190,7 +202,8 @@ export function SpellExplorerPage() {
     const wizard = next.wizard ?? filters.wizard;
     const levelMin = next.levelMin ?? filters.levelMin;
     const levelMax = next.levelMax ?? filters.levelMax;
-    const spheres = next.spheres ?? filters.spheres;
+    const majorSpheres = next.majorSpheres ?? filters.majorSpheres;
+    const minorSpheres = next.minorSpheres ?? filters.minorSpheres;
     const nextPage = next.page ?? filters.page;
     const nextPageSize = next.pageSize ?? filters.pageSize;
 
@@ -200,11 +213,18 @@ export function SpellExplorerPage() {
     params.set("max", String(levelMax));
     params.set("page", String(nextPage));
     params.set("perPage", String(nextPageSize));
+    params.delete("spheres");
 
-    if (spheres.length > 0) {
-      params.set("spheres", normalizeSpheres(spheres).join(","));
+    if (majorSpheres.length > 0) {
+      params.set("majorSpheres", normalizeSpheres(majorSpheres).join(","));
     } else {
-      params.delete("spheres");
+      params.delete("majorSpheres");
+    }
+
+    if (minorSpheres.length > 0) {
+      params.set("minorSpheres", normalizeSpheres(minorSpheres).join(","));
+    } else {
+      params.delete("minorSpheres");
     }
 
     setSearchParams(params, { replace: true });
@@ -238,12 +258,22 @@ export function SpellExplorerPage() {
       if (!filters.wizard && spell.spellClass === "wizard") return false;
       if (spell.level < filters.levelMin || spell.level > filters.levelMax)
         return false;
-      if (filters.spheres.length > 0) {
+      const hasMajorFilter = filters.majorSpheres.length > 0;
+      const hasMinorFilter = filters.minorSpheres.length > 0;
+      if (hasMajorFilter || hasMinorFilter) {
         if (!spell.spheres?.length) return false;
-        const hasMatch = spell.spheres.some((sphere) =>
-          filters.spheres.includes(sphere),
-        );
-        if (!hasMatch) return false;
+        const majorMatch =
+          hasMajorFilter &&
+          spell.spheres.some((sphere) =>
+            filters.majorSpheres.includes(sphere),
+          );
+        const minorMatch =
+          hasMinorFilter &&
+          spell.level <= 3 &&
+          spell.spheres.some((sphere) =>
+            filters.minorSpheres.includes(sphere),
+          );
+        if (!majorMatch && !minorMatch) return false;
       }
       return true;
     });
@@ -265,12 +295,6 @@ export function SpellExplorerPage() {
         case "class":
           cmp = compareStrings(a.spellClass, b.spellClass);
           break;
-        case "sphere": {
-          const aSphere = a.spheres?.join(", ") ?? "";
-          const bSphere = b.spheres?.join(", ") ?? "";
-          cmp = compareStrings(aSphere, bSphere);
-          break;
-        }
         default:
           cmp = 0;
       }
@@ -301,17 +325,26 @@ export function SpellExplorerPage() {
     return sortedSpells.slice(start, start + pageSize);
   }, [page, pageSize, sortedSpells]);
 
-  const toggleSphere = (sphere: string) => {
-    const next = new Set(filters.spheres);
+  const toggleSphere = (sphere: string, access: "major" | "minor") => {
+    const source =
+      access === "major" ? filters.majorSpheres : filters.minorSpheres;
+    const next = new Set(source);
     if (next.has(sphere)) {
       next.delete(sphere);
     } else {
       next.add(sphere);
     }
-    updateParams({
-      spheres: normalizeSpheres(Array.from(next)),
-      page: 1,
-    });
+    if (access === "major") {
+      updateParams({
+        majorSpheres: normalizeSpheres(Array.from(next)),
+        page: 1,
+      });
+    } else {
+      updateParams({
+        minorSpheres: normalizeSpheres(Array.from(next)),
+        page: 1,
+      });
+    }
   };
 
   const handleSort = (key: SortKey) => {
@@ -344,10 +377,7 @@ export function SpellExplorerPage() {
     return <div className="text-sm text-destructive">{spellStatus.error}</div>;
   }
 
-  const showSphereColumn = filteredSpells.some(
-    (spell) => spell.spheres && spell.spheres.length > 0,
-  );
-  const columnCount = showSphereColumn ? 4 : 3;
+  const columnCount = 3;
 
   return (
     <div className="space-y-4">
@@ -417,31 +447,62 @@ export function SpellExplorerPage() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Spheres
+                Sphere Access
               </div>
-              <div className="text-xs text-muted-foreground">
-                {filters.spheres.length > 0
-                  ? `${filters.spheres.length} selected`
-                  : "Any sphere"}
-              </div>
-              <ScrollArea className="h-56 rounded-sm border p-2">
-                <div className="grid grid-cols-2 gap-2">
-                  {SPHERE_OPTIONS.map((sphere) => (
-                    <label
-                      key={sphere}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <Checkbox
-                        checked={filters.spheres.includes(sphere)}
-                        onCheckedChange={() => toggleSphere(sphere)}
-                      />
-                      <span>{sphere}</span>
-                    </label>
-                  ))}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Major (all levels)</span>
+                  <span>
+                    {filters.majorSpheres.length > 0
+                      ? `${filters.majorSpheres.length} selected`
+                      : "Any sphere"}
+                  </span>
                 </div>
-              </ScrollArea>
+                <ScrollArea className="h-40 rounded-sm border p-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    {SPHERE_OPTIONS.map((sphere) => (
+                      <label
+                        key={`major-${sphere}`}
+                        className="flex items-center gap-2 text-sm"
+                      >
+                        <Checkbox
+                          checked={filters.majorSpheres.includes(sphere)}
+                          onCheckedChange={() => toggleSphere(sphere, "major")}
+                        />
+                        <span>{sphere}</span>
+                      </label>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Minor (levels 1-3)</span>
+                  <span>
+                    {filters.minorSpheres.length > 0
+                      ? `${filters.minorSpheres.length} selected`
+                      : "Any sphere"}
+                  </span>
+                </div>
+                <ScrollArea className="h-40 rounded-sm border p-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    {SPHERE_OPTIONS.map((sphere) => (
+                      <label
+                        key={`minor-${sphere}`}
+                        className="flex items-center gap-2 text-sm"
+                      >
+                        <Checkbox
+                          checked={filters.minorSpheres.includes(sphere)}
+                          onCheckedChange={() => toggleSphere(sphere, "minor")}
+                        />
+                        <span>{sphere}</span>
+                      </label>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
             </div>
             <div className="text-right text-xs text-muted-foreground">
               {sortedSpells.length} spells
@@ -455,6 +516,32 @@ export function SpellExplorerPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[88px] whitespace-nowrap">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="h-auto p-0 text-xs font-semibold"
+                      onClick={() => handleSort("class")}
+                    >
+                      Class
+                      <span className="ml-1 inline-flex">
+                        {sortIcon("class")}
+                      </span>
+                    </Button>
+                  </TableHead>
+                  <TableHead className="w-[64px] whitespace-nowrap">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="h-auto p-0 text-xs font-semibold"
+                      onClick={() => handleSort("level")}
+                    >
+                      Level
+                      <span className="ml-1 inline-flex">
+                        {sortIcon("level")}
+                      </span>
+                    </Button>
+                  </TableHead>
                   <TableHead>
                     <Button
                       type="button"
@@ -468,47 +555,6 @@ export function SpellExplorerPage() {
                       </span>
                     </Button>
                   </TableHead>
-                  <TableHead>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="h-auto p-0 text-xs font-semibold"
-                      onClick={() => handleSort("class")}
-                    >
-                      Class
-                      <span className="ml-1 inline-flex">
-                        {sortIcon("class")}
-                      </span>
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="h-auto p-0 text-xs font-semibold"
-                      onClick={() => handleSort("level")}
-                    >
-                      Level
-                      <span className="ml-1 inline-flex">
-                        {sortIcon("level")}
-                      </span>
-                    </Button>
-                  </TableHead>
-                  {showSphereColumn && (
-                    <TableHead className="min-w-48">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="h-auto p-0 text-xs font-semibold"
-                        onClick={() => handleSort("sphere")}
-                      >
-                        Sphere
-                        <span className="ml-1 inline-flex">
-                          {sortIcon("sphere")}
-                        </span>
-                      </Button>
-                    </TableHead>
-                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -526,6 +572,12 @@ export function SpellExplorerPage() {
                 )}
                 {pagedSpells.map((spell) => (
                   <TableRow key={`${spell.spellClass}:${spell.id}`}>
+                    <TableCell className="capitalize whitespace-nowrap">
+                      {spell.spellClass}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {spell.level}
+                    </TableCell>
                     <TableCell className="whitespace-normal">
                       <Link
                         to={PageRoute.SPELL_VIEW(spell.id)}
@@ -539,15 +591,6 @@ export function SpellExplorerPage() {
                         {spell.name}
                       </Link>
                     </TableCell>
-                    <TableCell className="capitalize">
-                      {spell.spellClass}
-                    </TableCell>
-                    <TableCell>{spell.level}</TableCell>
-                    {showSphereColumn && (
-                      <TableCell className="whitespace-normal">
-                        {spell.spheres?.length ? spell.spheres.join(", ") : "—"}
-                      </TableCell>
-                    )}
                   </TableRow>
                 ))}
               </TableBody>
