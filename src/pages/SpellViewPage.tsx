@@ -77,16 +77,6 @@ export function SpellViewPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {backTarget && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => navigate(backTarget)}
-            >
-              Back
-            </Button>
-          )}
           {canEditNotes && !isEditingNote && (
             <Button
               type="button"
@@ -95,6 +85,16 @@ export function SpellViewPage() {
               onClick={() => setIsEditingNote(true)}
             >
               {hasNote ? "Edit Note" : "Add Note"}
+            </Button>
+          )}
+          {backTarget && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(backTarget)}
+            >
+              Back
             </Button>
           )}
         </div>
