@@ -66,6 +66,53 @@ export function CharacterPage() {
         </CardContent>
       </Card>
 
+      {character.class.priest && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Priest Tools</CardTitle>
+            <CardDescription>
+              Quick links and brief guidance for priest-specific pages.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <PageLink
+              title="Cast Spells"
+              description="Track prepared spells by level and mark casts/restores during play."
+              href={PageRoute.PRIEST_CAST(character.id)}
+            />
+            <div className="h-px w-full bg-border" />
+            <PageLink
+              title="Prepare Spells"
+              description="Pick which spells are prepared in each slot, by level."
+              href={PageRoute.PRIEST_PREPARE(character.id)}
+            />
+            <div className="h-px w-full bg-border" />
+            <PageLink
+              title="Castable Spells List"
+              description="Browse priest spells in the Spell Explorer filtered to your level and sphere access."
+              href={`${PageRoute.SPELLS}?priest=1&wizard=0&min=0&max=${Math.min(
+                9,
+                Math.max(0, character.class.priest.level),
+              )}${
+                character.class.priest.majorSpheres?.length
+                  ? `&majorSpheres=${character.class.priest.majorSpheres.join(",")}`
+                  : ""
+              }${
+                character.class.priest.minorSpheres?.length
+                  ? `&minorSpheres=${character.class.priest.minorSpheres.join(",")}`
+                  : ""
+              }`}
+            />
+            <div className="h-px w-full bg-border" />
+            <PageLink
+              title="Manage Spell Slots"
+              description="Adjust slot modifiers and review base vs. modified slot tables."
+              href={PageRoute.PRIEST_SPELL_SLOTS(character.id)}
+            />
+          </CardContent>
+        </Card>
+      )}
+
       {character.class.wizard && (
         <Card>
           <CardHeader>
@@ -94,56 +141,15 @@ export function CharacterPage() {
             />
             <div className="h-px w-full bg-border" />
             <PageLink
+              title="Known Spells"
+              description="Track and review your known spells by level."
+              href={PageRoute.WIZARD_KNOWN_SPELLS(character.id)}
+            />
+            <div className="h-px w-full bg-border" />
+            <PageLink
               title="Manage Spell Slots"
               description="Adjust slot modifiers and review base vs. modified slot tables."
               href={PageRoute.WIZARD_SPELL_SLOTS(character.id)}
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {character.class.priest && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Priest Tools</CardTitle>
-            <CardDescription>
-              Quick links and brief guidance for priest-specific pages.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <PageLink
-              title="Cast Spells"
-              description="Track prepared spells by level and mark casts/restores during play."
-              href={PageRoute.PRIEST_CAST(character.id)}
-            />
-            <div className="h-px w-full bg-border" />
-            <PageLink
-              title="Prepare Spells"
-              description="Pick which spells are prepared in each slot, by level."
-              href={PageRoute.PRIEST_PREPARE(character.id)}
-            />
-            <div className="h-px w-full bg-border" />
-            <PageLink
-              title="Castable Spells List"
-              description="Browse priest spells filtered to your level and sphere access."
-              href={`${PageRoute.SPELLS}?priest=1&wizard=0&min=0&max=${Math.min(
-                9,
-                Math.max(0, character.class.priest.level),
-              )}${
-                character.class.priest.majorSpheres?.length
-                  ? `&majorSpheres=${character.class.priest.majorSpheres.join(",")}`
-                  : ""
-              }${
-                character.class.priest.minorSpheres?.length
-                  ? `&minorSpheres=${character.class.priest.minorSpheres.join(",")}`
-                  : ""
-              }`}
-            />
-            <div className="h-px w-full bg-border" />
-            <PageLink
-              title="Manage Spell Slots"
-              description="Adjust slot modifiers and review base vs. modified slot tables."
-              href={PageRoute.PRIEST_SPELL_SLOTS(character.id)}
             />
           </CardContent>
         </Card>
