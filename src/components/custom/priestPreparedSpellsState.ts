@@ -4,7 +4,7 @@ import { useAtomValue } from "jotai";
 import { updatePriestPreparedSpellsLevel } from "@/firebase/characters";
 import { findPriestSpellById } from "@/lib/spellLookup";
 import { getPriestProgressionSpellSlots } from "@/lib/spellSlots";
-import { priestSpellsAtom } from "@/globalState";
+import { priestSpellDescriptionsAtom, priestSpellsAtom } from "@/globalState";
 import { PreparedSpellCounts } from "@/types/ClassProgression";
 import { PriestClassProgression } from "@/types/PriestClassProgression";
 import type { Spell } from "@/types/Spell";
@@ -62,6 +62,7 @@ export function usePriestPreparedSpellsState({
   characterId,
 }: PriestPreparedSpellsProps): PreparedSpellsState {
   const allPriestSpells = useAtomValue(priestSpellsAtom);
+  const priestDescriptions = useAtomValue(priestSpellDescriptionsAtom);
   const [localSpells, setLocalSpells] = useState<
     Record<string, PreparedSpellCounts>
   >(progression.preparedSpells[spellLevel] || {});
@@ -98,6 +99,17 @@ export function usePriestPreparedSpellsState({
 
   const preparedIds = useMemo(() => new Set(Object.keys(spells)), [spells]);
 
+  const sphereAccess = useMemo(() => {
+    const major = new Set(progression.majorSpheres ?? []);
+    const minor = new Set(progression.minorSpheres ?? []);
+    return {
+      hasMajor: major.size > 0,
+      hasMinor: minor.size > 0,
+      major,
+      minor,
+    };
+  }, [progression.majorSpheres, progression.minorSpheres]);
+
   const availableSpells = useMemo(() => {
     return allPriestSpells
       .filter(
@@ -105,9 +117,29 @@ export function usePriestPreparedSpellsState({
           spell.level === spellLevel &&
           !preparedIds.has(String(spell.id)),
       )
+      .filter((spell) => {
+        if (!sphereAccess.hasMajor && !sphereAccess.hasMinor) return true;
+        const spheres =
+          priestDescriptions[String(spell.id)]?.metadata.spheres ?? [];
+        if (spheres.length === 0) return false;
+        const hasMajorMatch =
+          sphereAccess.hasMajor &&
+          spheres.some((sphere) => sphereAccess.major.has(sphere));
+        const hasMinorMatch =
+          sphereAccess.hasMinor &&
+          spell.level <= 3 &&
+          spheres.some((sphere) => sphereAccess.minor.has(sphere));
+        return hasMajorMatch || hasMinorMatch;
+      })
       .map((spell) => [String(spell.id), spell] as [string, Spell])
       .sort((a, b) => a[1].name.localeCompare(b[1].name));
-  }, [allPriestSpells, preparedIds, spellLevel]);
+  }, [
+    allPriestSpells,
+    preparedIds,
+    priestDescriptions,
+    spellLevel,
+    sphereAccess,
+  ]);
 
   const sortedSpells = useMemo<PreparedSpellEntries>(
     () =>
