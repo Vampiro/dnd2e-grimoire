@@ -6,6 +6,7 @@ import {
   spellNotesAtom,
   uiScaleAtom,
   userAtom,
+  favoriteSpellIdsAtom,
 } from "./globalState";
 import { useEffect, useRef } from "react";
 import { onAuthStateChanged } from "firebase/auth";
@@ -122,6 +123,7 @@ function App() {
         store.set(charactersAtom, []);
         store.set(uiScaleAtom, 1);
         store.set(spellNotesAtom, {});
+        store.set(favoriteSpellIdsAtom, []);
         return;
       }
 
@@ -133,6 +135,7 @@ function App() {
           store.set(uiScaleAtom, 1);
         }
         store.set(spellNotesAtom, settings.spellNotes ?? {});
+        store.set(favoriteSpellIdsAtom, settings.favoriteSpellIds ?? []);
       });
 
       try {

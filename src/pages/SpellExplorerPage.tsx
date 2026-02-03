@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAtomValue } from "jotai";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Star } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,12 +19,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  favoriteSpellIdsAtom,
   priestSpellDescriptionsAtom,
   priestSpellsAtom,
   spellDataStatusAtom,
+  userAtom,
   wizardSpellDescriptionsAtom,
   wizardSpellsAtom,
 } from "@/globalState";
+import {
+  addUserFavoriteSpell,
+  removeUserFavoriteSpell,
+} from "@/firebase/userSettings";
 import { cn } from "@/lib/utils";
 import { PageRoute } from "@/pages/PageRoute";
 import type { Spell } from "@/types/Spell";
@@ -109,6 +115,8 @@ const compareStrings = (a: string, b: string) =>
 export function SpellExplorerPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const spellStatus = useAtomValue(spellDataStatusAtom);
+  const user = useAtomValue(userAtom);
+  const favoriteSpellIds = useAtomValue(favoriteSpellIdsAtom);
   const wizardSpells = useAtomValue(wizardSpellsAtom);
   const priestSpells = useAtomValue(priestSpellsAtom);
   const wizardDescriptions = useAtomValue(wizardSpellDescriptionsAtom);
@@ -122,6 +130,7 @@ export function SpellExplorerPage() {
     const majorParam = searchParams.get("majorSpheres");
     const minorParam = searchParams.get("minorSpheres");
     const legacySpheresParam = searchParams.get("spheres");
+    const favoritesParam = searchParams.get("fav");
     const pageParam = searchParams.get("page");
     const pageSizeParam = searchParams.get("perPage");
 
@@ -157,6 +166,7 @@ export function SpellExplorerPage() {
       levelMax,
       majorSpheres,
       minorSpheres,
+      favoritesOnly: favoritesParam === "1",
       page: parsePositiveInt(pageParam, 1),
       pageSize: parsePositiveInt(pageSizeParam, DEFAULT_PAGE_SIZE),
     };
@@ -168,6 +178,9 @@ export function SpellExplorerPage() {
   }>({ key: "level", direction: "asc" });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [favoriteSavingIds, setFavoriteSavingIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [levelRange, setLevelRange] = useState<[number, number]>([
     LEVEL_MIN,
     LEVEL_MAX,
@@ -204,6 +217,7 @@ export function SpellExplorerPage() {
     const levelMax = next.levelMax ?? filters.levelMax;
     const majorSpheres = next.majorSpheres ?? filters.majorSpheres;
     const minorSpheres = next.minorSpheres ?? filters.minorSpheres;
+    const favoritesOnly = next.favoritesOnly ?? filters.favoritesOnly;
     const nextPage = next.page ?? filters.page;
     const nextPageSize = next.pageSize ?? filters.pageSize;
 
@@ -214,6 +228,11 @@ export function SpellExplorerPage() {
     params.set("page", String(nextPage));
     params.set("perPage", String(nextPageSize));
     params.delete("spheres");
+    if (favoritesOnly) {
+      params.set("fav", "1");
+    } else {
+      params.delete("fav");
+    }
 
     if (majorSpheres.length > 0) {
       params.set("majorSpheres", normalizeSpheres(majorSpheres).join(","));
@@ -252,12 +271,20 @@ export function SpellExplorerPage() {
     return rows;
   }, [wizardSpells, priestSpells, wizardDescriptions, priestDescriptions]);
 
+  const favoriteSet = useMemo(
+    () => new Set(favoriteSpellIds.map((id) => String(id))),
+    [favoriteSpellIds],
+  );
+
   const filteredSpells = useMemo(() => {
     return allSpells.filter((spell) => {
       if (!filters.priest && spell.spellClass === "priest") return false;
       if (!filters.wizard && spell.spellClass === "wizard") return false;
       if (spell.level < filters.levelMin || spell.level > filters.levelMax)
         return false;
+      if (filters.favoritesOnly && !favoriteSet.has(String(spell.id))) {
+        return false;
+      }
       const hasMajorFilter = filters.majorSpheres.length > 0;
       const hasMinorFilter = filters.minorSpheres.length > 0;
       if (hasMajorFilter || hasMinorFilter) {
@@ -277,7 +304,7 @@ export function SpellExplorerPage() {
       }
       return true;
     });
-  }, [allSpells, filters]);
+  }, [allSpells, favoriteSet, filters]);
 
   const sortedSpells = useMemo(() => {
     const next = [...filteredSpells];
@@ -367,6 +394,30 @@ export function SpellExplorerPage() {
     ) : (
       <ChevronDown className="h-3 w-3" />
     );
+  };
+
+  const handleToggleFavorite = async (spellId: number | string) => {
+    if (!user) return;
+    const key = String(spellId);
+    if (favoriteSavingIds.has(key)) return;
+    setFavoriteSavingIds((prev) => {
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+    try {
+      if (favoriteSet.has(key)) {
+        await removeUserFavoriteSpell(user.uid, key);
+      } else {
+        await addUserFavoriteSpell(user.uid, key);
+      }
+    } finally {
+      setFavoriteSavingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    }
   };
 
   if (spellStatus.loading && !spellStatus.ready) {
@@ -504,6 +555,24 @@ export function SpellExplorerPage() {
                 </ScrollArea>
               </div>
             </div>
+
+            {user && (
+              <div className="space-y-2">
+                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Favorites
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <Label htmlFor="filter-favorites">Favorites only</Label>
+                  <Switch
+                    id="filter-favorites"
+                    checked={filters.favoritesOnly}
+                    onCheckedChange={(checked) =>
+                      updateParams({ favoritesOnly: checked, page: 1 })
+                    }
+                  />
+                </div>
+              </div>
+            )}
             <div className="text-right text-xs text-muted-foreground">
               {sortedSpells.length} spells
             </div>
@@ -579,17 +648,43 @@ export function SpellExplorerPage() {
                       {spell.level}
                     </TableCell>
                     <TableCell className="whitespace-normal">
-                      <Link
-                        to={PageRoute.SPELL_VIEW(spell.id)}
-                        className={cn(
-                          "font-medium hover:underline",
-                          spell.spellClass === "wizard"
-                            ? "text-sky-600 dark:text-sky-400"
-                            : "text-emerald-600 dark:text-emerald-400",
+                      <div className="flex items-center gap-2">
+                        {user && (
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => handleToggleFavorite(spell.id)}
+                            disabled={favoriteSavingIds.has(String(spell.id))}
+                            aria-label={
+                              favoriteSet.has(String(spell.id))
+                                ? "Remove from favorites"
+                                : "Add to favorites"
+                            }
+                          >
+                            <Star
+                              className={cn(
+                                "h-4 w-4",
+                                favoriteSet.has(String(spell.id))
+                                  ? "text-yellow-500 fill-yellow-500"
+                                  : "text-muted-foreground",
+                              )}
+                            />
+                          </Button>
                         )}
-                      >
-                        {spell.name}
-                      </Link>
+                        <Link
+                          to={PageRoute.SPELL_VIEW(spell.id)}
+                          className={cn(
+                            "font-medium hover:underline",
+                            spell.spellClass === "wizard"
+                              ? "text-sky-600 dark:text-sky-400"
+                              : "text-emerald-600 dark:text-emerald-400",
+                          )}
+                        >
+                          {spell.name}
+                        </Link>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

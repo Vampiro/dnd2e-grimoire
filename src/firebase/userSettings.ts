@@ -1,4 +1,6 @@
 import {
+  arrayRemove,
+  arrayUnion,
   deleteField,
   doc,
   onSnapshot,
@@ -22,6 +24,8 @@ export type UserSettings = {
   uiScale?: number;
   /** Optional per-spell markdown notes keyed by spell id. */
   spellNotes?: Record<string, SerializedEditorState>;
+  /** Optional list of favorited spell ids. */
+  favoriteSpellIds?: string[];
 };
 
 type UserDoc = {
@@ -31,6 +35,7 @@ type UserDoc = {
 type UserSettingsUpdate = {
   uiScale?: number;
   spellNotes?: Record<string, SerializedEditorState | FieldValue>;
+  favoriteSpellIds?: string[] | FieldValue;
 };
 
 type UserDocUpdate = {
@@ -122,6 +127,44 @@ export async function deleteUserSpellNote(
         spellNotes: {
           [spellId]: deleteField(),
         },
+      },
+    } satisfies UserDocUpdate,
+    { merge: true },
+  );
+}
+
+/**
+ * Add a spell to the user's favorites list.
+ */
+export async function addUserFavoriteSpell(
+  userId: string,
+  spellId: string,
+): Promise<void> {
+  const ref = userSettingsDoc(userId);
+  await setDoc(
+    ref,
+    {
+      settings: {
+        favoriteSpellIds: arrayUnion(spellId),
+      },
+    } satisfies UserDocUpdate,
+    { merge: true },
+  );
+}
+
+/**
+ * Remove a spell from the user's favorites list.
+ */
+export async function removeUserFavoriteSpell(
+  userId: string,
+  spellId: string,
+): Promise<void> {
+  const ref = userSettingsDoc(userId);
+  await setDoc(
+    ref,
+    {
+      settings: {
+        favoriteSpellIds: arrayRemove(spellId),
       },
     } satisfies UserDocUpdate,
     { merge: true },

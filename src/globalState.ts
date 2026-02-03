@@ -67,6 +67,9 @@ export const priestSpellDescriptionsAtom = atom<
 /** User-authored spell notes keyed by spell id. */
 export const spellNotesAtom = atom<Record<string, SerializedEditorState>>({});
 
+/** User favorite spell ids. */
+export const favoriteSpellIdsAtom = atom<string[]>([]);
+
 /**
  * Global UI scale multiplier.
  *
