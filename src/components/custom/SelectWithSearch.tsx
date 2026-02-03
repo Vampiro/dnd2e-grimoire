@@ -15,7 +15,14 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+  isValidElement,
+  cloneElement,
+} from "react";
 import { ChevronDownIcon } from "lucide-react";
 import { MobileSelect } from "./MobileSelect";
 
@@ -37,6 +44,9 @@ type BaseProps<T> = {
   open?: boolean;
   onOpenChange?(open: boolean): void;
   contentOnly?: boolean;
+  autoFocus?: boolean;
+  inputRightSlot?: ReactNode;
+  renderTrigger?: (props: { open: boolean; label: string }) => ReactNode;
 };
 
 const DEFAULT_LIMIT = 200;
@@ -75,6 +85,9 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
     open: controlledOpen,
     onOpenChange: controlledOnOpenChange,
     contentOnly = false,
+    autoFocus = false,
+    inputRightSlot,
+    renderTrigger,
   } = props;
 
   const [internalOpen, setInternalOpen] = useState(false);
@@ -173,11 +186,12 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
       shouldFilter={false}
     >
       <CommandInput
-        autoFocus
+        autoFocus={autoFocus}
         value={query}
         onValueChange={setQuery}
         placeholder="Search..."
         className="h-12"
+        rightSlot={inputRightSlot}
       />
       <ScrollArea className="flex-1 min-h-0 h-full">
         <CommandList className={`p-2 ${isMobile ? "max-h-none" : ""} h-full`}>
@@ -231,7 +245,7 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
     </Command>
   );
 
-  const trigger = (
+  const defaultTrigger = (
     <button
       type="button"
       className={cn(
@@ -241,9 +255,8 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
         "hover:bg-accent/50",
         "focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring",
         "disabled:cursor-not-allowed disabled:opacity-50",
-        className
+        className,
       )}
-      onClick={() => setOpen(!open)}
       aria-haspopup="dialog"
       aria-expanded={open}
     >
@@ -251,6 +264,30 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
       <ChevronDownIcon className="h-4 w-4" />
     </button>
   );
+
+  const triggerCandidate = renderTrigger
+    ? renderTrigger({ open, label: triggerLabel })
+    : defaultTrigger;
+  const triggerNode = isValidElement(triggerCandidate)
+    ? triggerCandidate
+    : defaultTrigger;
+
+  const mobileTrigger = renderTrigger
+    ? cloneElement(triggerNode, {
+        onClick: (event: React.MouseEvent) => {
+          if (typeof triggerNode.props.onClick === "function") {
+            triggerNode.props.onClick(event);
+          }
+          setOpen(!open);
+        },
+        "aria-haspopup": "dialog",
+        "aria-expanded": open,
+      })
+    : cloneElement(defaultTrigger, {
+        onClick: () => setOpen(!open),
+        "aria-haspopup": "dialog",
+        "aria-expanded": open,
+      });
 
   if (isMobile) {
     const mobileSelect = (
@@ -270,6 +307,8 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
         getCategory={getCategory}
         categoryLabel={categoryLabel}
         renderItem={renderItem}
+        autoFocus={autoFocus}
+        inputRightSlot={inputRightSlot}
       />
     );
 
@@ -279,7 +318,7 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
 
     return (
       <>
-        {trigger}
+        {mobileTrigger}
         {mobileSelect}
       </>
     );
@@ -292,7 +331,7 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      <PopoverTrigger asChild>{triggerNode}</PopoverTrigger>
       <PopoverContent className="p-0 w-80" align="start" sideOffset={8}>
         {content}
       </PopoverContent>

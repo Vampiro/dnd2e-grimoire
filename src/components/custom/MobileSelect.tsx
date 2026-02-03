@@ -33,6 +33,8 @@ type MobileSelectProps<T> = {
   getCategory?(item: T): string | undefined;
   categoryLabel?(category: string): string;
   renderItem?(item: T): ReactNode;
+  autoFocus?: boolean;
+  inputRightSlot?: ReactNode;
 };
 
 const DEFAULT_LIMIT = 200;
@@ -53,6 +55,8 @@ export function MobileSelect<T>({
   getCategory,
   categoryLabel = (cat) => cat,
   renderItem,
+  autoFocus = true,
+  inputRightSlot,
 }: MobileSelectProps<T>) {
   const [query, setQuery] = useState("");
   const [isLandscape, setIsLandscape] = useState(false);
@@ -189,11 +193,12 @@ export function MobileSelect<T>({
             <div className="flex items-center gap-2">
               <div className="flex-1">
                 <CommandInput
-                  autoFocus
+                  autoFocus={autoFocus}
                   value={query}
                   onValueChange={setQuery}
                   placeholder={placeholder}
                   className="h-11 w-full"
+                  rightSlot={inputRightSlot}
                 />
               </div>
               {isLandscape && (

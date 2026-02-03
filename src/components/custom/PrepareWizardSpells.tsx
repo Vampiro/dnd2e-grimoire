@@ -1,24 +1,15 @@
-import { useState, type ReactNode } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAtomValue } from "jotai";
 
 import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { SelectWithSearch } from "@/components/custom/SelectWithSearch";
+import { favoriteSpellIdsAtom, userAtom } from "@/globalState";
+import { Minus, Plus, Star, Trash2 } from "lucide-react";
 
 import { PageRoute } from "@/pages/PageRoute";
 import { findWizardSpellById } from "@/lib/spellLookup";
+import { cn } from "@/lib/utils";
 
 import {
   useWizardPreparedSpellsState,
@@ -40,6 +31,8 @@ export function PrepareWizardSpells({
   ...props
 }: PrepareWizardSpellsProps) {
   const navigate = useNavigate();
+  const user = useAtomValue(userAtom);
+  const favoriteSpellIds = useAtomValue(favoriteSpellIdsAtom);
   const {
     sortedSpells,
     availableSpells,
@@ -57,6 +50,7 @@ export function PrepareWizardSpells({
   const missingPreparedSet = new Set(missingPreparedSpellIds);
 
   const [addOpen, setAddOpen] = useState(false);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const spellRowCount = sortedSpells.length;
   const countClass =
     totalPrepared < maxSlots
@@ -65,13 +59,81 @@ export function PrepareWizardSpells({
         ? "text-red-500"
         : "text-muted-foreground";
 
+  const favoriteSet = useMemo(
+    () => new Set(favoriteSpellIds.map((id) => String(id))),
+    [favoriteSpellIds],
+  );
+
+  const filteredAvailableSpells = useMemo(() => {
+    if (!favoritesOnly) return availableSpells;
+    return availableSpells.filter(([id]) => favoriteSet.has(String(id)));
+  }, [availableSpells, favoriteSet, favoritesOnly]);
+
+  useEffect(() => {
+    if (!user && favoritesOnly) {
+      setFavoritesOnly(false);
+    }
+  }, [favoritesOnly, user]);
+
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="font-semibold">Level {props.spellLevel}</h3>
-          <Popover open={addOpen} onOpenChange={setAddOpen}>
-            <PopoverTrigger asChild>
+          <SelectWithSearch
+            items={filteredAvailableSpells}
+            getLabel={(item) => item[1].name}
+            getKey={(item) => item[0]}
+            renderItem={(item) => (
+              <div className="flex items-center justify-between gap-2">
+                <span>{item[1].name}</span>
+                {favoriteSet.has(String(item[0])) && (
+                  <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                )}
+              </div>
+            )}
+            onChange={(item) => {
+              if (!item) return;
+              handleAddSpell(item[0]);
+              setAddOpen(false);
+            }}
+            emptyText={
+              filteredAvailableSpells.length === 0
+                ? "No remaining spells match your filter."
+                : "No results found."
+            }
+            open={addOpen}
+            onOpenChange={setAddOpen}
+            autoFocus={false}
+            inputRightSlot={
+              user ? (
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7"
+                  onClick={() => setFavoritesOnly((prev) => !prev)}
+                  aria-label={
+                    favoritesOnly
+                      ? "Show all spells"
+                      : "Show favorite spells only"
+                  }
+                  title={
+                    favoritesOnly ? "Showing favorites" : "Filter to favorites"
+                  }
+                >
+                  <Star
+                    className={cn(
+                      "h-4 w-4",
+                      favoritesOnly
+                        ? "text-yellow-500 fill-yellow-500"
+                        : "text-muted-foreground",
+                    )}
+                  />
+                </Button>
+              ) : null
+            }
+            renderTrigger={() => (
               <Button
                 size="sm"
                 variant="outline"
@@ -80,46 +142,8 @@ export function PrepareWizardSpells({
               >
                 <Plus className="h-3 w-3" />
               </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-0" align="start">
-              <Command shouldFilter={availableSpells.length >= 10}>
-                {availableSpells.length >= 10 && (
-                  <CommandInput placeholder="Search spells..." />
-                )}
-                <CommandList>
-                  <CommandEmpty>
-                    <div className="space-y-1 px-3 py-2 text-sm text-muted-foreground">
-                      <p>No remaining spells match your filter.</p>
-                      <p>
-                        Update your{" "}
-                        <Link
-                          className="underline"
-                          to={PageRoute.WIZARD_SPELLBOOKS(props.characterId)}
-                        >
-                          Spellbooks
-                        </Link>{" "}
-                        to add level {props.spellLevel} spells.
-                      </p>
-                    </div>
-                  </CommandEmpty>
-                  <CommandGroup>
-                    {availableSpells.map(([id, spell]) => (
-                      <CommandItem
-                        key={id}
-                        value={`${spell.name} ${id}`}
-                        onSelect={() => {
-                          handleAddSpell(id);
-                          setAddOpen(false);
-                        }}
-                      >
-                        {spell.name}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+            )}
+          />
         </div>
         {headerRight && <div className="flex items-center">{headerRight}</div>}
       </div>

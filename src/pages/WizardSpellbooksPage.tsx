@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +24,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ChevronDown, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, Plus, Star, Trash2 } from "lucide-react";
 import { useCharacterById } from "@/hooks/useCharacterById";
 import { WizardSpellbook } from "@/types/WizardClassProgression";
 import { findWizardSpellById } from "@/lib/spellLookup";
@@ -36,7 +36,7 @@ import {
   updateWizardSpellbook,
 } from "@/firebase/characters";
 import { useAtomValue } from "jotai";
-import { wizardSpellsAtom } from "@/globalState";
+import { favoriteSpellIdsAtom, userAtom, wizardSpellsAtom } from "@/globalState";
 import { cn } from "@/lib/utils";
 import { PageRoute } from "./PageRoute";
 
@@ -139,6 +139,8 @@ function SpellbookCard({
   knownSpellIds: Set<string>;
 }) {
   const navigate = useNavigate();
+  const user = useAtomValue(userAtom);
+  const favoriteSpellIds = useAtomValue(favoriteSpellIdsAtom);
   const spellsByLevel = useMemo(() => {
     const grouped: Record<number, Spell[]> = {};
     const spellsById = spellbook.spellsById ?? {};
@@ -181,6 +183,7 @@ function SpellbookCard({
   const [addError, setAddError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [addSpellOpen, setAddSpellOpen] = useState(false);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [deleteMode, setDeleteMode] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [toggleError, setToggleError] = useState<string | null>(null);
@@ -213,6 +216,24 @@ function SpellbookCard({
       return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
     });
   }, [allWizardSpells]);
+
+  const favoriteSet = useMemo(
+    () => new Set(favoriteSpellIds.map((id) => String(id))),
+    [favoriteSpellIds],
+  );
+
+  const filteredSelectableSpells = useMemo(() => {
+    if (!favoritesOnly) return selectableSpells;
+    return selectableSpells.filter((spell) =>
+      favoriteSet.has(String(spell.id)),
+    );
+  }, [favoriteSet, favoritesOnly, selectableSpells]);
+
+  useEffect(() => {
+    if (!user && favoritesOnly) {
+      setFavoritesOnly(false);
+    }
+  }, [favoritesOnly, user]);
 
   const handleSelectSpell = async (spell: Spell | undefined) => {
     if (!spell) return;
@@ -309,13 +330,25 @@ function SpellbookCard({
                 >
                   <SelectWithSearch<Spell>
                     title="Add spell to Spellbook"
-                    items={selectableSpells}
+                    items={filteredSelectableSpells}
                     getKey={(spell) => String(spell.id)}
                     getLabel={(spell) =>
                       spellIdsInBook.has(spell.id)
                         ? `${spell.name} (in book)`
                         : spell.name
                     }
+                    renderItem={(spell) => (
+                      <div className="flex items-center justify-between gap-2">
+                        <span>
+                          {spellIdsInBook.has(spell.id)
+                            ? `${spell.name} (in book)`
+                            : spell.name}
+                        </span>
+                        {favoriteSet.has(String(spell.id)) && (
+                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                        )}
+                      </div>
+                    )}
                     isItemDisabled={(spell) => spellIdsInBook.has(spell.id)}
                     value={undefined}
                     onChange={handleSelectSpell}
@@ -326,6 +359,37 @@ function SpellbookCard({
                     open={addSpellOpen}
                     onOpenChange={setAddSpellOpen}
                     contentOnly={true}
+                    autoFocus={false}
+                    inputRightSlot={
+                      user ? (
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          onClick={() => setFavoritesOnly((prev) => !prev)}
+                          aria-label={
+                            favoritesOnly
+                              ? "Show all spells"
+                              : "Show favorite spells only"
+                          }
+                          title={
+                            favoritesOnly
+                              ? "Showing favorites"
+                              : "Filter to favorites"
+                          }
+                        >
+                          <Star
+                            className={cn(
+                              "h-4 w-4",
+                              favoritesOnly
+                                ? "text-yellow-500 fill-yellow-500"
+                                : "text-muted-foreground",
+                            )}
+                          />
+                        </Button>
+                      ) : null
+                    }
                   />
                 </PopoverContent>
               </Popover>
