@@ -168,6 +168,59 @@ export function Navbar() {
     }
     return `${PageRoute.SPELLS}?${params.toString()}`;
   }, [selectedCharacter]);
+  const isPriestCastableActive = useMemo(() => {
+    if (!selectedCharacter?.class.priest) return false;
+    if (location.pathname !== PageRoute.SPELLS) return false;
+
+    const priest = selectedCharacter.class.priest;
+    const params = new URLSearchParams(location.search);
+    const allowedKeys = new Set([
+      "priest",
+      "wizard",
+      "min",
+      "max",
+      "majorSpheres",
+      "minorSpheres",
+      "page",
+      "perPage",
+    ]);
+
+    for (const key of params.keys()) {
+      if (!allowedKeys.has(key)) return false;
+    }
+
+    if (params.get("priest") !== "1") return false;
+    if (params.get("wizard") !== "0") return false;
+    if (params.get("min") !== "0") return false;
+    const expectedMax = String(Math.min(9, Math.max(0, priest.level)));
+    if (params.get("max") !== expectedMax) return false;
+
+    const normalizeList = (value: string | null) =>
+      value
+        ? value
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean)
+        : [];
+    const normalizeSet = (items: string[]) =>
+      Array.from(new Set(items)).sort();
+    const listsEqual = (a: string[], b: string[]) =>
+      a.length === b.length && a.every((value, index) => value === b[index]);
+
+    const expectedMajor = normalizeSet(priest.majorSpheres ?? []);
+    const expectedMinor = normalizeSet(priest.minorSpheres ?? []);
+    const actualMajor = normalizeSet(normalizeList(params.get("majorSpheres")));
+    const actualMinor = normalizeSet(normalizeList(params.get("minorSpheres")));
+
+    if (!listsEqual(expectedMajor, actualMajor)) return false;
+    if (!listsEqual(expectedMinor, actualMinor)) return false;
+
+    return true;
+  }, [
+    location.pathname,
+    location.search,
+    selectedCharacter?.class.priest,
+  ]);
 
   /** Returns true when the current location matches the given path/prefix. */
   const isActivePath = (path: string | undefined, exact = false) => {
@@ -407,12 +460,12 @@ export function Navbar() {
                               <Link
                                 to={priestCastableLink}
                                 className={`relative rounded-md pl-3 pr-2 py-1 text-sm hover:bg-accent ${
-                                  isActivePath(PageRoute.SPELLS, true)
+                                  isPriestCastableActive
                                     ? "font-semibold bg-accent text-foreground"
                                     : ""
                                 }`}
                               >
-                                {isActivePath(PageRoute.SPELLS, true) && (
+                                {isPriestCastableActive && (
                                   <span
                                     className="absolute -left-1.5 top-1 bottom-1 w-0.5 rounded-full bg-white"
                                     aria-hidden
