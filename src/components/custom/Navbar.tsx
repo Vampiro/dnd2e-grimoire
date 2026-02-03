@@ -152,6 +152,22 @@ export function Navbar() {
   );
 
   const scrollQuillNoBgSrc = `${import.meta.env.BASE_URL}scroll-quill-no-bg.png`;
+  const priestCastableLink = useMemo(() => {
+    if (!selectedCharacter?.class.priest) return null;
+    const priest = selectedCharacter.class.priest;
+    const params = new URLSearchParams();
+    params.set("priest", "1");
+    params.set("wizard", "0");
+    params.set("min", "0");
+    params.set("max", String(Math.min(9, Math.max(0, priest.level))));
+    if (priest.majorSpheres?.length) {
+      params.set("majorSpheres", priest.majorSpheres.join(","));
+    }
+    if (priest.minorSpheres?.length) {
+      params.set("minorSpheres", priest.minorSpheres.join(","));
+    }
+    return `${PageRoute.SPELLS}?${params.toString()}`;
+  }, [selectedCharacter]);
 
   /** Returns true when the current location matches the given path/prefix. */
   const isActivePath = (path: string | undefined, exact = false) => {
@@ -386,6 +402,26 @@ export function Navbar() {
                               Prepare Spells
                             </Link>
                           </DrawerClose>
+                          {priestCastableLink && (
+                            <DrawerClose asChild>
+                              <Link
+                                to={priestCastableLink}
+                                className={`relative rounded-md pl-3 pr-2 py-1 text-sm hover:bg-accent ${
+                                  isActivePath(PageRoute.SPELLS, true)
+                                    ? "font-semibold bg-accent text-foreground"
+                                    : ""
+                                }`}
+                              >
+                                {isActivePath(PageRoute.SPELLS, true) && (
+                                  <span
+                                    className="absolute -left-1.5 top-1 bottom-1 w-0.5 rounded-full bg-white"
+                                    aria-hidden
+                                  />
+                                )}
+                                Castable Spells List
+                              </Link>
+                            </DrawerClose>
+                          )}
                           <DrawerClose asChild>
                             <Link
                               to={PageRoute.PRIEST_SPELL_SLOTS(

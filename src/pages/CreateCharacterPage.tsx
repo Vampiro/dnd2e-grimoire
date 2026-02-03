@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -11,6 +13,7 @@ import {
 import { Plus, Trash2 } from "lucide-react";
 import { createCharacter } from "@/firebase/characters";
 import { CharacterClass } from "@/types/ClassProgression";
+import { PRIEST_SPHERE_OPTIONS } from "@/lib/priestSpheres";
 import { PageRoute } from "./PageRoute";
 
 export function CreateCharacterPage() {
@@ -24,6 +27,8 @@ export function CreateCharacterPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [classHintError, setClassHintError] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
+  const [priestMajorSpheres, setPriestMajorSpheres] = useState<string[]>([]);
+  const [priestMinorSpheres, setPriestMinorSpheres] = useState<string[]>([]);
 
   const remainingClasses = useMemo(() => {
     const remaining: Array<{ key: "wizard" | "priest"; label: string }> = [];
@@ -46,6 +51,32 @@ export function CreateCharacterPage() {
       delete next[klass];
       return next;
     });
+    if (klass === "priest") {
+      setPriestMajorSpheres([]);
+      setPriestMinorSpheres([]);
+    }
+  };
+
+  const normalizeSpheres = (values: Iterable<string>) => {
+    const set = new Set(values);
+    return PRIEST_SPHERE_OPTIONS.filter((sphere) => set.has(sphere));
+  };
+
+  const toggleSphere = (sphere: string, access: "major" | "minor") => {
+    const source =
+      access === "major" ? priestMajorSpheres : priestMinorSpheres;
+    const next = new Set(source);
+    if (next.has(sphere)) {
+      next.delete(sphere);
+    } else {
+      next.add(sphere);
+    }
+    const normalized = normalizeSpheres(next);
+    if (access === "major") {
+      setPriestMajorSpheres(normalized);
+    } else {
+      setPriestMinorSpheres(normalized);
+    }
   };
 
   const adjustClassLevel = (klass: "wizard" | "priest", delta: number) => {
@@ -95,6 +126,12 @@ export function CreateCharacterPage() {
                   level: classLevels.priest,
                   preparedSpells: {},
                   spellSlotModifiers: [],
+                  ...(priestMajorSpheres.length > 0
+                    ? { majorSpheres: priestMajorSpheres }
+                    : {}),
+                  ...(priestMinorSpheres.length > 0
+                    ? { minorSpheres: priestMinorSpheres }
+                    : {}),
                 },
               }
             : {}),
@@ -236,43 +273,103 @@ export function CreateCharacterPage() {
                 )}
 
                 {classLevels.priest && (
-                  <div className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-muted/50">
-                    <div className="text-sm font-medium">Priest</div>
-                    <div className="inline-flex items-center">
+                  <div className="space-y-2 rounded-md px-2 py-1 transition-colors hover:bg-muted/50">
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm font-medium">Priest</div>
+                      <div className="inline-flex items-center">
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-8 w-8 rounded-r-none"
+                          onClick={() => adjustClassLevel("priest", -1)}
+                          disabled={(classLevels.priest ?? 1) <= 1}
+                          title="Decrease level"
+                        >
+                          -
+                        </Button>
+                        <input
+                          readOnly
+                          value={`Level ${classLevels.priest ?? 1}`}
+                          className="h-8 w-24 border-y border-input bg-background px-2 text-center text-sm font-semibold"
+                        />
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-8 w-8 rounded-l-none"
+                          onClick={() => adjustClassLevel("priest", 1)}
+                          disabled={(classLevels.priest ?? 1) >= 20}
+                          title="Increase level"
+                        >
+                          +
+                        </Button>
+                      </div>
                       <Button
+                        variant="ghost"
                         size="icon"
-                        variant="outline"
-                        className="h-8 w-8 rounded-r-none"
-                        onClick={() => adjustClassLevel("priest", -1)}
-                        disabled={(classLevels.priest ?? 1) <= 1}
-                        title="Decrease level"
+                        onClick={() => handleRemoveClass("priest")}
+                        aria-label="Remove priest class"
                       >
-                        -
-                      </Button>
-                      <input
-                        readOnly
-                        value={`Level ${classLevels.priest ?? 1}`}
-                        className="h-8 w-24 border-y border-input bg-background px-2 text-center text-sm font-semibold"
-                      />
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        className="h-8 w-8 rounded-l-none"
-                        onClick={() => adjustClassLevel("priest", 1)}
-                        disabled={(classLevels.priest ?? 1) >= 20}
-                        title="Increase level"
-                      >
-                        +
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveClass("priest")}
-                      aria-label="Remove priest class"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Major Spheres
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {priestMajorSpheres.length > 0
+                            ? `${priestMajorSpheres.length} selected`
+                            : "None selected"}
+                        </div>
+                        <ScrollArea className="h-40 rounded-sm border p-2">
+                          <div className="grid grid-cols-2 gap-2">
+                            {PRIEST_SPHERE_OPTIONS.map((sphere) => (
+                              <label
+                                key={`create-major-${sphere}`}
+                                className="flex items-center gap-2 text-sm"
+                              >
+                                <Checkbox
+                                  checked={priestMajorSpheres.includes(sphere)}
+                                  onCheckedChange={() =>
+                                    toggleSphere(sphere, "major")
+                                  }
+                                />
+                                <span>{sphere}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Minor Spheres (levels 1-3)
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {priestMinorSpheres.length > 0
+                            ? `${priestMinorSpheres.length} selected`
+                            : "None selected"}
+                        </div>
+                        <ScrollArea className="h-40 rounded-sm border p-2">
+                          <div className="grid grid-cols-2 gap-2">
+                            {PRIEST_SPHERE_OPTIONS.map((sphere) => (
+                              <label
+                                key={`create-minor-${sphere}`}
+                                className="flex items-center gap-2 text-sm"
+                              >
+                                <Checkbox
+                                  checked={priestMinorSpheres.includes(sphere)}
+                                  onCheckedChange={() =>
+                                    toggleSphere(sphere, "minor")
+                                  }
+                                />
+                                <span>{sphere}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

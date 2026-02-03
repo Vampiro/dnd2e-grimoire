@@ -49,6 +49,21 @@ export function PriestCastSpellsPage() {
     return <div>This character has no priest progression.</div>;
   }
 
+  const spellExplorerLink = (() => {
+    const params = new URLSearchParams();
+    params.set("priest", "1");
+    params.set("wizard", "0");
+    params.set("min", "0");
+    params.set("max", String(Math.min(9, Math.max(0, priest.level))));
+    if (priest.majorSpheres?.length) {
+      params.set("majorSpheres", priest.majorSpheres.join(","));
+    }
+    if (priest.minorSpheres?.length) {
+      params.set("minorSpheres", priest.minorSpheres.join(","));
+    }
+    return `${PageRoute.SPELLS}?${params.toString()}`;
+  })();
+
   const slotMap = getPriestProgressionSpellSlots(priest);
   const availableLevels = [1, 2, 3, 4, 5, 6, 7].filter(
     (lvl) => (slotMap[lvl] ?? 0) > 0,
@@ -150,6 +165,12 @@ export function PriestCastSpellsPage() {
                             className="rounded px-2 py-1 hover:bg-accent"
                           >
                             Prepare Spells
+                          </Link>
+                          <Link
+                            to={spellExplorerLink}
+                            className="rounded px-2 py-1 hover:bg-accent"
+                          >
+                            Castable Spells List
                           </Link>
                           <Link
                             to={PageRoute.PRIEST_SPELL_SLOTS(character.id)}
