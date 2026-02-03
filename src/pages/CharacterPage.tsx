@@ -124,6 +124,23 @@ export function CharacterPage() {
             />
             <div className="h-px w-full bg-border" />
             <PageLink
+              title="Castable Spells List"
+              description="Browse priest spells filtered to your level and sphere access."
+              href={`${PageRoute.SPELLS}?priest=1&wizard=0&min=0&max=${Math.min(
+                9,
+                Math.max(0, character.class.priest.level),
+              )}${
+                character.class.priest.majorSpheres?.length
+                  ? `&majorSpheres=${character.class.priest.majorSpheres.join(",")}`
+                  : ""
+              }${
+                character.class.priest.minorSpheres?.length
+                  ? `&minorSpheres=${character.class.priest.minorSpheres.join(",")}`
+                  : ""
+              }`}
+            />
+            <div className="h-px w-full bg-border" />
+            <PageLink
               title="Manage Spell Slots"
               description="Adjust slot modifiers and review base vs. modified slot tables."
               href={PageRoute.PRIEST_SPELL_SLOTS(character.id)}
