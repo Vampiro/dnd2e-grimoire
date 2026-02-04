@@ -8,7 +8,7 @@ import {
   userAtom,
   favoriteSpellIdsAtom,
 } from "./globalState";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
 import {
@@ -41,6 +41,7 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { subscribeToUserSettings } from "./firebase/userSettings";
 import { TestPage } from "./pages/TestPage";
 import { PageRoute } from "./pages/PageRoute";
+import { ArcaneLoader } from "./components/custom/ArcaneLoader";
 
 /** Root application component. */
 function App() {
@@ -49,6 +50,7 @@ function App() {
   const uiScale = useAtomValue(uiScaleAtom);
   const location = useLocation();
   const lastPathRef = useRef<string | null>(null);
+  const [userDataReady, setUserDataReady] = useState(false);
 
   useEffect(() => {
     const clamped = Math.min(1.5, Math.max(0.75, uiScale));
@@ -110,6 +112,7 @@ function App() {
     let unsubUserSettings: (() => void) | null = null;
 
     const unsub = onAuthStateChanged(auth, (u) => {
+      setUserDataReady(false);
       // update user atom with new user (or no user)
       store.set(userAtom, u);
 
@@ -124,9 +127,11 @@ function App() {
         store.set(uiScaleAtom, 1);
         store.set(spellNotesAtom, {});
         store.set(favoriteSpellIdsAtom, []);
+        setUserDataReady(true);
         return;
       }
 
+      let initializedSettings = false;
       unsubUserSettings = subscribeToUserSettings(u.uid, (settings) => {
         const next = settings.uiScale;
         if (typeof next === "number" && Number.isFinite(next)) {
@@ -136,6 +141,10 @@ function App() {
         }
         store.set(spellNotesAtom, settings.spellNotes ?? {});
         store.set(favoriteSpellIdsAtom, settings.favoriteSpellIds ?? []);
+        if (!initializedSettings) {
+          initializedSettings = true;
+          setUserDataReady(true);
+        }
       });
 
       try {
@@ -153,88 +162,98 @@ function App() {
     };
   }, []);
 
+  const isSpellDataLoading = !spellStatus.ready && !spellStatus.error;
+  const isUserDataLoading = !userDataReady;
+  const isAppLoading =
+    !spellStatus.error && (isSpellDataLoading || isUserDataLoading);
+  const loadingLabel = isSpellDataLoading
+    ? isUserDataLoading
+      ? "Loading spell and user data..."
+      : "Loading spell data..."
+    : "Loading user data...";
+
   return (
     <div>
       <Toaster />
       <Navbar />
 
       <main className="mx-auto w-full max-w-6xl mt-4">
-        {spellStatus.loading && !spellStatus.error && (
-          <div className="py-6 text-sm text-muted-foreground">
-            Loading spell data...
-          </div>
+        {isAppLoading && (
+          <ArcaneLoader label={loadingLabel} />
         )}
         {spellStatus.error && (
           <div className="py-6 text-sm text-destructive">
             {spellStatus.error}
           </div>
         )}
-        <Routes>
-          <Route path={PageRoute.TEST} element={<TestPage />} />
-          <Route path={PageRoute.SPELLS} element={<SpellExplorerPage />} />
-          <Route
-            path={PageRoute.SPELL_VIEW(":spellId")}
-            element={<SpellViewPage />}
-          />
-          {user && (
-            <>
-              <Route
-                path={PageRoute.CHARACTERS_NEW}
-                element={<CreateCharacterPage />}
-              />
-              <Route
-                path={PageRoute.WIZARD_SPELLBOOKS_NEW(":characterId")}
-                element={<CreateSpellbookPage />}
-              />
-              <Route
-                path={PageRoute.WIZARD_SPELLBOOKS_EDIT(
-                  ":characterId",
-                  ":spellbookId",
-                )}
-                element={<EditSpellbookPage />}
-              />
-              <Route
-                path={PageRoute.WIZARD_KNOWN_SPELLS(":characterId")}
-                element={<WizardKnownSpellsPage />}
-              />
-              <Route path="/characters/:id" element={<CharacterPage />} />
-              <Route
-                path="/characters/:characterId/edit"
-                element={<CharacterEditPage />}
-              />
-              <Route
-                path="/characters/:characterId/wizard/cast"
-                element={<WizardCastSpellsPage />}
-              />
-              <Route
-                path="/characters/:characterId/wizard/prepare"
-                element={<WizardPrepareSpellsPage />}
-              />
-              <Route
-                path="/characters/:characterId/wizard/edit"
-                element={<WizardSpellSlotsPage />}
-              />
-              <Route
-                path="/characters/:characterId/priest/cast"
-                element={<PriestCastSpellsPage />}
-              />
-              <Route
-                path="/characters/:characterId/priest/prepare"
-                element={<PriestPrepareSpellsPage />}
-              />
-              <Route
-                path="/characters/:characterId/priest/edit"
-                element={<PriestSpellSlotsPage />}
-              />
-              <Route
-                path="/characters/:characterId/wizard/spellbooks"
-                element={<WizardSpellbooksPage />}
-              />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/characters" element={<CharactersPage />} />
-            </>
-          )}
-        </Routes>
+        {spellStatus.ready && userDataReady && !spellStatus.error && (
+          <Routes>
+            <Route path={PageRoute.TEST} element={<TestPage />} />
+            <Route path={PageRoute.SPELLS} element={<SpellExplorerPage />} />
+            <Route
+              path={PageRoute.SPELL_VIEW(":spellId")}
+              element={<SpellViewPage />}
+            />
+            {user && (
+              <>
+                <Route
+                  path={PageRoute.CHARACTERS_NEW}
+                  element={<CreateCharacterPage />}
+                />
+                <Route
+                  path={PageRoute.WIZARD_SPELLBOOKS_NEW(":characterId")}
+                  element={<CreateSpellbookPage />}
+                />
+                <Route
+                  path={PageRoute.WIZARD_SPELLBOOKS_EDIT(
+                    ":characterId",
+                    ":spellbookId",
+                  )}
+                  element={<EditSpellbookPage />}
+                />
+                <Route
+                  path={PageRoute.WIZARD_KNOWN_SPELLS(":characterId")}
+                  element={<WizardKnownSpellsPage />}
+                />
+                <Route path="/characters/:id" element={<CharacterPage />} />
+                <Route
+                  path="/characters/:characterId/edit"
+                  element={<CharacterEditPage />}
+                />
+                <Route
+                  path="/characters/:characterId/wizard/cast"
+                  element={<WizardCastSpellsPage />}
+                />
+                <Route
+                  path="/characters/:characterId/wizard/prepare"
+                  element={<WizardPrepareSpellsPage />}
+                />
+                <Route
+                  path="/characters/:characterId/wizard/edit"
+                  element={<WizardSpellSlotsPage />}
+                />
+                <Route
+                  path="/characters/:characterId/priest/cast"
+                  element={<PriestCastSpellsPage />}
+                />
+                <Route
+                  path="/characters/:characterId/priest/prepare"
+                  element={<PriestPrepareSpellsPage />}
+                />
+                <Route
+                  path="/characters/:characterId/priest/edit"
+                  element={<PriestSpellSlotsPage />}
+                />
+                <Route
+                  path="/characters/:characterId/wizard/spellbooks"
+                  element={<WizardSpellbooksPage />}
+                />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/characters" element={<CharactersPage />} />
+              </>
+            )}
+          </Routes>
+        )}
       </main>
     </div>
   );

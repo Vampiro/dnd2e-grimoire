@@ -420,10 +420,6 @@ export function SpellExplorerPage() {
     }
   };
 
-  if (spellStatus.loading && !spellStatus.ready) {
-    return <div>Loading spell data...</div>;
-  }
-
   if (spellStatus.error) {
     return <div className="text-sm text-destructive">{spellStatus.error}</div>;
   }
