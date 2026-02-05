@@ -20,7 +20,7 @@ export function HomePage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button asChild>
+          <Button asChild variant="outline">
             <Link to={PageRoute.SPELLS}>Open Spell Explorer</Link>
           </Button>
           {user && (
