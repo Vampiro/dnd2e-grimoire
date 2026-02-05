@@ -16,7 +16,7 @@ import {
   startCharactersRealtimeSync,
   stopCharactersRealtimeSync,
 } from "./firebase/characters";
-import { Route, Routes } from "react-router-dom";
+import { Outlet, Route, Routes, useNavigate } from "react-router-dom";
 import { CharactersPage } from "./pages/CharactersPage";
 import { CreateCharacterPage } from "./pages/CreateCharacterPage";
 import { CharacterPage } from "./pages/CharacterPage";
@@ -44,6 +44,7 @@ import { PageRoute } from "./pages/PageRoute";
 import { ArcaneLoader } from "./components/custom/ArcaneLoader";
 import { HomePage } from "./pages/HomePage";
 import { AboutPage } from "./pages/AboutPage";
+import { toast } from "sonner";
 
 /** Root application component. */
 function App() {
@@ -176,69 +177,80 @@ function App() {
               path={PageRoute.SPELL_VIEW(":spellId")}
               element={<SpellViewPage />}
             />
-            {user && (
-              <>
-                <Route
-                  path={PageRoute.CHARACTERS_NEW}
-                  element={<CreateCharacterPage />}
-                />
-                <Route
-                  path={PageRoute.WIZARD_SPELLBOOKS_NEW(":characterId")}
-                  element={<CreateSpellbookPage />}
-                />
-                <Route
-                  path={PageRoute.WIZARD_SPELLBOOKS_EDIT(
-                    ":characterId",
-                    ":spellbookId",
-                  )}
-                  element={<EditSpellbookPage />}
-                />
-                <Route
-                  path={PageRoute.WIZARD_KNOWN_SPELLS(":characterId")}
-                  element={<WizardKnownSpellsPage />}
-                />
-                <Route path="/characters/:id" element={<CharacterPage />} />
-                <Route
-                  path="/characters/:characterId/edit"
-                  element={<CharacterEditPage />}
-                />
-                <Route
-                  path="/characters/:characterId/wizard/cast"
-                  element={<WizardCastSpellsPage />}
-                />
-                <Route
-                  path="/characters/:characterId/wizard/prepare"
-                  element={<WizardPrepareSpellsPage />}
-                />
-                <Route
-                  path="/characters/:characterId/wizard/edit"
-                  element={<WizardSpellSlotsPage />}
-                />
-                <Route
-                  path="/characters/:characterId/priest/cast"
-                  element={<PriestCastSpellsPage />}
-                />
-                <Route
-                  path="/characters/:characterId/priest/prepare"
-                  element={<PriestPrepareSpellsPage />}
-                />
-                <Route
-                  path="/characters/:characterId/priest/edit"
-                  element={<PriestSpellSlotsPage />}
-                />
-                <Route
-                  path="/characters/:characterId/wizard/spellbooks"
-                  element={<WizardSpellbooksPage />}
-                />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/characters" element={<CharactersPage />} />
-              </>
-            )}
+            <Route element={<RequireAuth user={user} />}>
+              <Route
+                path={PageRoute.CHARACTERS_NEW}
+                element={<CreateCharacterPage />}
+              />
+              <Route
+                path={PageRoute.WIZARD_SPELLBOOKS_NEW(":characterId")}
+                element={<CreateSpellbookPage />}
+              />
+              <Route
+                path={PageRoute.WIZARD_SPELLBOOKS_EDIT(
+                  ":characterId",
+                  ":spellbookId",
+                )}
+                element={<EditSpellbookPage />}
+              />
+              <Route
+                path={PageRoute.WIZARD_KNOWN_SPELLS(":characterId")}
+                element={<WizardKnownSpellsPage />}
+              />
+              <Route path="/characters/:id" element={<CharacterPage />} />
+              <Route
+                path="/characters/:characterId/edit"
+                element={<CharacterEditPage />}
+              />
+              <Route
+                path="/characters/:characterId/wizard/cast"
+                element={<WizardCastSpellsPage />}
+              />
+              <Route
+                path="/characters/:characterId/wizard/prepare"
+                element={<WizardPrepareSpellsPage />}
+              />
+              <Route
+                path="/characters/:characterId/wizard/edit"
+                element={<WizardSpellSlotsPage />}
+              />
+              <Route
+                path="/characters/:characterId/priest/cast"
+                element={<PriestCastSpellsPage />}
+              />
+              <Route
+                path="/characters/:characterId/priest/prepare"
+                element={<PriestPrepareSpellsPage />}
+              />
+              <Route
+                path="/characters/:characterId/priest/edit"
+                element={<PriestSpellSlotsPage />}
+              />
+              <Route
+                path="/characters/:characterId/wizard/spellbooks"
+                element={<WizardSpellbooksPage />}
+              />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/characters" element={<CharactersPage />} />
+            </Route>
           </Routes>
         )}
       </main>
     </div>
   );
+}
+
+function RequireAuth({ user }: { user: unknown | null }) {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) return;
+    toast("Please sign in to access that page.", { duration: 2500 });
+    navigate(PageRoute.HOME, { replace: true });
+  }, [navigate, user]);
+
+  if (!user) return null;
+  return <Outlet />;
 }
 
 export default App;
