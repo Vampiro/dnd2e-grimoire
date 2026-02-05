@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAtomValue } from "jotai";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,9 +26,7 @@ export function SpellViewPage() {
   const spellStatus = useAtomValue(spellDataStatusAtom);
   const spellNotes = useAtomValue(spellNotesAtom);
   const favoriteSpellIds = useAtomValue(favoriteSpellIdsAtom);
-  const location = useLocation();
   const navigate = useNavigate();
-  const [backTarget, setBackTarget] = useState<string | null>(null);
   const [favoriteSaving, setFavoriteSaving] = useState(false);
 
   const spell = useMemo(() => {
@@ -54,16 +52,6 @@ export function SpellViewPage() {
   useEffect(() => {
     setIsEditingNote(false);
   }, [spell?.id]);
-
-  useEffect(() => {
-    const currentPath = `${location.pathname}${location.search}`;
-    const stored = sessionStorage.getItem("lastInternalPath");
-    if (stored && stored !== currentPath) {
-      setBackTarget(stored);
-    } else {
-      setBackTarget(null);
-    }
-  }, [location.pathname, location.search]);
 
   const handleToggleFavorite = async () => {
     if (!user || !spell || favoriteSaving) return;
@@ -148,16 +136,14 @@ export function SpellViewPage() {
               {hasNote ? "Edit Note" : "Add Note"}
             </Button>
           )}
-          {backTarget && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => navigate(backTarget)}
-            >
-              Back
-            </Button>
-          )}
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => navigate(-1)}
+          >
+            Back
+          </Button>
         </div>
       </div>
 

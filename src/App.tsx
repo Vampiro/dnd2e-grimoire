@@ -8,7 +8,7 @@ import {
   userAtom,
   favoriteSpellIdsAtom,
 } from "./globalState";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
 import {
@@ -16,7 +16,7 @@ import {
   startCharactersRealtimeSync,
   stopCharactersRealtimeSync,
 } from "./firebase/characters";
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { CharactersPage } from "./pages/CharactersPage";
 import { CreateCharacterPage } from "./pages/CreateCharacterPage";
 import { CharacterPage } from "./pages/CharacterPage";
@@ -50,32 +50,12 @@ function App() {
   const user = useAtomValue(userAtom);
   const spellStatus = useAtomValue(spellDataStatusAtom);
   const uiScale = useAtomValue(uiScaleAtom);
-  const location = useLocation();
-  const lastPathRef = useRef<string | null>(null);
   const [userDataReady, setUserDataReady] = useState(false);
 
   useEffect(() => {
     const clamped = Math.min(1.5, Math.max(0.75, uiScale));
     document.documentElement.style.fontSize = `${clamped * 100}%`;
   }, [uiScale]);
-
-  useEffect(() => {
-    if (
-      document.referrer &&
-      !document.referrer.startsWith(window.location.origin)
-    ) {
-      sessionStorage.removeItem("lastInternalPath");
-    }
-  }, []);
-
-  useEffect(() => {
-    const currentPath = `${location.pathname}${location.search}`;
-    const previousPath = lastPathRef.current;
-    if (previousPath && previousPath !== currentPath) {
-      sessionStorage.setItem("lastInternalPath", previousPath);
-    }
-    lastPathRef.current = currentPath;
-  }, [location.pathname, location.search]);
 
   useEffect(() => {
     let cancelled = false;
@@ -180,9 +160,7 @@ function App() {
       <Navbar />
 
       <main className="mx-auto w-full max-w-6xl mt-4">
-        {isAppLoading && (
-          <ArcaneLoader label={loadingLabel} />
-        )}
+        {isAppLoading && <ArcaneLoader label={loadingLabel} />}
         {spellStatus.error && (
           <div className="py-6 text-sm text-destructive">
             {spellStatus.error}
