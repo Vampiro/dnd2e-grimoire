@@ -89,7 +89,8 @@ export function CharacterPage() {
             <div className="h-px w-full bg-border" />
             <PageLink
               title="Castable Spells List"
-              description="Browse priest spells in the Spell Explorer filtered to your level and sphere access."
+              description="Browse priest spells in the Spell Explorer filtered to your level and sphere access.
+              Favorite spells to be able to filter on them when preparing spells."
               href={`${PageRoute.SPELLS}?priest=1&wizard=0&min=0&max=${Math.min(
                 9,
                 Math.max(0, character.class.priest.level),
@@ -130,19 +131,22 @@ export function CharacterPage() {
             <div className="h-px w-full bg-border" />
             <PageLink
               title="Prepare Spells"
-              description="Pick which spells are prepared in each slot, by level."
+              description="Pick which spells are prepared in each slot, by level.
+              The spells you can add are filtered based on your known spells and active spellbooks."
               href={PageRoute.WIZARD_PREPARE(character.id)}
             />
             <div className="h-px w-full bg-border" />
             <PageLink
               title="Spellbooks"
-              description="Manage learned spells by spellbook, add/remove spells, and organize pages."
+              description="Manage learned spells by spellbook, add/remove spells, and organize pages.
+              You can also temporarily disable spellbooks so that its spells don't show up when preparing."
               href={PageRoute.WIZARD_SPELLBOOKS(character.id)}
             />
             <div className="h-px w-full bg-border" />
             <PageLink
               title="Known Spells"
-              description="Track and review your known spells by level."
+              description="Track and review your known spells by level.
+              These are spells your wizard has learned, not necessarily those that are in your spellbooks or prepared."
               href={PageRoute.WIZARD_KNOWN_SPELLS(character.id)}
             />
             <div className="h-px w-full bg-border" />

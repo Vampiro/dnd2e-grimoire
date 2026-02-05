@@ -79,38 +79,6 @@ export function HomePage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">Wizard Workflow</h2>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">End-to-End Wizard Flow</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <ol className="list-decimal space-y-2 pl-5">
-              <li>
-                Build spellbooks and add spells, tracking page limits and book
-                organization.
-              </li>
-              <li>
-                Mark known spells so preparation and casting tools reflect the
-                wizard&apos;s actual repertoire.
-              </li>
-              <li>
-                Manage spell slots to capture daily capacity and any modifiers.
-              </li>
-              <li>
-                Prepare spells from known spells after resting, filling slots by
-                level.
-              </li>
-              <li>
-                Cast spells to track remaining prepared slots during the
-                adventure day.
-              </li>
-            </ol>
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="space-y-3">
         <h2 className="text-xl font-semibold">Priest Workflow</h2>
         <Card>
           <CardHeader>
@@ -127,7 +95,9 @@ export function HomePage() {
               </li>
               <li>
                 Use the Castable Spells List to view only spells that match the
-                priest&apos;s spheres and level.
+                priest&apos;s spheres and level. You can favorite spells from
+                the Spell Explorer and filter on them when picking spells to
+                prepare.
               </li>
               <li>
                 Prepare spells from eligible lists after resting, filling slots
@@ -135,6 +105,38 @@ export function HomePage() {
               </li>
               <li>
                 Cast spells to track remaining prepared slots during the day.
+              </li>
+            </ol>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-xl font-semibold">Wizard Workflow</h2>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">End-to-End Wizard Flow</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <ol className="list-decimal space-y-2 pl-5">
+              <li>
+                Manage spell slots to capture daily capacity and any modifiers.
+              </li>
+              <li>
+                Build spellbooks and add spells, tracking page limits and book
+                organization.
+              </li>
+              <li>
+                Mark known spells so preparation and casting tools reflect the
+                wizard&apos;s actual repertoire.
+              </li>
+              <li>
+                Prepare spells from known spells after resting, filling slots by
+                level.
+              </li>
+              <li>
+                Cast spells to track remaining prepared slots during the
+                adventure day.
               </li>
             </ol>
           </CardContent>
