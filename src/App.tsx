@@ -42,6 +42,7 @@ import { subscribeToUserSettings } from "./firebase/userSettings";
 import { TestPage } from "./pages/TestPage";
 import { PageRoute } from "./pages/PageRoute";
 import { ArcaneLoader } from "./components/custom/ArcaneLoader";
+import { HomePage } from "./pages/HomePage";
 
 /** Root application component. */
 function App() {
@@ -188,6 +189,7 @@ function App() {
         )}
         {spellStatus.ready && userDataReady && !spellStatus.error && (
           <Routes>
+            <Route path={PageRoute.HOME} element={<HomePage />} />
             <Route path={PageRoute.TEST} element={<TestPage />} />
             <Route path={PageRoute.SPELLS} element={<SpellExplorerPage />} />
             <Route

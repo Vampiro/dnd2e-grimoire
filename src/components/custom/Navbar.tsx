@@ -655,6 +655,24 @@ export function Navbar() {
                     <div className="flex flex-col gap-1">
                       <DrawerClose asChild>
                         <Link
+                          to={PageRoute.HOME}
+                          className={`relative rounded-md pl-3 pr-2 py-1 text-sm hover:bg-accent ${
+                            isActivePath(PageRoute.HOME, true)
+                              ? "font-semibold bg-accent text-foreground"
+                              : ""
+                          }`}
+                        >
+                          {isActivePath(PageRoute.HOME, true) && (
+                            <span
+                              className="absolute -left-1.5 top-1 bottom-1 w-0.5 rounded-full bg-white"
+                              aria-hidden
+                            />
+                          )}
+                          Home
+                        </Link>
+                      </DrawerClose>
+                      <DrawerClose asChild>
+                        <Link
                           to={PageRoute.CHARACTERS}
                           className={`relative rounded-md pl-3 pr-2 py-1 text-sm hover:bg-accent ${
                             isActivePath(PageRoute.CHARACTERS, true)
@@ -708,6 +726,24 @@ export function Navbar() {
                     </button>
                     <div className="h-px bg-border" />
                     <div className="flex flex-col gap-1">
+                      <DrawerClose asChild>
+                        <Link
+                          to={PageRoute.HOME}
+                          className={`relative rounded-md pl-3 pr-2 py-1 text-sm hover:bg-accent ${
+                            isActivePath(PageRoute.HOME, true)
+                              ? "font-semibold bg-accent text-foreground"
+                              : ""
+                          }`}
+                        >
+                          {isActivePath(PageRoute.HOME, true) && (
+                            <span
+                              className="absolute -left-1.5 top-1 bottom-1 w-0.5 rounded-full bg-white"
+                              aria-hidden
+                            />
+                          )}
+                          Home
+                        </Link>
+                      </DrawerClose>
                       <DrawerClose asChild>
                         <Link
                           to={PageRoute.SPELLS}
