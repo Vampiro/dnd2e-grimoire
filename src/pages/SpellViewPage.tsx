@@ -52,6 +52,10 @@ export function SpellViewPage() {
   }, [canEditNotes, isEditingNote]);
 
   useEffect(() => {
+    setIsEditingNote(false);
+  }, [spell?.id]);
+
+  useEffect(() => {
     const currentPath = `${location.pathname}${location.search}`;
     const stored = sessionStorage.getItem("lastInternalPath");
     if (stored && stored !== currentPath) {
@@ -99,38 +103,41 @@ export function SpellViewPage() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold">{spell.name}</h1>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold leading-tight">
+            <span>{spell.name}</span>
             {user && (
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                onClick={handleToggleFavorite}
-                disabled={favoriteSaving}
-                aria-label={
-                  isFavorite ? "Remove from favorites" : "Add to favorites"
-                }
-                className="h-8 w-8"
-              >
-                <Star
-                  className={cn(
-                    "h-4 w-4",
-                    isFavorite
-                      ? "text-yellow-500 fill-yellow-500"
-                      : "text-muted-foreground",
-                  )}
-                />
-              </Button>
+              <>
+                {"\u00A0"}
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  onClick={handleToggleFavorite}
+                  disabled={favoriteSaving}
+                  aria-label={
+                    isFavorite ? "Remove from favorites" : "Add to favorites"
+                  }
+                  className="h-7 w-7 inline-flex align-baseline -translate-y-px"
+                >
+                  <Star
+                    className={cn(
+                      "h-4 w-4",
+                      isFavorite
+                        ? "text-yellow-500 fill-yellow-500"
+                        : "text-muted-foreground",
+                    )}
+                  />
+                </Button>
+              </>
             )}
-          </div>
+          </h1>
           <p className="text-muted-foreground text-sm capitalize">
             {spell.spellClass} Spell Level: {spell.level}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
           {canEditNotes && !isEditingNote && (
             <Button
               type="button"
