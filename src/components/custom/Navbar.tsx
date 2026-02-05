@@ -238,6 +238,7 @@ export function Navbar() {
           open={drawerOpen}
           onOpenChange={setDrawerOpen}
           direction="left"
+          handleOnly
           autoFocus
         >
           <DrawerTrigger asChild>
