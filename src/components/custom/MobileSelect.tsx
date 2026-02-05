@@ -10,9 +10,11 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Dialog, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogTitle } from "@/components/ui/dialog";
 import { MobileFullScreenDialogContent } from "./MobileFullScreenDialogContent";
 import { X } from "lucide-react";
+import { Select } from "../ui/select";
+import { Description } from "@radix-ui/react-dialog";
 
 type MobileSelectProps<T> = {
   open: boolean;
@@ -185,6 +187,8 @@ export function MobileSelect<T>({
           }
         }}
       >
+        <DialogTitle className="hidden">Select</DialogTitle>
+        <Description className="hidden">Select</Description>
         <Command
           shouldFilter={false}
           className="flex h-full flex-col bg-background"

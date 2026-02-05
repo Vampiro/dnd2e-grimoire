@@ -18,7 +18,7 @@ import { useAtomValue } from "jotai";
 import { Menu, User, X } from "lucide-react";
 import { KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useMatch, useNavigate } from "react-router-dom";
-import { DndWikiSearch } from "./NavbarSearch";
+import { NavbarSearch } from "./NavbarSearch";
 import {
   Select,
   SelectContent,
@@ -41,7 +41,6 @@ export function Navbar() {
   const closeMenu = () => setOpen(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchOpen, setSearchOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [persistedCharacterId, setPersistedCharacterId] = useState<
     string | null
@@ -202,8 +201,7 @@ export function Navbar() {
             .map((item) => item.trim())
             .filter(Boolean)
         : [];
-    const normalizeSet = (items: string[]) =>
-      Array.from(new Set(items)).sort();
+    const normalizeSet = (items: string[]) => Array.from(new Set(items)).sort();
     const listsEqual = (a: string[], b: string[]) =>
       a.length === b.length && a.every((value, index) => value === b[index]);
 
@@ -216,11 +214,7 @@ export function Navbar() {
     if (!listsEqual(expectedMinor, actualMinor)) return false;
 
     return true;
-  }, [
-    location.pathname,
-    location.search,
-    selectedCharacter?.class.priest,
-  ]);
+  }, [location.pathname, location.search, selectedCharacter?.class.priest]);
 
   /** Returns true when the current location matches the given path/prefix. */
   const isActivePath = (path: string | undefined, exact = false) => {
@@ -446,9 +440,7 @@ export function Navbar() {
                               }`}
                             >
                               {isActivePath(
-                                PageRoute.PRIEST_PREPARE(
-                                  selectedCharacter.id,
-                                ),
+                                PageRoute.PRIEST_PREPARE(selectedCharacter.id),
                               ) && (
                                 <span
                                   className="absolute -left-1.5 top-1 bottom-1 w-0.5 rounded-full bg-white"
@@ -554,9 +546,7 @@ export function Navbar() {
                               }`}
                             >
                               {isActivePath(
-                                PageRoute.WIZARD_PREPARE(
-                                  selectedCharacter.id,
-                                ),
+                                PageRoute.WIZARD_PREPARE(selectedCharacter.id),
                               ) && (
                                 <span
                                   className="absolute -left-1.5 top-1 bottom-1 w-0.5 rounded-full bg-white"
@@ -777,10 +767,7 @@ export function Navbar() {
       {/* Right side icons */}
       <div className="flex items-center">
         {/* Account menu */}
-        <DndWikiSearch
-          open={searchOpen}
-          onOpenChange={(open) => setSearchOpen(open)}
-        />
+        <NavbarSearch />
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <button
@@ -802,7 +789,7 @@ export function Navbar() {
             </button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-48 p-2">
-                <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1">
               {user && (
                 <>
                   <Link

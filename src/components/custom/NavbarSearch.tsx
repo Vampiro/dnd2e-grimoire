@@ -1,21 +1,11 @@
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
 import { Search } from "lucide-react";
 import { SelectWithSearch } from "./SelectWithSearch";
 import { useAtomValue } from "jotai";
 import { priestSpellsAtom, wizardSpellsAtom } from "@/globalState";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageRoute } from "@/pages/PageRoute";
 import type { Spell } from "@/types/Spell";
-
-interface DndWikiSearchProps {
-  open: boolean;
-  onOpenChange(open: boolean): void;
-}
 
 type SpellSearchEntry = {
   id: string;
@@ -24,53 +14,11 @@ type SpellSearchEntry = {
   spell: Spell;
 };
 
-function useIsMobile(): boolean {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(max-width: 768px)");
-    const update = () =>
-      setIsMobile(mq.matches || navigator.maxTouchPoints > 0);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-
-  return isMobile;
-}
-
-function useIsLandscape(): boolean {
-  const [isLandscape, setIsLandscape] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(orientation: landscape)");
-    const update = () => setIsLandscape(mq.matches);
-    update();
-    if (mq.addEventListener) {
-      mq.addEventListener("change", update);
-    } else {
-      mq.addListener(update);
-    }
-    return () => {
-      if (mq.removeEventListener) {
-        mq.removeEventListener("change", update);
-      } else {
-        mq.removeListener(update);
-      }
-    };
-  }, []);
-
-  return isLandscape;
-}
-
-export function DndWikiSearch(props: DndWikiSearchProps) {
+export function NavbarSearch() {
   const wizardSpells = useAtomValue(wizardSpellsAtom);
   const priestSpells = useAtomValue(priestSpellsAtom);
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  const isLandscape = useIsLandscape();
+  const [open, setOpen] = useState(false);
 
   const items = useMemo((): SpellSearchEntry[] => {
     const wizardEntries = wizardSpells.map((spell) => ({
@@ -94,11 +42,13 @@ export function DndWikiSearch(props: DndWikiSearchProps) {
 
   const handleSelect = (entry?: SpellSearchEntry) => {
     if (!entry) return;
-    props.onOpenChange(false);
-    navigate(PageRoute.SPELL_VIEW(entry.spell.id));
+    setOpen(false);
+    setTimeout(() => {
+      navigate(PageRoute.SPELL_VIEW(entry.spell.id));
+    }, 300);
   };
 
-  const searchContent = (
+  return (
     <SelectWithSearch
       items={items}
       getLabel={(item) => item.name}
@@ -118,43 +68,17 @@ export function DndWikiSearch(props: DndWikiSearchProps) {
       emptyText="No spells found."
       title="Search Spells"
       limit={200}
-      contentOnly
-      open={props.open}
-      onOpenChange={props.onOpenChange}
-      autoFocus={isMobile && !isLandscape}
-      preventAutoFocus={isMobile && isLandscape}
-    />
-  );
-
-  if (isMobile) {
-    return (
-      <>
+      open={open}
+      onOpenChange={setOpen}
+      renderTrigger={() => (
         <button
           type="button"
           className="p-2 rounded-full hover:bg-accent cursor-pointer"
-          onClick={() => props.onOpenChange(true)}
           aria-label="Search spells"
         >
           <Search className="h-5 w-5" />
         </button>
-        {searchContent}
-      </>
-    );
-  }
-
-  return (
-    <Popover open={props.open} onOpenChange={props.onOpenChange}>
-      <PopoverTrigger className="p-2 rounded-full hover:bg-accent cursor-pointer">
-        <Search className="h-5 w-5" onClick={() => props.onOpenChange(true)} />
-      </PopoverTrigger>
-
-      <PopoverContent
-        align="end"
-        sideOffset={8}
-        className="w-[500px] max-w-[90vw] p-0"
-      >
-        {searchContent}
-      </PopoverContent>
-    </Popover>
+      )}
+    />
   );
 }
