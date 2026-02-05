@@ -802,26 +802,26 @@ export function Navbar() {
           </PopoverTrigger>
           <PopoverContent align="end" className="w-48 p-2">
                 <div className="flex flex-col gap-1">
-                  {user && (
-                    <>
-                      <Link
-                        to={PageRoute.SETTINGS}
-                        className="px-2 py-2 rounded hover:bg-accent cursor-pointer"
-                        onClick={closeMenu}
-                      >
-                        Settings
-                      </Link>
-                      <Link
-                        to={PageRoute.ABOUT}
-                        className="px-2 py-2 rounded hover:bg-accent cursor-pointer"
-                        onClick={closeMenu}
-                      >
-                        About
-                      </Link>
-                      <button
-                        className="text-left px-2 py-2 rounded hover:bg-accent cursor-pointer"
-                        onClick={() => {
-                          closeMenu();
+              {user && (
+                <>
+                  <Link
+                    to={PageRoute.SETTINGS}
+                    className="px-2 py-2 rounded hover:bg-accent cursor-pointer"
+                    onClick={closeMenu}
+                  >
+                    Settings
+                  </Link>
+                  <Link
+                    to={PageRoute.ABOUT}
+                    className="px-2 py-2 rounded hover:bg-accent cursor-pointer"
+                    onClick={closeMenu}
+                  >
+                    About
+                  </Link>
+                  <button
+                    className="text-left px-2 py-2 rounded hover:bg-accent cursor-pointer"
+                    onClick={() => {
+                      closeMenu();
                       logout();
                       navigate(PageRoute.HOME);
                     }}
@@ -832,16 +832,25 @@ export function Navbar() {
               )}
 
               {!user && (
-                <button
-                  className="text-left px-2 py-2 rounded hover:bg-accent cursor-pointer"
-                  onClick={async () => {
-                    closeMenu();
-                    await signInWithGoogle();
-                    navigate(PageRoute.CHARACTERS);
-                  }}
-                >
-                  Sign in with Google
-                </button>
+                <>
+                  <Link
+                    to={PageRoute.ABOUT}
+                    className="px-2 py-2 rounded hover:bg-accent cursor-pointer"
+                    onClick={closeMenu}
+                  >
+                    About
+                  </Link>
+                  <button
+                    className="text-left px-2 py-2 rounded hover:bg-accent cursor-pointer"
+                    onClick={async () => {
+                      closeMenu();
+                      await signInWithGoogle();
+                      navigate(PageRoute.CHARACTERS);
+                    }}
+                  >
+                    Sign in with Google
+                  </button>
+                </>
               )}
             </div>
           </PopoverContent>
