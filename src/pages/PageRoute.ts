@@ -9,6 +9,7 @@ export const PageRoute = {
   CHARACTERS: "/characters",
   CHARACTERS_NEW: "/characters/new",
   SETTINGS: "/settings",
+  ABOUT: "/about",
   TEST: "/test",
   SPELLS: "/spells",
   /** Character overview page. */

@@ -251,11 +251,13 @@ export function Navbar() {
               <Menu className="h-5 w-5" />
             </button>
           </DrawerTrigger>
-          <img
-            src={scrollQuillNoBgSrc}
-            alt="Grimoire scroll"
-            className="h-6 w-6 object-contain"
-          />
+          <Link to={PageRoute.HOME} aria-label="Go to Home">
+            <img
+              src={scrollQuillNoBgSrc}
+              alt="Grimoire scroll"
+              className="h-6 w-6 object-contain"
+            />
+          </Link>
           {user && selectedCharacter && (
             <div
               className="text-lg font-semibold"
@@ -799,20 +801,27 @@ export function Navbar() {
             </button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-48 p-2">
-            <div className="flex flex-col gap-1">
-              {user && (
-                <>
-                  <Link
-                    to={PageRoute.SETTINGS}
-                    className="px-2 py-2 rounded hover:bg-accent cursor-pointer"
-                    onClick={closeMenu}
-                  >
-                    Settings
-                  </Link>
-                  <button
-                    className="text-left px-2 py-2 rounded hover:bg-accent cursor-pointer"
-                    onClick={() => {
-                      closeMenu();
+                <div className="flex flex-col gap-1">
+                  {user && (
+                    <>
+                      <Link
+                        to={PageRoute.SETTINGS}
+                        className="px-2 py-2 rounded hover:bg-accent cursor-pointer"
+                        onClick={closeMenu}
+                      >
+                        Settings
+                      </Link>
+                      <Link
+                        to={PageRoute.ABOUT}
+                        className="px-2 py-2 rounded hover:bg-accent cursor-pointer"
+                        onClick={closeMenu}
+                      >
+                        About
+                      </Link>
+                      <button
+                        className="text-left px-2 py-2 rounded hover:bg-accent cursor-pointer"
+                        onClick={() => {
+                          closeMenu();
                       logout();
                       navigate(PageRoute.HOME);
                     }}

@@ -43,6 +43,7 @@ import { TestPage } from "./pages/TestPage";
 import { PageRoute } from "./pages/PageRoute";
 import { ArcaneLoader } from "./components/custom/ArcaneLoader";
 import { HomePage } from "./pages/HomePage";
+import { AboutPage } from "./pages/AboutPage";
 
 /** Root application component. */
 function App() {
@@ -190,6 +191,7 @@ function App() {
         {spellStatus.ready && userDataReady && !spellStatus.error && (
           <Routes>
             <Route path={PageRoute.HOME} element={<HomePage />} />
+            <Route path={PageRoute.ABOUT} element={<AboutPage />} />
             <Route path={PageRoute.TEST} element={<TestPage />} />
             <Route path={PageRoute.SPELLS} element={<SpellExplorerPage />} />
             <Route

@@ -38,6 +38,6 @@ This was built for my own personal use, though you're welcome to use it. If you 
 - Jotai
 - shadcn/ui
 
-## Spell Data Source
+## Spell Descriptions
 
-The spell descriptions, and only the spell descriptions, are sourced from the [AD&D 2e Wiki](https://adnd2e.fandom.com/wiki/Advanced_Dungeons_%26_Dragons_2nd_Edition_Wiki) and are licensed [CC BY-SA](https://www.fandom.com/licensing). Spell page data was pulled down and parsed from MediaWiki markup into JSON and HTML. Hopefully not too many mistakes were made in the parsing! Definitely thankful to the folks there who have contributed so much to that Wiki. I fixed what I found while making my mini-project under the alias [CheetahGoesMeow](https://adnd2e.fandom.com/wiki/User:CheetahGoesMeow).
+The spell descriptions were sourced from the [AD&D 2e Wiki](https://adnd2e.fandom.com/wiki/Advanced_Dungeons_%26_Dragons_2nd_Edition_Wiki). The descriptions are licensed [CC BY-SA](https://www.fandom.com/licensing). Spells were pulled down and parsed from MediaWiki markup into JSON and HTML. Hopefully not too many mistakes were made in the parsing/transforms! Definitely thankful to the folks who have contributed so much to that Wiki. As I went, I tried to fix whatever small issues with spells I found under the alias [CheetahGoesMeow](https://adnd2e.fandom.com/wiki/User:CheetahGoesMeow).
