@@ -2,6 +2,7 @@ import { useId, useState, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { addWizardSpellbook } from "@/firebase/characters";
 import { useCharacterById } from "@/hooks/useCharacterById";
 import { PageRoute } from "./PageRoute";
@@ -74,12 +75,11 @@ export function CreateSpellbookPage() {
               <label className="text-sm font-medium" htmlFor={nameId}>
                 Name
               </label>
-              <input
+              <Input
                 id={nameId}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="E.g., Grimorium Arcana"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 required
               />
             </div>
@@ -88,14 +88,13 @@ export function CreateSpellbookPage() {
               <label className="text-sm font-medium" htmlFor={pagesId}>
                 Pages
               </label>
-              <input
+              <Input
                 id={pagesId}
                 type="number"
                 min={1}
                 value={pages}
                 onChange={(e) => setPages(e.target.value)}
                 placeholder="50"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 required
               />
             </div>

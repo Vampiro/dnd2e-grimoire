@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
@@ -168,14 +169,13 @@ export function CreateCharacterPage() {
                 <span className="text-xs text-destructive">{nameError}</span>
               )}
             </div>
-            <input
+            <Input
               value={name}
               onChange={(e) => {
                 setName(e.target.value);
                 if (nameError) setNameError(null);
               }}
               placeholder="e.g. Aragorn"
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
             />
           </div>
 
@@ -245,10 +245,10 @@ export function CreateCharacterPage() {
                       >
                         -
                       </Button>
-                      <input
+                      <Input
                         readOnly
                         value={`Level ${classLevels.wizard ?? 1}`}
-                        className="h-8 w-24 border-y border-input bg-background px-2 text-center text-sm font-semibold"
+                        className="h-8 w-24 rounded-none border-y border-input bg-background px-2 text-center text-sm font-semibold shadow-none"
                       />
                       <Button
                         size="icon"
@@ -287,10 +287,10 @@ export function CreateCharacterPage() {
                         >
                           -
                         </Button>
-                        <input
+                        <Input
                           readOnly
                           value={`Level ${classLevels.priest ?? 1}`}
-                          className="h-8 w-24 border-y border-input bg-background px-2 text-center text-sm font-semibold"
+                          className="h-8 w-24 rounded-none border-y border-input bg-background px-2 text-center text-sm font-semibold shadow-none"
                         />
                         <Button
                           size="icon"
