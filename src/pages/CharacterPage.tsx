@@ -21,7 +21,7 @@ export function CharacterPage() {
   }
 
   if (!character) {
-    return <div>No Character with id {id}</div>;
+    return <div>No character with ID {id}</div>;
   }
 
   return (
@@ -89,8 +89,7 @@ export function CharacterPage() {
             <div className="h-px w-full bg-border" />
             <PageLink
               title="Castable Spells List"
-              description="Browse priest spells in the Spell Explorer filtered to your level and sphere access.
-              Favorite spells to be able to filter on them when preparing spells."
+              description="Browse priest spells in the Spell Explorer filtered to your level and sphere access. Favorite spells so you can filter by them when preparing spells."
               href={`${PageRoute.SPELLS}?priest=1&wizard=0&min=0&max=${Math.min(
                 9,
                 Math.max(0, character.class.priest.level),
@@ -131,15 +130,13 @@ export function CharacterPage() {
             <div className="h-px w-full bg-border" />
             <PageLink
               title="Prepare Spells"
-              description="Pick which spells are prepared in each slot, by level.
-              The spells you can add are filtered based on your known spells and active spellbooks."
+              description="Pick which spells are prepared in each slot, by level. The spells you can add are filtered based on your known spells and active spellbooks."
               href={PageRoute.WIZARD_PREPARE(character.id)}
             />
             <div className="h-px w-full bg-border" />
             <PageLink
               title="Spellbooks"
-              description="Manage learned spells by spellbook, add/remove spells, and organize pages.
-              You can also temporarily disable spellbooks so that its spells don't show up when preparing."
+              description="Manage learned spells by spellbook, add/remove spells, and organize pages. You can also temporarily disable spellbooks so their spells don't show up when preparing."
               href={PageRoute.WIZARD_SPELLBOOKS(character.id)}
             />
             <div className="h-px w-full bg-border" />
