@@ -36,7 +36,7 @@ import { PageRoute } from "@/pages/PageRoute";
 import type { Spell } from "@/types/Spell";
 
 const LEVEL_MIN = 0;
-const LEVEL_MAX = 9;
+const LEVEL_MAX = 12;
 
 const SPHERE_OPTIONS = [
   "All",
