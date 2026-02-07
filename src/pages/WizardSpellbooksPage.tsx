@@ -315,8 +315,39 @@ function SpellbookCard({
           {/* Add spell */}
           <div>
             <div className="flex items-center gap-0">
-              <Popover open={addSpellOpen} onOpenChange={handleOpenChange}>
-                <PopoverTrigger asChild>
+              <SelectWithSearch<Spell>
+                title="Add spell to Spellbook"
+                items={filteredSelectableSpells}
+                getKey={(spell) => String(spell.id)}
+                getLabel={(spell) =>
+                  spellIdsInBook.has(spell.id)
+                    ? `${spell.name} (in book)`
+                    : spell.name
+                }
+                renderItem={(spell) => (
+                  <div className="flex items-center justify-between gap-2">
+                    <span>
+                      {spellIdsInBook.has(spell.id)
+                        ? `${spell.name} (in book)`
+                        : spell.name}
+                    </span>
+                    {favoriteSet.has(String(spell.id)) && (
+                      <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                    )}
+                  </div>
+                )}
+                isItemDisabled={(spell) => spellIdsInBook.has(spell.id)}
+                value={undefined}
+                onChange={handleSelectSpell}
+                placeholder="Search spells..."
+                emptyText="No spells found."
+                getCategory={(spell) => `Level ${spell.level}`}
+                categoryLabel={(cat) => cat}
+                open={addSpellOpen}
+                onOpenChange={handleOpenChange}
+                autoFocus={false}
+                popoverAlign="end"
+                renderTrigger={() => (
                   <Button
                     size="sm"
                     variant="outline"
@@ -326,77 +357,38 @@ function SpellbookCard({
                     <Plus className="h-4 w-4" />
                     Add Spell
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="p-0 w-80"
-                  align="start"
-                  sideOffset={8}
-                >
-                  <SelectWithSearch<Spell>
-                    title="Add spell to Spellbook"
-                    items={filteredSelectableSpells}
-                    getKey={(spell) => String(spell.id)}
-                    getLabel={(spell) =>
-                      spellIdsInBook.has(spell.id)
-                        ? `${spell.name} (in book)`
-                        : spell.name
-                    }
-                    renderItem={(spell) => (
-                      <div className="flex items-center justify-between gap-2">
-                        <span>
-                          {spellIdsInBook.has(spell.id)
-                            ? `${spell.name} (in book)`
-                            : spell.name}
-                        </span>
-                        {favoriteSet.has(String(spell.id)) && (
-                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                )}
+                inputRightSlot={
+                  user ? (
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7"
+                      onClick={() => setFavoritesOnly((prev) => !prev)}
+                      aria-label={
+                        favoritesOnly
+                          ? "Show all spells"
+                          : "Show favorite spells only"
+                      }
+                      title={
+                        favoritesOnly
+                          ? "Showing favorites"
+                          : "Filter to favorites"
+                      }
+                    >
+                      <Star
+                        className={cn(
+                          "h-4 w-4",
+                          favoritesOnly
+                            ? "text-yellow-500 fill-yellow-500"
+                            : "text-muted-foreground",
                         )}
-                      </div>
-                    )}
-                    isItemDisabled={(spell) => spellIdsInBook.has(spell.id)}
-                    value={undefined}
-                    onChange={handleSelectSpell}
-                    placeholder="Search spells..."
-                    emptyText="No spells found."
-                    getCategory={(spell) => `Level ${spell.level}`}
-                    categoryLabel={(cat) => cat}
-                    open={addSpellOpen}
-                    onOpenChange={setAddSpellOpen}
-                    contentOnly={true}
-                    autoFocus={false}
-                    inputRightSlot={
-                      user ? (
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7"
-                          onClick={() => setFavoritesOnly((prev) => !prev)}
-                          aria-label={
-                            favoritesOnly
-                              ? "Show all spells"
-                              : "Show favorite spells only"
-                          }
-                          title={
-                            favoritesOnly
-                              ? "Showing favorites"
-                              : "Filter to favorites"
-                          }
-                        >
-                          <Star
-                            className={cn(
-                              "h-4 w-4",
-                              favoritesOnly
-                                ? "text-yellow-500 fill-yellow-500"
-                                : "text-muted-foreground",
-                            )}
-                          />
-                        </Button>
-                      ) : null
-                    }
-                  />
-                </PopoverContent>
-              </Popover>
+                      />
+                    </Button>
+                  ) : null
+                }
+              />
               <Popover open={optionsOpen} onOpenChange={setOptionsOpen}>
                 <PopoverTrigger asChild>
                   <Button

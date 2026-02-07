@@ -48,6 +48,9 @@ type BaseProps<T> = {
   inputRightSlot?: ReactNode;
   preventAutoFocus?: boolean;
   renderTrigger?: (props: { open: boolean; label: string }) => ReactNode;
+  popoverAlign?: "start" | "center" | "end";
+  popoverSideOffset?: number;
+  popoverContentClassName?: string;
 };
 
 const DEFAULT_LIMIT = 200;
@@ -95,6 +98,9 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
     inputRightSlot,
     preventAutoFocus = false,
     renderTrigger,
+    popoverAlign = "start",
+    popoverSideOffset = 8,
+    popoverContentClassName,
   } = props;
 
   const [internalOpen, setInternalOpen] = useState(false);
@@ -346,7 +352,11 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{triggerNode}</PopoverTrigger>
-      <PopoverContent className="p-0 w-80" align="start" sideOffset={8}>
+      <PopoverContent
+        className={cn("p-0 w-80", popoverContentClassName)}
+        align={popoverAlign}
+        sideOffset={popoverSideOffset}
+      >
         {content}
       </PopoverContent>
     </Popover>

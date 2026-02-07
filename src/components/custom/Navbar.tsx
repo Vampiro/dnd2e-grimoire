@@ -766,8 +766,8 @@ export function Navbar() {
 
       {/* Right side icons */}
       <div className="flex items-center">
-        {/* Account menu */}
         <NavbarSearch />
+        {/* Account menu */}
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <button

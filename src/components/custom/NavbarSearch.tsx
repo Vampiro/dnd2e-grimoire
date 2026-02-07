@@ -87,6 +87,7 @@ export function NavbarSearch() {
       limit={200}
       open={open}
       onOpenChange={setOpen}
+      popoverAlign="end"
       renderTrigger={() => (
         <button
           type="button"
