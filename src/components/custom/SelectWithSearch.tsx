@@ -56,12 +56,21 @@ function useIsMobile(): boolean {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 768px)");
-    const update = () =>
-      setIsMobile(mq.matches || navigator.maxTouchPoints > 0);
+    const mq = window.matchMedia("(max-width: 768px), (max-height: 800px)");
+    const update = () => {
+      const viewportHeight =
+        window.visualViewport?.height ?? window.innerHeight;
+      setIsMobile(
+        mq.matches || navigator.maxTouchPoints > 0 || viewportHeight < 1000
+      );
+    };
     update();
     mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
+    window.addEventListener("resize", update);
+    return () => {
+      mq.removeEventListener("change", update);
+      window.removeEventListener("resize", update);
+    };
   }, []);
 
   return isMobile;
@@ -108,14 +117,14 @@ export function SelectWithSearch<T>(props: BaseProps<T>) {
   const filtered = useMemo(() => {
     const base = normalized
       ? items.filter((item) =>
-          getLabel(item).toLowerCase().includes(normalized)
+          getLabel(item).toLowerCase().includes(normalized),
         )
       : items;
     return [...base].sort((a, b) =>
       getLabel(a).localeCompare(getLabel(b), undefined, {
         sensitivity: "base",
         numeric: true,
-      })
+      }),
     );
   }, [getLabel, items, normalized]);
 
